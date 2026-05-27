@@ -24,8 +24,8 @@ Mount Kimodo alongside other backbones, in a custom FastAPI app, or behind your 
 from motionmcp import build_app, serve
 from motionmcp_kimodo import KimodoBackbone
 
-# Single backbone (optional text_encoder_mode: dummy, local, api, auto):
-serve(KimodoBackbone(model_id="soma30", text_encoder_mode="dummy"))
+# Single backbone (optional text_encoder_mode: local, dummy, api, auto):
+serve(KimodoBackbone(model_id="soma30"))
 
 # Mount alongside others:
 app = build_app({

@@ -46,7 +46,7 @@ class KimodoBackbone(Backbone):
         otherwise CPU.
     text_encoder_mode
         Kimodo ``TEXT_ENCODER_MODE`` (``dummy``, ``local``, ``api``, ``auto``).
-        When omitted, uses the env var if set, otherwise ``dummy``.
+        When omitted, uses the env var if set, otherwise ``local``.
     """
 
     def __init__(
@@ -68,7 +68,7 @@ class KimodoBackbone(Backbone):
         if self.text_encoder_mode is not None:
             os.environ["TEXT_ENCODER_MODE"] = self.text_encoder_mode.lower()
         else:
-            os.environ.setdefault("TEXT_ENCODER_MODE", "dummy")
+            os.environ.setdefault("TEXT_ENCODER_MODE", "local")
         print(
             f"[motionmcp-kimodo] loading {self.model_id} on {self.device} "
             f"(TEXT_ENCODER_MODE={os.environ['TEXT_ENCODER_MODE']})",

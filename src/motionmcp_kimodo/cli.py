@@ -34,13 +34,13 @@ def main() -> None:
         default=None,
         choices=["dummy", "local", "api", "auto"],
         metavar="MODE",
-        help="Kimodo text encoder: dummy (default, no LLM), local (LLM2Vec), api, auto. "
-             "Overrides TEXT_ENCODER_MODE when set; otherwise env or dummy.",
+        help="Kimodo text encoder: local (default, LLM2Vec), dummy (no LLM), api, auto. "
+             "Overrides TEXT_ENCODER_MODE when set; otherwise env or local.",
     )
     parser.add_argument(
         "--quantize",
         default=None,
-        help="BitsAndBytes quant for the Kimodo text encoder when --text-encoder-mode=local "
+        help="BitsAndBytes quant for the Kimodo text encoder when mode is local "
         "(4bit or 8bit). No effect with dummy.",
     )
 

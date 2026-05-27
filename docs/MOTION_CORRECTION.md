@@ -136,7 +136,7 @@ MotionCorrection plus PyTorch/Kimodo downloads can take **30+ minutes** on first
 ## Do I need MotionCorrection to run the MMCP server?
 
 - **Install time:** Yes — Kimodo’s `pip` install always attempts to build MotionCorrection unless explicitly skipped (Docker/advanced only).
-- **Runtime (motionmcp-kimodo):** Basic generation does not require post-processing. The server defaults to Kimodo’s dummy text encoder and typical MMCP requests do not enable `post_processing`. You still need a **successful compile** to complete `pip install`.
+- **Runtime (motionmcp-kimodo):** Basic generation does not require post-processing. The server defaults to Kimodo’s **local** text encoder (`LLM2Vec`); use `--text-encoder-mode dummy` to skip the LLM. Typical MMCP requests do not enable `post_processing`. You still need a **successful compile** to complete `pip install`.
 
 If you need Kimodo’s post-processing APIs (`post_processing=True`), MotionCorrection must import successfully (see verify step above).
 

@@ -27,8 +27,8 @@ Leave the terminal open while clients (e.g. Proscenium) connect. Default URL for
 | `--port` | `8000` | Listen port |
 | `--model` | env / Kimodo default | Kimodo model id (e.g. `soma30`) |
 | `--device` | `cuda:0` or `cpu` | PyTorch device |
-| `--text-encoder-mode` | `dummy` (or env) | Kimodo text encoder: `dummy`, `local`, `api`, `auto` |
-| `--quantize` | — | `4bit` or `8bit` for Kimodo’s local text encoder only (see below) |
+| `--text-encoder-mode` | `local` (or env) | Kimodo text encoder: `local`, `dummy`, `api`, `auto` |
+| `--quantize` | — | `4bit` or `8bit` when using the local LLM encoder (see below) |
 
 ## Environment variables
 
@@ -40,15 +40,15 @@ Leave the terminal open while clients (e.g. Proscenium) connect. Default URL for
 
 ### Text encoder and `--quantize`
 
-The server defaults to `--text-encoder-mode dummy` (no LLM loaded). `--quantize` only applies with `local`.
+The server defaults to **`local`** (loads Kimodo’s LLM2Vec text encoder). Use `--text-encoder-mode dummy` for constraint-only runs without an LLM (lower VRAM, no text semantics).
 
-Local LLM with 4-bit quantization:
+4-bit quantization to save VRAM:
 
 ```bash
-motionmcp-kimodo --text-encoder-mode local --quantize 4bit
+motionmcp-kimodo --quantize 4bit
 ```
 
-`--text-encoder-mode` overrides `TEXT_ENCODER_MODE` when passed. If you omit the flag, an existing env var is used; otherwise Kimodo runs in `dummy` mode.
+`--text-encoder-mode` overrides `TEXT_ENCODER_MODE` when passed. If you omit the flag, an existing env var is used; otherwise the server uses `local`.
 
 `--quantize` does **not** affect motion/diffusion weights — only the text encoder when Kimodo loads `LLM2VecEncoder`.
 
