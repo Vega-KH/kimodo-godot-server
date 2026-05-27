@@ -8,6 +8,12 @@
 
 Run Kimodo on your own GPU and expose it over HTTP so any MMCP client can generate animation. The reference client is **[Proscenium for Blender](https://github.com/animatica-ai/proscenium-blender)** — text prompts, paths, and pose constraints on your armature.
 
+## Who this is for
+
+**This repo is for developers** who are comfortable with Python environments, CUDA, and self-hosting ML services. The install assumes you can debug `pip`, virtualenvs, CUDA drivers, and Hugging Face authentication on your own. See [Installation](docs/INSTALL.md) and [MotionCorrection](docs/MOTION_CORRECTION.md) for what that involves.
+
+**If you are an animator or artist** and want Kimodo in Blender without that setup, use the hosted product at **[animatica.ai](https://animatica.ai)** — same model family, no local server install. Point the [Proscenium](https://github.com/animatica-ai/proscenium-blender) plugin at your Animatica endpoint and generate from there.
+
 > **Alpha** — APIs and packaging may change. Tracks `motionmcp` 0.1.x and Kimodo 1.x.
 
 ## Features
@@ -29,7 +35,7 @@ Run Kimodo on your own GPU and expose it over HTTP so any MMCP client can genera
 
 Full setup (Blender addon, troubleshooting): **[Installation](docs/INSTALL.md)**.
 
-## Quick start
+## Quick start (self-hosted)
 
 ```bash
 pip install "motionmcp-kimodo @ git+https://github.com/animatica-ai/motionmcp-kimodo.git"
