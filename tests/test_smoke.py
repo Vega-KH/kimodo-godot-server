@@ -50,6 +50,27 @@ def test_backbone_does_not_load_until_setup():
     assert b._spec is None
 
 
+def test_cli_passes_text_encoder_mode(monkeypatch):
+    import sys
+
+    captured: dict = {}
+
+    def fake_serve(backbone, **kwargs):
+        captured["backbone"] = backbone
+
+    monkeypatch.setattr("motionmcp_kimodo.cli.serve", fake_serve)
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        ["motionmcp-kimodo", "--text-encoder-mode", "local", "--port", "9000"],
+    )
+
+    from motionmcp_kimodo.cli import main
+
+    main()
+    assert captured["backbone"].text_encoder_mode == "local"
+
+
 def test_capabilities_before_setup_raises():
     from motionmcp.errors import ProtocolError
     from motionmcp_kimodo import KimodoBackbone

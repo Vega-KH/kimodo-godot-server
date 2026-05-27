@@ -30,19 +30,31 @@ def main() -> None:
         help="torch device (default: cuda:0 if available, else cpu)",
     )
     parser.add_argument(
+        "--text-encoder-mode",
+        default=None,
+        choices=["dummy", "local", "api", "auto"],
+        metavar="MODE",
+        help="Kimodo text encoder: dummy (default, no LLM), local (LLM2Vec), api, auto. "
+             "Overrides TEXT_ENCODER_MODE when set; otherwise env or dummy.",
+    )
+    parser.add_argument(
         "--quantize",
         default=None,
-        help="BitsAndBytes quant for the Kimodo text encoder when TEXT_ENCODER_MODE=local "
-        "(4bit or 8bit). No effect with the default dummy encoder.",
+        help="BitsAndBytes quant for the Kimodo text encoder when --text-encoder-mode=local "
+        "(4bit or 8bit). No effect with dummy.",
     )
 
     args = parser.parse_args()
 
     if args.quantize:
         os.environ["KIMODO_QUANTIZE"] = args.quantize.lower()
- 
+
     serve(
-        KimodoBackbone(model_id=args.model, device=args.device),
+        KimodoBackbone(
+            model_id=args.model,
+            device=args.device,
+            text_encoder_mode=args.text_encoder_mode,
+        ),
         host=args.host,
         port=args.port,
     )

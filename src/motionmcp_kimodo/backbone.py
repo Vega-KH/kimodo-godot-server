@@ -44,15 +44,20 @@ class KimodoBackbone(Backbone):
     device
         Torch device (e.g. ``"cuda:0"``). Defaults to CUDA if available,
         otherwise CPU.
+    text_encoder_mode
+        Kimodo ``TEXT_ENCODER_MODE`` (``dummy``, ``local``, ``api``, ``auto``).
+        When omitted, uses the env var if set, otherwise ``dummy``.
     """
 
     def __init__(
         self,
         model_id: str | None = None,
         device: str | None = None,
+        text_encoder_mode: str | None = None,
     ) -> None:
         self.model_id = model_id or os.environ.get("KIMODO_MODEL", DEFAULT_MODEL)
         self.device = device or ("cuda:0" if torch.cuda.is_available() else "cpu")
+        self.text_encoder_mode = text_encoder_mode
         self.model: Any = None
         self._spec: ModelSpec | None = None
         self._slice_indices: np.ndarray | None = None
@@ -60,9 +65,13 @@ class KimodoBackbone(Backbone):
     # ----- lifecycle -------------------------------------------------------
 
     def setup(self) -> None:
-        os.environ.setdefault("TEXT_ENCODER_MODE", "dummy")
+        if self.text_encoder_mode is not None:
+            os.environ["TEXT_ENCODER_MODE"] = self.text_encoder_mode.lower()
+        else:
+            os.environ.setdefault("TEXT_ENCODER_MODE", "dummy")
         print(
-            f"[motionmcp-kimodo] loading {self.model_id} on {self.device}",
+            f"[motionmcp-kimodo] loading {self.model_id} on {self.device} "
+            f"(TEXT_ENCODER_MODE={os.environ['TEXT_ENCODER_MODE']})",
             flush=True,
         )
         self.model = load_model(self.model_id, device=self.device)
