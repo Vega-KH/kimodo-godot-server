@@ -3,9 +3,9 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "motionmcp-kimodo"
-version = "0.1.0"
-description = "MMCP backbone for the Kimodo motion model. A drop-in motionmcp.Backbone that runs a Kimodo SOMA model under the protocol."
+name = "kimodo-godot-server"
+version = "0.1.0.dev0"
+description = "Local Kimodo motion-generation service for the Godot editor, with an MMCP-compatible backbone."
 readme = "README.md"
 license = "Apache-2.0"
 requires-python = ">=3.10"
@@ -37,13 +37,12 @@ dev = [
 ]
 
 [project.scripts]
-# `motionmcp-kimodo --port 8080 --model soma30` runs a server.
+# Keep the upstream command while clients and documentation migrate.
+kimodo-godot-server = "motionmcp_kimodo.cli:main"
 motionmcp-kimodo = "motionmcp_kimodo.cli:main"
 
 [project.urls]
-Homepage = "https://animatica.ai/mmcp"
-Source   = "https://github.com/animatica-ai/motionmcp-kimodo"
-Issues   = "https://github.com/animatica-ai/motionmcp-kimodo/issues"
+Upstream = "https://github.com/animatica-ai/motionmcp-kimodo"
 
 [tool.hatch.metadata]
 allow-direct-references = true

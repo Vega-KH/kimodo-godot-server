@@ -1,10 +1,20 @@
-# motionmcp-kimodo
+# kimodo-godot-server
 
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![Status](https://img.shields.io/badge/status-alpha-orange.svg)](https://github.com/animatica-ai/motionmcp-kimodo)
 
-**Self-hosted [MMCP](https://animatica.ai/mmcp) server for [Kimodo](https://github.com/animatica-ai/kimodo) motion generation.**
+Local Kimodo motion-generation service for the Godot editor, built as a
+history-preserving fork of Animatica's Apache-2.0
+[`motionmcp-kimodo`](https://github.com/animatica-ai/motionmcp-kimodo).
+
+The fork is at the beginning of Milestone 0. It intentionally retains the
+`motionmcp_kimodo` Python namespace and the `motionmcp-kimodo` command while
+the reusable MMCP adapter is separated from Godot Studio services. The new
+preferred command is `kimodo-godot-server`.
+
+See [the development baseline](docs/DEVELOPMENT_BASELINE.md) and
+[architecture decisions](docs/adr/README.md) for current status.
 
 Run Kimodo on your own GPU and expose it over HTTP so any MMCP client can generate animation. The reference client is **[Proscenium for Blender](https://github.com/animatica-ai/proscenium-blender)** — text prompts, paths, and pose constraints on your armature.
 

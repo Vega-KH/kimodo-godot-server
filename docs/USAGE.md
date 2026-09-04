@@ -1,6 +1,6 @@
 # Usage
 
-Running the `motionmcp-kimodo` MMCP server after [installation](INSTALL.md).
+Running the `kimodo-godot-server` MMCP server after [installation](INSTALL.md).
 
 [← Documentation index](README.md)
 
@@ -8,10 +8,10 @@ Running the `motionmcp-kimodo` MMCP server after [installation](INSTALL.md).
 
 ```bash
 # Defaults: port 8000, default Kimodo model, cuda:0 if available else cpu.
-motionmcp-kimodo
+kimodo-godot-server
 
 # Pick a model and bind explicitly:
-motionmcp-kimodo --model soma30 --port 8000 --device cuda:0
+kimodo-godot-server --model soma30 --port 8000 --device cuda:0
 
 # Or run as a module:
 python -m motionmcp_kimodo --model soma30
@@ -23,7 +23,7 @@ Leave the terminal open while clients (e.g. Proscenium) connect. Default URL for
 
 | Flag | Default | Description |
 |---|---|---|
-| `--host` | `0.0.0.0` | Bind address |
+| `--host` | `127.0.0.1` | Bind address; remote binding is explicit |
 | `--port` | `8000` | Listen port |
 | `--model` | env / Kimodo default | Kimodo model id (e.g. `soma30`) |
 | `--device` | `cuda:0` or `cpu` | PyTorch device |
@@ -45,7 +45,7 @@ The server defaults to **`local`** (loads Kimodo’s LLM2Vec text encoder). Use 
 4-bit quantization to save VRAM:
 
 ```bash
-motionmcp-kimodo --quantize 4bit
+kimodo-godot-server --quantize 4bit
 ```
 
 `--text-encoder-mode` overrides `TEXT_ENCODER_MODE` when passed. If you omit the flag, an existing env var is used; otherwise the server uses `local`.

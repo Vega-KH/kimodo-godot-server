@@ -1,4 +1,5 @@
-# Python
+.venv/
+venv/
 __pycache__/
 *.py[cod]
 *$py.class
@@ -12,10 +13,10 @@ dist/
 .ruff_cache/
 .coverage
 htmlcov/
-.venv/
-venv/
-
-# Editors
+.env
+models/
+artifacts/
+diagnostics/
 .vscode/
 .idea/
 *.swp

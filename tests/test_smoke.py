@@ -21,7 +21,7 @@ def test_imports_clean():
     )
     from motionmcp_kimodo.translate import translate_request  # noqa: F401
 
-    assert motionmcp_kimodo.__version__ == "0.1.0"
+    assert motionmcp_kimodo.__version__ == "0.1.0.dev0"
     assert KimodoBackbone
 
 
@@ -69,6 +69,23 @@ def test_cli_passes_text_encoder_mode(monkeypatch):
 
     main()
     assert captured["backbone"].text_encoder_mode == "local"
+
+
+def test_cli_binds_to_loopback_by_default(monkeypatch):
+    import sys
+
+    captured: dict = {}
+
+    def fake_serve(backbone, **kwargs):
+        captured.update(kwargs)
+
+    monkeypatch.setattr("motionmcp_kimodo.cli.serve", fake_serve)
+    monkeypatch.setattr(sys, "argv", ["kimodo-godot-server"])
+
+    from motionmcp_kimodo.cli import main
+
+    main()
+    assert captured["host"] == "127.0.0.1"
 
 
 def test_capabilities_before_setup_raises():

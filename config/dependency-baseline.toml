@@ -1,0 +1,16 @@
+# Discovery snapshot only. This is not yet a complete lock file.
+captured_at = "2026-09-04"
+
+[repository]
+motionmcp_kimodo_upstream = "99a88e6ceae89bdc9734503dd06cd61d9d82ed1b"
+
+[candidate_dependencies]
+animatica_kimodo_main = "390fadb57a188fb97b8c3af5d5fb693a72ff03c3"
+nvidia_kimodo_main = "1aece8c124d73d255ceff5086d983b844c9f4e94"
+motionmcp_sdk_main = "a298338bb3684a506ec313dce6d5cb12a6dc5167"
+motionmcp_sdk_v0_1_0 = "8047a90b045f45c0141c8168a38e54d2e28ffd62"
+
+[resolution]
+status = "pending"
+python = "3.10"
+notes = "Select CUDA-compatible PyTorch and compare Kimodo forks before producing the lock."

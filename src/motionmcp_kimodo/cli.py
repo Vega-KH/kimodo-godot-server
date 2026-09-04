@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0
-"""``motionmcp-kimodo`` CLI entry point."""
+"""``kimodo-godot-server`` CLI entry point."""
 
 from __future__ import annotations
 
@@ -13,11 +13,15 @@ from .backbone import KimodoBackbone
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        prog="motionmcp-kimodo",
+        prog="kimodo-godot-server",
         description="Run an MMCP server backed by the Kimodo motion model. "
                     "Requires the canonical skeleton served at /capabilities.",
     )
-    parser.add_argument("--host", default="0.0.0.0")
+    parser.add_argument(
+        "--host",
+        default="127.0.0.1",
+        help="listen address (default: 127.0.0.1; remote binding is opt-in)",
+    )
     parser.add_argument("--port", type=int, default=8000)
     parser.add_argument(
         "--model",

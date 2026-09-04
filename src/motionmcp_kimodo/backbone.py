@@ -70,7 +70,7 @@ class KimodoBackbone(Backbone):
         else:
             os.environ.setdefault("TEXT_ENCODER_MODE", "local")
         print(
-            f"[motionmcp-kimodo] loading {self.model_id} on {self.device} "
+            f"[kimodo-godot-server] loading {self.model_id} on {self.device} "
             f"(TEXT_ENCODER_MODE={os.environ['TEXT_ENCODER_MODE']})",
             flush=True,
         )
@@ -110,7 +110,7 @@ class KimodoBackbone(Backbone):
             self._slice_indices = None
 
         print(
-            f"[motionmcp-kimodo] ready. fps={self.model.fps} "
+            f"[kimodo-godot-server] ready. fps={self.model.fps} "
             f"canonical_joints={len(input_skel.bone_order_names)}",
             flush=True,
         )
