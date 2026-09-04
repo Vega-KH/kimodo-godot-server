@@ -21,7 +21,6 @@ from typing import Any
 import numpy as np
 import torch
 
-
 # ---- Foot-contact channel mapping ----------------------------------------
 
 # Kimodo emits 4 contact channels in order [L_heel, L_toe, R_heel, R_toe].

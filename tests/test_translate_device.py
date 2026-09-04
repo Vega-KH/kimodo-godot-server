@@ -48,11 +48,11 @@ def _wire_skeleton() -> dict[str, Any]:
 
 
 def _generate_request(**kwargs: Any) -> schemas.GenerateRequest:
-    base = dict(
-        protocol_version="0.1",
-        model="test",
-        skeleton=_wire_skeleton(),
-    )
+    base = {
+        "protocol_version": "0.1",
+        "model": "test",
+        "skeleton": _wire_skeleton(),
+    }
     base.update(kwargs)
     return schemas.GenerateRequest.model_construct(**base)
 

@@ -9,9 +9,10 @@ Status: Milestone 0 bootstrap
 - Upstream branch: `main`
 - License: Apache-2.0 (retained in `LICENSE`)
 - Local fork name: `kimodo-godot-server`
+- Hosted fork: `https://github.com/Vega-KH/kimodo-godot-server`
 
-The local Git remote named `upstream` tracks Animatica. A hosted fork remote
-named `origin` will be added after the GitHub destination is known.
+The local Git remote named `upstream` tracks Animatica. `origin` tracks the
+hosted Vega-KH fork.
 
 ## Verified development machine
 
@@ -20,26 +21,35 @@ named `origin` will be added after the GitHub destination is known.
 - GPU: NVIDIA GeForce RTX 4070 Laptop GPU, 8188 MiB
 - NVIDIA driver: 616.64
 - Git: 2.49.0.windows.1
+- Python: 3.10.16 in `.venv`
+- `uv`: 0.12.9
+- PyTorch: 2.12.1+cu130; CUDA 13.0; GPU detected
+- CMake: 3.31.6 from Visual Studio Community 2022
+- MSVC: 19.44.35209 x64
+- GitHub CLI: 2.100.0 portable workspace install
 
-Not yet installed or not on `PATH` at bootstrap time:
+Some tools are installed outside the process `PATH`; use `.venv` and
+`scripts/check-system.ps1` rather than relying on global command discovery.
 
-- Python
-- `uv`
-- CMake
-- GitHub CLI (`gh`)
-- A verified Visual Studio C++ build environment
+## Initial validation
+
+- `torch.cuda.is_available()`: `true`
+- CUDA device: NVIDIA GeForce RTX 4070 Laptop GPU
+- MotionCorrection import: passed
+- Unit tests: 10 passed, 7 hardware-specific tests skipped
+- Ruff: passed
+- Model weights and generation: not run yet
 
 ## Immediate gates
 
-1. Provision a Python 3.10 environment and Windows C++/CMake prerequisites.
-2. Resolve and lock CUDA-compatible PyTorch, MMCP SDK, Kimodo, and transitive
-   dependencies without downloading model weights as part of normal tests.
-3. Capture the upstream MMCP behavior as contract fixtures.
-4. Compare the Animatica Kimodo fork with NVIDIA upstream and record the
-   dependency choice.
-5. Change the service output boundary from the upstream SOMA-30 slice to
+1. Authenticate Hugging Face and accept the selected model license before the
+   first model download.
+2. Capture the upstream MMCP behavior as contract fixtures.
+3. Run constraint-only and CPU-text-encoder generation baselines.
+4. Change the service output boundary from the upstream SOMA-30 slice to
    structurally validated SOMA-77 output.
-6. Only then run the first CPU-text-encoder/CUDA-motion-model benchmark.
+5. Reconcile the Windows/low-memory patches with NVIDIA's newer upstream and
+   benchmark fixes.
 
 ## Bootstrap decisions
 

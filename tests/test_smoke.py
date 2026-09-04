@@ -90,6 +90,7 @@ def test_cli_binds_to_loopback_by_default(monkeypatch):
 
 def test_capabilities_before_setup_raises():
     from motionmcp.errors import ProtocolError
+
     from motionmcp_kimodo import KimodoBackbone
 
     b = KimodoBackbone(model_id="x", device="cpu")

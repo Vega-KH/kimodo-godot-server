@@ -16,7 +16,6 @@ from typing import Any
 
 import numpy as np
 import torch
-
 from kimodo.constraints import (
     EndEffectorConstraintSet,
     FullBodyConstraintSet,
@@ -38,7 +37,6 @@ from motionmcp import schemas
 from motionmcp.errors import ProtocolError
 
 from .skeleton import standing_root_position
-
 
 # ---- Public entry point ---------------------------------------------------
 

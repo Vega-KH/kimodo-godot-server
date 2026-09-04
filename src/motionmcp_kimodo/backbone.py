@@ -12,7 +12,6 @@ from typing import Any
 
 import numpy as np
 import torch
-
 from kimodo import DEFAULT_MODEL, load_model
 from motionmcp import (
     Backbone,
@@ -221,11 +220,14 @@ def _normalize_origin(
     heading = 0.0
 
     for c in body.constraints:
-        if isinstance(c, PoseKeyframeConstraint):
-            if c.root_position is not None and (anchor_frame is None or c.frame < anchor_frame):
-                anchor_frame = c.frame
-                ox = c.root_position[0]
-                oz = c.root_position[2]
+        if (
+            isinstance(c, PoseKeyframeConstraint)
+            and c.root_position is not None
+            and (anchor_frame is None or c.frame < anchor_frame)
+        ):
+            anchor_frame = c.frame
+            ox = c.root_position[0]
+            oz = c.root_position[2]
 
     if anchor_frame is None:
         for c in body.constraints:
@@ -239,9 +241,12 @@ def _normalize_origin(
 
     earliest_pk: PoseKeyframeConstraint | None = None
     for c in body.constraints:
-        if isinstance(c, PoseKeyframeConstraint) and root_joint_name in c.joint_rotations:
-            if earliest_pk is None or c.frame < earliest_pk.frame:
-                earliest_pk = c
+        if (
+            isinstance(c, PoseKeyframeConstraint)
+            and root_joint_name in c.joint_rotations
+            and (earliest_pk is None or c.frame < earliest_pk.frame)
+        ):
+            earliest_pk = c
     if earliest_pk is not None:
         x, y, z, w = earliest_pk.joint_rotations[root_joint_name]
         rest_by_name = {j.name: j.rest_translation for j in body.skeleton.joints}

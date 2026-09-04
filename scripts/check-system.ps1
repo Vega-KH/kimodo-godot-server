@@ -10,15 +10,21 @@ function Get-CommandVersion {
         [Parameter(Mandatory)]
         [string]$Name,
         [Parameter(Mandatory)]
-        [string[]]$Arguments
+        [string[]]$Arguments,
+        [string[]]$CandidatePaths = @()
     )
 
     $command = Get-Command $Name
-    if ($null -eq $command) {
+    $executable = if ($null -ne $command) {
+        $command.Source
+    } else {
+        $CandidatePaths | Where-Object { Test-Path -LiteralPath $_ } | Select-Object -First 1
+    }
+    if ($null -eq $executable) {
         return $null
     }
 
-    $result = & $command.Source @Arguments 2>&1 | Select-Object -First 1
+    $result = & $executable @Arguments 2>&1 | Select-Object -First 1
     return [string]$result
 }
 
@@ -45,14 +51,25 @@ if ($null -ne (Get-Command nvidia-smi)) {
     }
 }
 
+$compiler = Get-ChildItem -Path (
+    'C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\' +
+    '*\bin\Hostx64\x64\cl.exe'
+) | Sort-Object FullName -Descending | Select-Object -First 1
+
 [ordered]@{
     captured_at = (Get-Date).ToString('o')
     os = [System.Environment]::OSVersion.VersionString
     git = Get-CommandVersion -Name 'git' -Arguments @('--version')
-    python = Get-CommandVersion -Name 'python' -Arguments @('--version')
-    uv = Get-CommandVersion -Name 'uv' -Arguments @('--version')
-    cmake = Get-CommandVersion -Name 'cmake' -Arguments @('--version')
-    compiler = if ($null -ne (Get-Command cl.exe)) { (Get-Command cl.exe).Source } else { $null }
+    python = Get-CommandVersion -Name 'python' -Arguments @('--version') -CandidatePaths @(
+        (Join-Path $env:LOCALAPPDATA 'Programs\Python\Python310\python.exe')
+    )
+    uv = Get-CommandVersion -Name 'uv' -Arguments @('--version') -CandidatePaths @(
+        (Join-Path $PSScriptRoot '..\.venv\Scripts\uv.exe')
+    )
+    cmake = Get-CommandVersion -Name 'cmake' -Arguments @('--version') -CandidatePaths @(
+        'C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe'
+    )
+    compiler = if ($null -ne $compiler) { $compiler.FullName } else { $null }
     godot = [ordered]@{
         executable = if ($null -ne $godot) { $godot.FullName } else { $null }
         version = $godotVersion

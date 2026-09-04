@@ -20,20 +20,18 @@ classifiers = [
 ]
 
 dependencies = [
-    "motionmcp-sdk >= 0.1",
-    # Kimodo isn't published to PyPI, so we pin a git source.
-    # ``animatica-ai/kimodo`` is a fork of upstream ``nv-tlabs/kimodo``
-    # with fixes for common install / runtime issues; pin tags or commits
-    # with ``@ref`` if version stability becomes important.
-    "kimodo @ git+https://github.com/animatica-ai/kimodo.git",
+    "motionmcp-sdk @ git+https://github.com/animatica-ai/motionmcp.git@a298338bb3684a506ec313dce6d5cb12a6dc5167",
+    # Temporary Windows/low-VRAM baseline; see ADR 0002.
+    "kimodo @ git+https://github.com/animatica-ai/kimodo.git@390fadb57a188fb97b8c3af5d5fb693a72ff03c3",
     "numpy >= 1.24",
-    "torch >= 2.0",
+    "torch == 2.12.1",
 ]
 
 [project.optional-dependencies]
 dev = [
     "pytest >= 8.0",
     "ruff >= 0.4",
+    "uv == 0.12.9",
 ]
 
 [project.scripts]
@@ -46,6 +44,14 @@ Upstream = "https://github.com/animatica-ai/motionmcp-kimodo"
 
 [tool.hatch.metadata]
 allow-direct-references = true
+
+[[tool.uv.index]]
+name = "pytorch-cu130"
+url = "https://download.pytorch.org/whl/cu130"
+explicit = true
+
+[tool.uv.sources]
+torch = { index = "pytorch-cu130" }
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/motionmcp_kimodo"]
