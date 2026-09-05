@@ -9,6 +9,22 @@ Milestone 0 establishes a reproducible upstream baseline before Studio API or
 UI feature work. Prefer small changes with tests and record consequential
 decisions in `docs/adr/`.
 
+## Goal-oriented sessions
+
+Read `docs/DEVELOPMENT_GOALS.md` before choosing work. It is the authoritative,
+append-only progress record.
+
+- Work on only the active goal unless the user explicitly changes the goal.
+- Keep goals small enough for a focused session of roughly 20–60 minutes.
+- Update task checkboxes, evidence, blockers, and the session log as work lands.
+- Never delete completed goals or tasks; add a correction or superseding note.
+- Run the goal's completion test before marking it complete.
+- When a goal passes, mark it complete, commit the record, report the result,
+  celebrate briefly, and end the turn. Do not begin the next goal until the
+  user explicitly asks.
+- If work exposes a blocker, record it and stop at a useful checkpoint rather
+  than silently switching to another planned goal.
+
 ## Compatibility boundaries
 
 - Preserve the standard MMCP capability and generation surface.

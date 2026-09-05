@@ -24,10 +24,10 @@ hardware baseline. Pin MMCP SDK commit
 
 Do not mark this ADR Accepted until all of the following pass:
 
-1. MotionCorrection builds and imports on Windows.
-2. PyTorch detects CUDA and the reference GPU.
-3. A constraint-only smoke generation succeeds.
-4. CPU text-encoder generation succeeds within the 8 GB VRAM budget.
+- [x] MotionCorrection builds and imports on Windows.
+- [x] PyTorch detects CUDA and the reference GPU.
+- [ ] A constraint-only smoke generation succeeds.
+- [ ] CPU text-encoder generation succeeds within the 8 GB VRAM budget.
 
 After the baseline, create a maintained Kimodo patch branch based on NVIDIA
 upstream or contribute the required changes upstream. Carry NVIDIA's benchmark

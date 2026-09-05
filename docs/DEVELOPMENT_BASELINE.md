@@ -38,14 +38,18 @@ Some tools are installed outside the process `PATH`; use `.venv` and
 - MotionCorrection import: passed
 - Unit tests: 10 passed, 7 hardware-specific tests skipped
 - Ruff: passed
-- Model weights and generation: not run yet
+- Kimodo-SOMA-RP-v1.1 model access, download, and CUDA load: passed
+- Loaded skeletons: SOMA-30 input and SOMA-77 output
+- Dummy-encoder fixed-seed generation: passed and exactly reproducible
+- Live loopback `/capabilities`: HTTP 200; currently advertises SOMA-30
+- Full text encoder: blocked on gated base-model approval
 
 ## Immediate gates
 
-1. Authenticate Hugging Face and accept the selected model license before the
-   first model download.
+1. Obtain gated access to `meta-llama/Meta-Llama-3-8B-Instruct` and run the
+   CPU-text-encoder baseline.
 2. Capture the upstream MMCP behavior as contract fixtures.
-3. Run constraint-only and CPU-text-encoder generation baselines.
+3. Run a constraint-only baseline.
 4. Change the service output boundary from the upstream SOMA-30 slice to
    structurally validated SOMA-77 output.
 5. Reconcile the Windows/low-memory patches with NVIDIA's newer upstream and
@@ -61,3 +65,5 @@ Some tools are installed outside the process `PATH`; use `.venv` and
 - No Godot MCP bridge is required for backend development. Godot can be driven
   headlessly for extension tests; an editor bridge can be evaluated when
   interactive dock and viewport work begins.
+- Detailed progress and the next goals are maintained in
+  `docs/DEVELOPMENT_GOALS.md`.

@@ -2,6 +2,8 @@
 
 | Guide | Who it's for |
 |---|---|
+| **[Development goals](DEVELOPMENT_GOALS.md)** | Current goal, completed work, upcoming goals, blockers, and session history |
+| **[Development baseline](DEVELOPMENT_BASELINE.md)** | Fork point, verified workstation, dependencies, and initial validation |
 | **[Installation](INSTALL.md)** | Blender artists and anyone setting up the server + [Proscenium](https://github.com/animatica-ai/proscenium-blender) for the first time |
 | **[MotionCorrection](MOTION_CORRECTION.md)** | C++ compile step when installing Kimodo — CMake, compilers, platform fixes (**read before `pip install` if builds fail**) |
 | **[Usage](USAGE.md)** | Running the server — CLI flags, environment variables, models |
