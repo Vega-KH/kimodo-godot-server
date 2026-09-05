@@ -751,7 +751,7 @@ wheels = [
 [[package]]
 name = "kimodo"
 version = "1.0.0"
-source = { git = "https://github.com/animatica-ai/kimodo.git?rev=390fadb57a188fb97b8c3af5d5fb693a72ff03c3#390fadb57a188fb97b8c3af5d5fb693a72ff03c3" }
+source = { git = "https://github.com/Vega-KH/kimodo.git?rev=3362b92c37faa100fb697972f0fc5485dd94dd4f#3362b92c37faa100fb697972f0fc5485dd94dd4f" }
 dependencies = [
     { name = "accelerate" },
     { name = "av", version = "17.1.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
@@ -797,6 +797,7 @@ dependencies = [
 
 [package.optional-dependencies]
 dev = [
+    { name = "psutil" },
     { name = "pytest" },
     { name = "ruff" },
     { name = "uv" },
@@ -804,9 +805,10 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "kimodo", git = "https://github.com/animatica-ai/kimodo.git?rev=390fadb57a188fb97b8c3af5d5fb693a72ff03c3" },
+    { name = "kimodo", git = "https://github.com/Vega-KH/kimodo.git?rev=3362b92c37faa100fb697972f0fc5485dd94dd4f" },
     { name = "motionmcp-sdk", git = "https://github.com/animatica-ai/motionmcp.git?rev=a298338bb3684a506ec313dce6d5cb12a6dc5167" },
     { name = "numpy", specifier = ">=1.24" },
+    { name = "psutil", marker = "extra == 'dev'", specifier = ">=5.9" },
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=8.0" },
     { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.4" },
     { name = "torch", specifier = "==2.12.1", index = "https://download.pytorch.org/whl/cu130" },

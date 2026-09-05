@@ -47,7 +47,11 @@ cd motionmcp-kimodo
 pip install -e .
 ```
 
-Kimodo is pulled from [animatica-ai/kimodo](https://github.com/animatica-ai/kimodo) (not PyPI). If install fails while **building MotionCorrection** (CMake / compiler errors), see **[MotionCorrection](MOTION_CORRECTION.md)** first, then [Troubleshooting](#troubleshooting).
+Kimodo is pulled from the pinned
+[Vega-KH/kimodo](https://github.com/Vega-KH/kimodo) Windows/low-VRAM baseline
+(not PyPI). If install fails while **building MotionCorrection** (CMake /
+compiler errors), see **[MotionCorrection](MOTION_CORRECTION.md)** first, then
+[Troubleshooting](#troubleshooting).
 
 ## 2. Start the server
 

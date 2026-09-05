@@ -28,7 +28,7 @@ Checkboxes mean:
 
 ## Goal 0 — Bootstrap the backend and Windows CUDA environment
 
-Status: **Complete**  
+Status: **Complete**
 Completed: 2026-09-04
 
 Outcome: a history-preserving, independently versioned backend fork and a
@@ -69,8 +69,8 @@ Completion test and evidence:
 
 ## Goal 1 — Run MMCP with the full CPU-offloaded text encoder
 
-Status: **Blocked**  
-Target session: one focused setup and smoke-test session after model approval
+Status: **Complete**
+Completed: 2026-09-05
 
 Outcome sought: a text prompt travels through the live MMCP service and returns
 a structurally valid motion while the text encoder remains on CPU and the
@@ -81,17 +81,19 @@ motion model remains within the 8 GB GPU budget.
 - [x] Identify the two McGill LLM2Vec adapter repositories.
 - [x] Confirm from adapter metadata that the required base is exactly
   `meta-llama/Meta-Llama-3-8B-Instruct`.
-- [!] Obtain gated access to `meta-llama/Meta-Llama-3-8B-Instruct` for the
+- [x] Obtain gated access to `meta-llama/Meta-Llama-3-8B-Instruct` for the
   `VegaKH` account.
-- [ ] Confirm access with an authenticated `hf download --dry-run`.
-- [ ] Record the expected download size and available disk space.
-- [ ] Load with `TEXT_ENCODER_MODE=local` and `TEXT_ENCODER_DEVICE=cpu`.
-- [ ] Run one short, fixed-seed text-conditioned generation.
-- [ ] Start `kimodo-godot-server` on loopback with the full encoder.
-- [ ] Submit the same prompt through MMCP and validate the returned animation.
-- [ ] Record cold/warm load time, generation latency, peak VRAM, peak system
+- [x] Confirm access with an authenticated Hugging Face metadata request.
+- [x] Record the expected download size and available disk space.
+- [x] Restore and test explicit CPU device placement in the maintained
+  `Vega-KH/kimodo` fork after the inherited quantization patch regressed it.
+- [x] Load with `TEXT_ENCODER_MODE=local` and `TEXT_ENCODER_DEVICE=cpu`.
+- [x] Run one short, fixed-seed text-conditioned generation.
+- [x] Start `kimodo-godot-server` on loopback with the full encoder.
+- [x] Submit the same prompt through MMCP and validate the returned animation.
+- [x] Record cold/warm load time, generation latency, peak VRAM, peak system
   RAM, model identifiers, and warnings.
-- [ ] Update ADR 0002 with the result; keep it Proposed if its remaining
+- [x] Update ADR 0002 with the result; keep it Proposed because its remaining
   constraint-generation gate is still open.
 
 Completion test:
@@ -105,6 +107,32 @@ Completion test:
 
 Stop condition: mark Goal 1 Complete, commit the measurements, report the
 result, and end the turn without starting Goal 2.
+
+Completion test and evidence:
+
+- Full-encoder environment: `TEXT_ENCODER_MODE=local`,
+  `TEXT_ENCODER_DEVICE=cpu`, and no quantization.
+- Exact model revisions: Meta Llama 3 `8afb486c1db24fe5011ec46dfbe5b5dccdb575c2`,
+  McGill MNTP adapter `31474e395ada192e8ed1586db6be79fb3b70c9c0`, and
+  McGill supervised adapter `baa8ebf04a1c2500e61288e7dad65e8ae42601a7`.
+- Hugging Face repository metadata totals 32.13 GB across all formats. The
+  files selected by Transformers occupy 14.958 GiB for the base, 0.165 GiB
+  for the MNTP adapter, and 0.156 GiB for the supervised adapter locally.
+- Download-inclusive cold setup: 3,218.4 seconds. Cached setup: 24.1 seconds.
+- Five-step, 30-frame generation: 6.10 seconds direct and 7.09 seconds over
+  live loopback HTTP, using seed 1234.
+- `/capabilities`: HTTP 200. `/generate`: HTTP 200 with
+  `model/gltf+json`.
+- Both responses decoded as one 30-joint, 30-frame animation at 30 fps;
+  all 3,720 accessor floats were finite. The direct and HTTP glTF documents
+  matched exactly by SHA-256.
+- Peak process RSS: 16.01 GiB. Peak system memory used across the cold and
+  cached runs: 28.52 GiB of 31.52 GiB.
+- Peak CUDA memory: 1.12 GiB allocated and 1.29 GiB reserved on the 8 GB
+  RTX 4070 Laptop GPU.
+- Kimodo dependency patch: `Vega-KH/kimodo` commit
+  `3362b92c37faa100fb697972f0fc5485dd94dd4f`; focused tests: 2 passed.
+- Backend tests: 11 passed, 7 hardware-specific tests skipped. Ruff passed.
 
 ## Goal 2 — Freeze the current upstream MMCP contract
 
@@ -161,15 +189,17 @@ result, and end the turn before planning Godot editor work.
 
 ### Gated Meta Llama 3 access
 
-Hugging Face returns `Access denied. This repository requires approval` for
-`VegaKH`. The required repository does exist:
+Resolved 2026-09-05: gated access was granted and verified for `VegaKH`. The
+required repository is:
 
 `https://huggingface.co/meta-llama/Meta-Llama-3-8B-Instruct`
 
-Open that exact URL while signed in as `VegaKH`, request/accept access, and
-wait for approval if Hugging Face does not grant it immediately. Do not choose
-Llama 3.1 or 3.2 as a substitute: the pinned McGill adapter configuration and
-weights name the original Llama 3 checkpoint.
+Do not choose Llama 3.1 or 3.2 as a substitute: the pinned McGill adapter
+configuration and weights name the original Llama 3 checkpoint.
+
+No active external blocker is known. The full text-encoder load is proven, but
+its 28.52 GiB peak system usage leaves limited headroom on this 31.52 GiB
+machine; close other memory-heavy applications before cold startup.
 
 ## Known issues and risks
 
@@ -184,6 +214,13 @@ weights name the original Llama 3 checkpoint.
   Use `.venv` and `scripts/check-system.ps1`.
 - The Animatica Kimodo fork contains useful Windows/low-memory patches but is
   behind NVIDIA on benchmark fixes. ADR 0002 remains Proposed.
+- Animatica commit `390fadb` accidentally removed explicit text-encoder
+  placement while adding quantization. The backend now pins the tested
+  `Vega-KH/kimodo` repair at `3362b92`; upstream reconciliation remains due.
+- Transformers/PEFT emit adapter load reports containing missing/unexpected
+  key summaries plus a multiple-adapter warning. Text-conditioned generation
+  succeeds deterministically, but adapter-version compatibility should be
+  investigated before quality benchmarking.
 
 ## Design decisions and questions to track
 
@@ -212,3 +249,11 @@ MMCP capability endpoint.
 
 Created this living goal document and linked it from `AGENTS.md`. Goal 1 is
 blocked only on access to the exact gated Meta Llama 3 base model.
+
+### 2026-09-05 — Full CPU text encoder and live MMCP generation
+
+Completed Goal 1. Repaired the inherited text-encoder device regression in a
+maintained Kimodo fork, applied MMCP request-level seeds, loaded the full
+Llama 3/LLM2Vec stack on CPU, and generated matching finite glTF animation
+both directly and through the live loopback service while staying below the
+8 GB GPU budget.

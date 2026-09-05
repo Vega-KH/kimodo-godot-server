@@ -97,3 +97,37 @@ def test_capabilities_before_setup_raises():
     with pytest.raises(ProtocolError) as ei:
         b.capabilities()
     assert ei.value.code == "model_unavailable"
+
+
+def test_request_seed_is_applied(monkeypatch):
+    import asyncio
+
+    import numpy as np
+    from motionmcp import GenerateRequest, Options
+
+    from motionmcp_kimodo import backbone as backbone_module
+
+    class FakeModel:
+        skeleton = type(
+            "Skeleton",
+            (),
+            {"bone_order_names": ["Hips"], "root_idx": 0, "hip_joint_idx": None},
+        )()
+
+        def __call__(self, **_kwargs):
+            return {
+                "local_rot_mats": np.eye(3, dtype=np.float32)[None, None, None],
+                "root_positions": np.zeros((1, 1, 3), dtype=np.float32),
+            }
+
+    seeded = []
+    monkeypatch.setattr(backbone_module, "seed_everything", seeded.append)
+    monkeypatch.setattr(backbone_module, "translate_request", lambda *_args: {})
+
+    instance = backbone_module.KimodoBackbone(model_id="test", device="cpu")
+    instance.model = FakeModel()
+    request = GenerateRequest.model_construct(options=Options(seed=1234), constraints=[])
+
+    asyncio.run(instance.generate(request))
+
+    assert seeded == [1234]

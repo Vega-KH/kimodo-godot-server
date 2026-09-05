@@ -21,14 +21,15 @@ classifiers = [
 
 dependencies = [
     "motionmcp-sdk @ git+https://github.com/animatica-ai/motionmcp.git@a298338bb3684a506ec313dce6d5cb12a6dc5167",
-    # Temporary Windows/low-VRAM baseline; see ADR 0002.
-    "kimodo @ git+https://github.com/animatica-ai/kimodo.git@390fadb57a188fb97b8c3af5d5fb693a72ff03c3",
+    # Windows/low-VRAM baseline with explicit CPU text-encoder placement; see ADR 0002.
+    "kimodo @ git+https://github.com/Vega-KH/kimodo.git@3362b92c37faa100fb697972f0fc5485dd94dd4f",
     "numpy >= 1.24",
     "torch == 2.12.1",
 ]
 
 [project.optional-dependencies]
 dev = [
+    "psutil >= 5.9",
     "pytest >= 8.0",
     "ruff >= 0.4",
     "uv == 0.12.9",

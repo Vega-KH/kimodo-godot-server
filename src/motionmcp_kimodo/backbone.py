@@ -13,6 +13,7 @@ from typing import Any
 import numpy as np
 import torch
 from kimodo import DEFAULT_MODEL, load_model
+from kimodo.tools import seed_everything
 from motionmcp import (
     Backbone,
     GenerateRequest,
@@ -125,6 +126,9 @@ class KimodoBackbone(Backbone):
         return self._spec
 
     async def generate(self, req: GenerateRequest) -> MotionResult:
+        if req.options is not None and req.options.seed is not None:
+            seed_everything(req.options.seed)
+
         # Canonicalize the request so the earliest root pin sits at xz=(0,0)
         # facing +Z — Kimodo was trained on motions starting at world origin,
         # so non-canonical inputs degrade generation. The inverse transform

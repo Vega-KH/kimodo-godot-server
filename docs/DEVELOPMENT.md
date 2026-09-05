@@ -6,7 +6,9 @@ How **motionmcp-kimodo** is structured and how to embed it in your own stack.
 
 ## What this package is
 
-A thin glue layer around [Kimodo](https://github.com/animatica-ai/kimodo) and the [`motionmcp` Backbone SDK](https://animatica.ai/mmcp/docs/sdk/backbone):
+A thin glue layer around the pinned
+[Vega-KH Kimodo baseline](https://github.com/Vega-KH/kimodo) and the
+[`motionmcp` Backbone SDK](https://animatica.ai/mmcp/docs/sdk/backbone):
 
 | Module | Role |
 |---|---|
