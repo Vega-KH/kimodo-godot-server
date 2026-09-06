@@ -1,6 +1,6 @@
 # Development goals and session log
 
-Last updated: 2026-09-05
+Last updated: 2026-09-06
 
 This is the authoritative living record for near-term development. It keeps
 completed work visible while limiting planning to the active goal and the next
@@ -136,18 +136,19 @@ Completion test and evidence:
 
 ## Goal 2 — Freeze the current upstream MMCP contract
 
-Status: **Planned**
+Status: **Complete**
+Completed: 2026-09-06
 
 Outcome sought: recorded, sanitized fixtures and automated parsers describe
 the inherited server before its SOMA output behavior changes.
 
 - [x] Create `tests/contract/fixtures/` and fixture-recording guidance.
-- [ ] Define fixture metadata containing dependency commits and schema version.
-- [ ] Record `/capabilities` for the pinned SOMA-RP model.
-- [ ] Record one valid fixed-seed generation response.
-- [ ] Record representative validation/error responses.
-- [ ] Add tests that load and validate every fixture without model weights.
-- [ ] Document fields that are deliberately preserved versus scheduled to
+- [x] Define fixture metadata containing dependency commits and schema version.
+- [x] Record `/capabilities` for the pinned SOMA-RP model.
+- [x] Record one valid fixed-seed generation response.
+- [x] Record representative validation/error responses.
+- [x] Add tests that load and validate every fixture without model weights.
+- [x] Document fields that are deliberately preserved versus scheduled to
   change.
 
 Completion test:
@@ -158,6 +159,23 @@ Completion test:
 
 Stop condition: mark Goal 2 Complete, commit the fixtures/tests, report the
 result, and end the turn without starting Goal 3.
+
+Completion test and evidence:
+
+- Recorded a live loopback MMCP 1.0 fixture set at
+  `tests/contract/fixtures/pre_soma77_mmcp_1_0/`.
+- Metadata pins backend `d3c2d43`, MMCP SDK `a298338`, Kimodo `3362b92`, and
+  Kimodo-SOMA-RP-v1.1 model revision `6c9233a`; every payload has a SHA-256.
+- Captured HTTP 200 capability and generation responses, including the exact
+  seed-1234 request and self-contained glTF animation.
+- Captured actual schema-validation (HTTP 422), unsupported-version (HTTP
+  400), and unknown-model (HTTP 400) envelopes.
+- Offline validation proves the historical response contains 30 nodes, 30
+  rotation channels, one root-translation channel, four contact channels,
+  30 frames at 30 fps, and 3,720 finite accessor floats.
+- Five contract tests pass with `HF_HUB_OFFLINE=1` and
+  `TRANSFORMERS_OFFLINE=1`. Fixtures contain no credentials or personal
+  absolute paths and are each under 250 KB, excluding model weights.
 
 ## Goal 3 — Expose SOMA-77 at the service boundary
 
@@ -235,6 +253,27 @@ machine; close other memory-heavy applications before cold startup.
   NVIDIA upstream after the baseline is complete.
 - Decide whether recorded binary glTF fixtures live directly in Git or use a
   separate fixture-release mechanism after their sizes are known.
+- Explore a quantized or smaller compatible text encoder after the MMCP
+  boundary work. Measure semantic quality as well as download size, RAM,
+  startup latency, and GPU impact; this is independent of exposing SOMA-77.
+
+### Future text-encoder investigation
+
+- Runtime BitsAndBytes 4-bit/8-bit quantization should reduce resident model
+  memory, but it still starts from the full-precision Hugging Face checkpoint
+  and therefore is not expected to reduce the initial ~15.3 GiB selected-file
+  download. Verify this rather than assuming otherwise.
+- A pre-quantized checkpoint could reduce both transfer and storage, but must
+  preserve the exact LLM2Vec base/adapters and licensing provenance.
+- GPU 4-bit inference may fit beside the ~1.3 GiB Kimodo workload on an 8 GB
+  GPU, but leaves narrow headroom. CPU quantization, an encoder-only service,
+  and persistent embedding caches are separate candidates.
+- Replacing Llama 3 with a smaller encoder is not plug-compatible merely
+  because it can emit 4,096 values; semantic alignment with Kimodo training
+  matters. Evaluate motion quality using a fixed prompt suite before adopting
+  any replacement.
+- Benchmark encoder-only latency separately from diffusion generation, plus
+  cold/cached download, startup, system RAM, VRAM, and prompt quality.
 
 ## Session log
 
@@ -257,3 +296,11 @@ maintained Kimodo fork, applied MMCP request-level seeds, loaded the full
 Llama 3/LLM2Vec stack on CPU, and generated matching finite glTF animation
 both directly and through the live loopback service while staying below the
 8 GB GPU budget.
+
+### 2026-09-06 — Freeze the pre-SOMA-77 MMCP contract
+
+Completed Goal 2. Recorded and hashed the live MMCP 1.0 capability, seeded
+generation, glTF, and representative error envelopes. Added offline parsers
+that validate structure, finite animation data, provenance, size, and
+sanitization. Documented which 30-joint fields are historical and deliberately
+scheduled to change in Goal 3.
