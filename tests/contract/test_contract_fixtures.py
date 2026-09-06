@@ -1,4 +1,4 @@
-"""Offline validation for the recorded pre-SOMA-77 MMCP contract."""
+"""Offline validation for the historical and current MMCP contracts."""
 
 from __future__ import annotations
 
@@ -13,10 +13,15 @@ import numpy as np
 from motionmcp import GenerateRequest, ModelSpec
 
 FIXTURE_DIR = Path(__file__).parent / "fixtures" / "pre_soma77_mmcp_1_0"
+SOMA77_FIXTURE_DIR = Path(__file__).parent / "fixtures" / "soma77_mmcp_1_0"
 
 
 def _load(name: str) -> Any:
     return json.loads((FIXTURE_DIR / name).read_text(encoding="utf-8"))
+
+
+def _load_soma77(name: str) -> Any:
+    return json.loads((SOMA77_FIXTURE_DIR / name).read_text(encoding="utf-8"))
 
 
 def _decode_accessor(document: dict[str, Any], index: int) -> np.ndarray:
@@ -133,8 +138,56 @@ def test_fixtures_contain_no_credentials_or_personal_absolute_paths():
         re.compile(r"hf_[A-Za-z0-9]{20,}"),
         re.compile(r"(?:token|authorization|password)[\"']?\s*[:=]", re.IGNORECASE),
     )
-    for fixture in FIXTURE_DIR.iterdir():
-        if fixture.is_file():
-            assert fixture.stat().st_size < 250_000, fixture.name
-            text = fixture.read_text(encoding="utf-8")
-            assert not any(pattern.search(text) for pattern in forbidden), fixture.name
+    for fixture_dir in (FIXTURE_DIR, SOMA77_FIXTURE_DIR):
+        for fixture in fixture_dir.iterdir():
+            if fixture.is_file():
+                assert fixture.stat().st_size < 250_000, fixture.name
+                text = fixture.read_text(encoding="utf-8")
+                assert not any(pattern.search(text) for pattern in forbidden), fixture.name
+
+
+def test_soma77_metadata_identifies_implementation_and_file_hashes():
+    metadata = _load_soma77("metadata.json")
+    assert metadata["fixture_schema_version"] == 1
+    assert metadata["recording_method"] == "live_loopback"
+    assert metadata["contract_boundary"] == "soma77_mmcp_1_0"
+    assert metadata["source_commits"]["backend"] == (
+        "06a5f8cd412be25e3af2678a1a44eb1ca923eac9"
+    )
+    for descriptor in metadata["files"].values():
+        fixture = SOMA77_FIXTURE_DIR / descriptor["path"]
+        assert hashlib.sha256(fixture.read_bytes()).hexdigest() == descriptor["sha256"]
+
+
+def test_soma77_capabilities_and_generation_match_current_boundary():
+    capabilities = _load_soma77("capabilities.json")
+    model = ModelSpec.model_validate(capabilities["models"][0])
+    joint_names = [joint.name for joint in model.canonical_skeleton.joints]
+    assert len(joint_names) == 77
+    assert len(joint_names) == len(set(joint_names))
+    assert joint_names[0] == "Hips"
+    assert joint_names[-1] == "RightToeEnd"
+    assert model.predicted_contact_joints == [
+        "LeftFoot", "LeftToeBase", "LeftToeEnd",
+        "RightFoot", "RightToeBase", "RightToeEnd",
+    ]
+
+    request = GenerateRequest.model_validate(_load_soma77("generate_request.json"))
+    assert [joint.name for joint in request.skeleton.joints] == joint_names
+    assert request.options is not None and request.options.seed == 1234
+
+    document = _load_soma77("generate_response.gltf")
+    assert len(document["nodes"]) == 77
+    assert [node["name"] for node in document["nodes"]] == joint_names
+    assert len(document["skins"][0]["joints"]) == 77
+    channels = document["animations"][0]["channels"]
+    assert len(channels) == 78
+    assert sum(channel["target"]["path"] == "rotation" for channel in channels) == 77
+    assert sum(channel["target"]["path"] == "translation" for channel in channels) == 1
+
+    sample = document["extensions"]["MMCP_motion"]["samples"][0]
+    assert sample["num_frames"] == 30
+    assert list(sample["foot_contacts"]) == model.predicted_contact_joints
+    decoded = [_decode_accessor(document, index) for index in range(len(document["accessors"]))]
+    assert sum(values.size for values in decoded) == 9360
+    assert all(np.isfinite(values).all() for values in decoded)

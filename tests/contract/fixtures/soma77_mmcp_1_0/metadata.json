@@ -1,0 +1,58 @@
+{
+  "fixture_schema_version": 1,
+  "recorded_on": "2026-09-06",
+  "recording_method": "live_loopback",
+  "contract_boundary": "soma77_mmcp_1_0",
+  "source_commits": {
+    "backend": "06a5f8cd412be25e3af2678a1a44eb1ca923eac9",
+    "motionmcp_sdk": "a298338bb3684a506ec313dce6d5cb12a6dc5167",
+    "kimodo": "3362b92c37faa100fb697972f0fc5485dd94dd4f"
+  },
+  "model": {
+    "repository": "nvidia/Kimodo-SOMA-RP-v1.1",
+    "revision": "6c9233af1180b8151e3c4703477104af5dce9dd5"
+  },
+  "protocol": {
+    "version": "1.0",
+    "response_format": "gltf_2.0_json"
+  },
+  "http": {
+    "capabilities": {
+      "status": 200,
+      "content_type": "application/json"
+    },
+    "generate": {
+      "status": 200,
+      "content_type": "model/gltf+json"
+    }
+  },
+  "runtime": {
+    "model_device": "cuda:0",
+    "text_encoder_mode": "local",
+    "text_encoder_device": "cpu",
+    "quantization": null
+  },
+  "generation": {
+    "seed": 1234,
+    "frames": 30,
+    "diffusion_steps": 5
+  },
+  "files": {
+    "capabilities": {
+      "path": "capabilities.json",
+      "sha256": "b4f3b573fb9d926c65a76da08f0adaaf3f4c016f79ecbbe2507c040b50c6b219"
+    },
+    "generate_request": {
+      "path": "generate_request.json",
+      "sha256": "6444dd59bb6f949f067e636ececaabce2e8827b6d0294648e5135375e25cae0d"
+    },
+    "generate_response": {
+      "path": "generate_response.gltf",
+      "sha256": "54a7a63a326149d4573005be29df49142345bec43240f4cc2451db6bd70461b0"
+    },
+    "errors": {
+      "path": "errors.json",
+      "sha256": "2c0fd75ee449055059d306ede0119533621f6fff3ccbdda743e6abf8b97ba899"
+    }
+  }
+}

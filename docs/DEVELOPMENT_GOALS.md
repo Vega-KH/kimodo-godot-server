@@ -179,19 +179,20 @@ Completion test and evidence:
 
 ## Goal 3 — Expose SOMA-77 at the service boundary
 
-Status: **Planned**
+Status: **Complete**
+Completed: 2026-09-06
 
 Outcome sought: the service advertises and returns the authoritative SOMA-77
 presentation skeleton while preserving SOMA-30 as the internal generation and
 constraint representation.
 
-- [ ] Add golden assertions for the current 30-to-77 skeleton relationship.
-- [ ] Separate input/constraint skeleton handling from output skeleton handling.
-- [ ] Remove the inherited SOMA-77-to-SOMA-30 response slice.
-- [ ] Advertise the correct output skeleton and contact channels.
-- [ ] Validate joint order, hierarchy, rotations, root translation, and array
+- [x] Add golden assertions for the current 30-to-77 skeleton relationship.
+- [x] Separate input/constraint skeleton handling from output skeleton handling.
+- [x] Remove the inherited SOMA-77-to-SOMA-30 response slice.
+- [x] Advertise the correct output skeleton and contact channels.
+- [x] Validate joint order, hierarchy, rotations, root translation, and array
   dimensions before encoding.
-- [ ] Update contract fixtures and document the intentional protocol change.
+- [x] Update contract fixtures and document the intentional protocol change.
 
 Completion test:
 
@@ -200,8 +201,68 @@ Completion test:
 - The same request remains accepted using the internally supported SOMA-30
   constraint representation.
 
-Stop condition: mark Goal 3 Complete, commit the boundary change, report the
-result, and end the turn before planning Godot editor work.
+Stop condition: mark Goal 3 Complete, commit the boundary change, add only the
+Goal 4 plan for review, report the result, and end the turn before Godot work.
+
+Completion test and evidence:
+
+- Golden tests pin all 30 internal and 77 presentation joint names, their
+  subset mapping, canonical order, and parent-before-child hierarchy.
+- A SOMA-77 MMCP request containing a root-path constraint compiles to a real
+  Kimodo constraint whose skeleton is the internal SOMA-30 object.
+- Runtime guards reject invalid skeleton relationships, output joint counts,
+  dimensions, non-finite rotation/root values, and mismatched contact counts
+  before glTF encoding.
+- The inherited response slice is removed. `MotionResult.joint_names` now
+  explicitly identifies all 77 ordered output rotations.
+- The expanded contacts are correctly labeled as left foot/toe/toe-end,
+  followed by right foot/toe/toe-end. This also fixes a previously hidden
+  channel-to-name misalignment.
+- A full CPU-offloaded text-encoder run on CUDA returned HTTP 200 and recorded
+  a 30-frame, seed-1234 live fixture at
+  `tests/contract/fixtures/soma77_mmcp_1_0/`.
+- The live glTF has 77 named nodes in canonical order, 77 rotation channels,
+  one root-translation channel, six contacts, and 9,360 finite accessor
+  floats. The 111.3 KiB response contains no weights or private paths.
+- ADR 0003 records the boundary decision and its 30-joint constraint-name
+  limitation. Implementation checkpoint: `06a5f8c`.
+
+## Goal 4 — Bootstrap the Godot SOMA-77 playback fixture
+
+Status: **Planned — awaiting user review**
+
+Outcome sought: an independently versioned Godot 4.7 extension repository can
+load the recorded SOMA-77 MMCP animation and prove the source skeleton and
+animation survive Godot import before networking or retargeting is added.
+
+- [ ] Create the `godot-kimodo` repository locally and on GitHub under
+  `Vega-KH`, with license, attribution, Godot ignore rules, and initial docs.
+- [ ] Record the reference engine as Godot 4.7.2 using
+  `C:\Godot-472\Godot_v4.7.2-stable_win64_console.exe` for automated checks.
+- [ ] Scaffold a minimal Godot project and `addons/kimodo_motion` editor plugin
+  that enables without parse errors.
+- [ ] Copy the Goal 3 SOMA-77 glTF fixture into the Godot test assets with its
+  source commit, license/provenance note, and SHA-256.
+- [ ] Implement a small GDScript fixture loader using `GLTFDocument` and an
+  in-memory byte buffer rather than backend-specific parsing shortcuts.
+- [ ] Add a headless test that verifies the 77 bone names/order and hierarchy,
+  one 30 fps animation, 77 rotation tracks, one root-translation track, and
+  finite sampled transforms.
+- [ ] Add a minimal editor-openable fixture scene for visual inspection of the
+  imported skeleton animation; no humanoid retargeting or live server call yet.
+- [ ] Document the exact headless command and short manual playback check.
+
+Completion test:
+
+1. The addon enables and the project imports with no Godot errors.
+2. The automated fixture test exits zero under the Godot 4.7.2 console build
+   and proves the SOMA-77 hierarchy/animation invariants.
+3. Opening the fixture scene permits scrubbing or playing the one-second
+   recorded animation without altering source assets.
+
+Stop condition: mark Goal 4 Complete, commit and push the new repository,
+report and celebrate, then end the turn before adding backend networking or
+retargeting.
 
 ## Current blockers
 
@@ -221,8 +282,10 @@ machine; close other memory-heavy applications before cold startup.
 
 ## Known issues and risks
 
-- The inherited MMCP capability response advertises 30 canonical joints and
-  slices the model's 77-joint result down to 30. Goal 3 changes this.
+- Resolved in Goal 3: the inherited adapter advertised 30 canonical joints and
+  sliced 77-joint output to 30. Current capabilities and responses preserve
+  authoritative SOMA-77 output; the old behavior remains in historical
+  fixtures only.
 - Hugging Face reports degraded caching because Windows symlinks are disabled;
   downloads still work but may consume more disk space. Do not enable Windows
   Developer Mode solely for this project without a separate decision.
@@ -256,6 +319,12 @@ machine; close other memory-heavy applications before cold startup.
 - Explore a quantized or smaller compatible text encoder after the MMCP
   boundary work. Measure semantic quality as well as download size, RAM,
   startup latency, and GPU impact; this is independent of exposing SOMA-77.
+- If no suitable checkpoint exists, investigate producing an exact
+  base-plus-LLM2Vec-adapter quantized checkpoint on rented GPU hardware. Before
+  publishing it on Hugging Face, review the Meta Llama 3 Community License,
+  acceptable-use terms, adapter licenses, attribution, and weight-
+  redistribution requirements; the existence of other community conversions
+  is not by itself permission.
 
 ### Future text-encoder investigation
 
@@ -304,3 +373,11 @@ generation, glTF, and representative error envelopes. Added offline parsers
 that validate structure, finite animation data, provenance, size, and
 sanitization. Documented which 30-joint fields are historical and deliberately
 scheduled to change in Goal 3.
+
+### 2026-09-06 — Expose the complete SOMA-77 service boundary
+
+Completed Goal 3. Removed the inherited 77-to-30 output slice, advertised the
+authoritative 77-joint skeleton, corrected the expanded six-contact mapping,
+and retained native SOMA-30 constraint translation. Added golden/runtime
+validation, ADR 0003, and a separate fixed-seed live contract fixture. Planned
+Goal 4 for user review without beginning its Godot work.
