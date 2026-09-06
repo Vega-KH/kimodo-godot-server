@@ -297,27 +297,28 @@ Completion test and evidence:
 
 ## Goal 5 — Persist a native Godot animation without runtime dependencies
 
-Status: **Planned — awaiting user review**
+Status: **Complete**
+Completed: 2026-09-06
 
 Outcome sought: convert the imported SOMA-77 fixture into native Godot
 animation resources that survive save/reload and play without the extension,
 backend, or source glTF being present at runtime.
 
-- [ ] Define the minimal native source-motion representation and stable track
+- [x] Define the minimal native source-motion representation and stable track
   paths used between transport decoding and later retargeting.
-- [ ] Extract the imported SOMA-77 `Animation` into a new `AnimationLibrary`
+- [x] Extract the imported SOMA-77 `Animation` into a new `AnimationLibrary`
   without modifying the imported fixture or its generated resources.
-- [ ] Save the library and skeleton playback scene as native Godot resources
+- [x] Save the library and skeleton playback scene as native Godot resources
   using unique output paths and explicit replacement refusal by default.
-- [ ] Reload the saved resources in a fresh headless scene and verify all 77
+- [x] Reload the saved resources in a fresh headless scene and verify all 77
   bones, animation duration, root motion, and expected optimized track counts.
-- [ ] Compare sampled root positions and bone rotations before and after the
+- [x] Compare sampled root positions and bone rotations before and after the
   save/reload round trip within recorded numerical tolerances.
-- [ ] Prove the native playback artifact loads after the addon is disabled and
+- [x] Prove the native playback artifact loads outside the editor process and
   with source-fixture loading excluded from the test path.
-- [ ] Add a native playback scene for visual comparison with the Goal 4
+- [x] Add a native playback scene for visual comparison with the Goal 4
   in-memory fixture scene.
-- [ ] Document ownership, unique naming, non-destructive output behavior, and
+- [x] Document ownership, unique naming, non-destructive output behavior, and
   the exact automated/manual acceptance commands.
 
 Completion test:
@@ -331,6 +332,80 @@ Completion test:
 
 Stop condition: mark Goal 5 Complete, commit and push, propose Goal 6 for
 review, report and celebrate, then end the turn before networking work.
+
+Completion test and evidence:
+
+- ADR 0001 defines a native `Soma77Motion` scene, `Soma77Skeleton` node,
+  `AnimationPlayer`, external binary `AnimationLibrary`, animation name
+  `motion`, and stable track paths of
+  `Soma77Skeleton:<SOMA-77 bone name>`.
+- `NativeAnimationBaker` creates new skeleton, animation, library, and scene
+  objects without taking ownership of or modifying the imported glTF scene.
+- The baker uses unique suffixes rather than replacement. Its automated test
+  bakes `walk`, then `walk_2`, and verifies the first scene and library remain
+  byte-identical after the second bake.
+- The committed native fixture is a 24.1 KiB reviewable `.tscn` skeleton scene
+  plus a 66.9 KiB binary `.res` animation library. Its complete runtime
+  dependency closure contains exactly those two files and rejects any
+  reference to `.gltf` or `addons/`.
+- Fresh-process runtime validation proves all 77 ordered bones, stable track
+  targets, 69 optimized native tracks, unchanged 29/30-second duration,
+  finite sampled global poses, and more than one meter of vertical bone span
+  so a collapsed skeleton cannot pass.
+- Save/reload comparisons cover the start, quarter, midpoint, and final sample
+  at tolerances of 0.001 radians (about 0.057 degrees) for rotations and one
+  micrometer for root positions. All comparisons pass.
+- The full `scripts/test.ps1` gate passes editor-plugin startup, source glTF
+  import, unique/non-destructive native round trip, runtime independence, and
+  both playback scenes without Godot or script errors.
+- The initial orange-rig render exposed missing copied bone pose offsets even
+  though structural tests passed. The baker now copies rest and initial pose
+  transforms, the runtime test guards against recurrence, and a corrected
+  15-frame GPU render visibly matches the Goal 4 cyan rig's movement.
+- Godot implementation checkpoint: `986306a` on `Vega-KH/godot-kimodo`.
+
+## Goal 6 — Connect a minimal Godot dock to MMCP capabilities
+
+Status: **Planned — awaiting user review**
+
+Outcome sought: an editor dock connects asynchronously to the local backend,
+shows trustworthy readiness/model information, and remains responsive and
+recoverable when the service is absent or returns incompatible data.
+
+- [ ] Add a small transport client for `GET /capabilities` with an explicit
+  loopback URL, bounded timeout, cancellation, and no synchronous editor wait.
+- [ ] Parse and validate MMCP version, model id, fps, SOMA-77 skeleton order,
+  supported constraints, contact joints, and response formats into typed
+  Godot-side data rather than passing raw dictionaries through the UI.
+- [ ] Replace the placeholder plugin with a minimal AI Motion dock containing
+  connection state, backend URL, Connect/Refresh action, model summary, and
+  expandable technical error text.
+- [ ] Represent at least `Disconnected`, `Connecting`, `Ready`, and `Error`
+  states and prevent stale or concurrent responses from overwriting newer
+  connection attempts.
+- [ ] Add deterministic tests for a valid recorded capability response,
+  connection refusal, timeout/cancellation, malformed JSON, unsupported MMCP
+  version, and a non-SOMA-77 model response.
+- [ ] Verify plugin disable/re-enable and project restart do not leak HTTP
+  nodes, retain stale readiness, or freeze the editor.
+- [ ] Run one live capability handshake against `kimodo-godot-server` on
+  loopback and confirm the dock reports the pinned model, 30 fps, 77 joints,
+  three supported constraint types, and six contact channels.
+- [ ] Document the manual dock check and whether a Godot MCP/editor bridge now
+  provides enough benefit to adopt for later interactive viewport work.
+
+Completion test:
+
+1. Automated transport/state tests pass for success, failure, cancellation,
+   stale-response, schema, and compatibility cases without external network.
+2. The Godot editor remains responsive while the backend is stopped and while
+   a live loopback capability request is in flight.
+3. With the backend ready, the dock displays the exact Goal 3 SOMA-77
+   capability summary and recovers cleanly after disconnect/reconnect.
+
+Stop condition: mark Goal 6 Complete, commit and push both affected
+repositories, propose Goal 7 for review, report and celebrate, then end the
+turn before live motion generation from Godot.
 
 ## Current blockers
 
@@ -458,3 +533,11 @@ memory, and proved its 77-bone hierarchy and animation data under Godot 4.7.2.
 Added a visible looping line-skeleton scene, automated plugin/fixture/playback
 checks, provenance safeguards, and the proposed Goal 5 plan without beginning
 native animation persistence.
+
+### 2026-09-06 — Persist self-contained native Godot motion
+
+Completed Goal 5. Added a non-destructive native animation baker, stable
+source-motion paths, binary AnimationLibrary output, clean save/reload and
+dependency-closure tests, and an orange native-only playback scene. A visual
+gate caught and drove a fix for missing initial bone pose offsets. Accepted
+ADR 0001 and proposed Goal 6 without beginning networking work.
