@@ -60,7 +60,8 @@ class KimodoBackbone(Backbone):
         self.text_encoder_mode = text_encoder_mode
         self.model: Any = None
         self._spec: ModelSpec | None = None
-        self._slice_indices: np.ndarray | None = None
+        self._input_joint_names: tuple[str, ...] = ()
+        self._output_joint_names: tuple[str, ...] = ()
 
     # ----- lifecycle -------------------------------------------------------
 
@@ -78,18 +79,27 @@ class KimodoBackbone(Backbone):
 
         input_skel = self.model.skeleton
         output_skel = getattr(self.model, "output_skeleton", input_skel)
+        self._input_joint_names = tuple(input_skel.bone_order_names)
+        self._output_joint_names = tuple(output_skel.bone_order_names)
+        _validate_skeleton_relationship(input_skel, output_skel)
 
-        # Foot contacts are reported in the OUTPUT frame. Resolve against
-        # the input joint list (what we serve as the canonical) so clients
-        # only see joints they sent.
+        # SOMA30 -> SOMA77 expansion adds one toe-end contact per side. Keep
+        # the six generated channels aligned with the six advertised joints.
+        expanded_soma77 = (
+            len(self._input_joint_names) == 30
+            and len(self._output_joint_names) == 77
+            and set(self._input_joint_names).issubset(self._output_joint_names)
+        )
         contact_joints = resolve_foot_contact_joints(
-            list(input_skel.bone_order_names)
+            list(self._output_joint_names), expanded_soma77=expanded_soma77,
         )
 
+        canonical_skeleton = Skeleton.model_validate(skeleton_to_mmcp(output_skel))
+        _validate_wire_skeleton(canonical_skeleton, self._output_joint_names)
         self._spec = ModelSpec(
             id=self.model_id,
             fps=float(self.model.fps),
-            canonical_skeleton=Skeleton.model_validate(skeleton_to_mmcp(input_skel)),
+            canonical_skeleton=canonical_skeleton,
             supports_retargeting=False,
             supported_constraints=["root_path", "effector_target", "pose_keyframe"],
             predicted_contact_joints=contact_joints,
@@ -98,20 +108,10 @@ class KimodoBackbone(Backbone):
             recommended_max_duration_seconds=12.0,
         )
 
-        # Cache the slice indices used to project SOMA77 → SOMA30 (or
-        # equivalent) on every request. None when input == output.
-        if input_skel is not output_skel:
-            output_names = list(output_skel.bone_order_names)
-            input_names = list(input_skel.bone_order_names)
-            self._slice_indices = np.array(
-                [output_names.index(n) for n in input_names], dtype=np.int64,
-            )
-        else:
-            self._slice_indices = None
-
         print(
             f"[kimodo-godot-server] ready. fps={self.model.fps} "
-            f"canonical_joints={len(input_skel.bone_order_names)}",
+            f"constraint_joints={len(self._input_joint_names)} "
+            f"output_joints={len(self._output_joint_names)}",
             flush=True,
         )
 
@@ -161,9 +161,12 @@ class KimodoBackbone(Backbone):
 
         local_rot_mats = _to_numpy(output["local_rot_mats"])    # (B, T, J_out, 3, 3)
         root_positions = _to_numpy(output["root_positions"])    # (B, T, 3)
+        contacts = (
+            _to_numpy(output["foot_contacts"])
+            if "foot_contacts" in output
+            else None
+        )
 
-        # Un-canonicalize before slicing — the un-normalize indexes joints
-        # in the OUTPUT-skeleton layout (root_idx is on the unsliced array).
         if origin_transform is not None:
             output_skel = getattr(self.model, "output_skeleton", skel)
             out_root_idx = int(getattr(output_skel, "root_idx", 0))
@@ -171,17 +174,19 @@ class KimodoBackbone(Backbone):
                 local_rot_mats, root_positions, out_root_idx, origin_transform,
             )
 
-        # Slice the wider output skeleton down to the input subset, so the
-        # wire response uses only joints the client sent.
-        if self._slice_indices is not None:
-            local_rot_mats = np.take(local_rot_mats, self._slice_indices, axis=2)
-
-        rotations_quat = matrices_to_quats(local_rot_mats)      # (B, T, J_in, 4)
+        contact_joints = self._spec.predicted_contact_joints if self._spec else []
+        _validate_output_arrays(
+            local_rot_mats,
+            root_positions,
+            joint_names=self._output_joint_names,
+            contacts=contacts,
+            contact_joint_names=contact_joints,
+        )
+        rotations_quat = matrices_to_quats(local_rot_mats)      # (B, T, J_out, 4)
 
         foot_contacts: dict[str, np.ndarray] = {}
-        contact_joints = self._spec.predicted_contact_joints if self._spec else []
-        if contact_joints and "foot_contacts" in output:
-            contacts = _to_numpy(output["foot_contacts"]).astype(bool)
+        if contact_joints and contacts is not None:
+            contacts = contacts.astype(bool)
             for ch, name in enumerate(contact_joints):
                 foot_contacts[name] = contacts[..., ch]
 
@@ -189,6 +194,7 @@ class KimodoBackbone(Backbone):
             rotations=rotations_quat.astype(np.float32),
             root_translations=root_positions.astype(np.float32),
             foot_contacts=foot_contacts,
+            joint_names=list(self._output_joint_names),
         )
 
 
@@ -196,6 +202,80 @@ def _to_numpy(x: Any) -> np.ndarray:
     if isinstance(x, torch.Tensor):
         return x.detach().cpu().numpy()
     return np.asarray(x)
+
+
+def _validate_skeleton_relationship(input_skel: Any, output_skel: Any) -> None:
+    """Fail setup if Kimodo's internal/output skeleton boundary is ambiguous."""
+    input_names = tuple(input_skel.bone_order_names)
+    output_names = tuple(output_skel.bone_order_names)
+    if len(set(input_names)) != len(input_names):
+        raise ValueError("Kimodo constraint skeleton contains duplicate joint names")
+    if len(set(output_names)) != len(output_names):
+        raise ValueError("Kimodo output skeleton contains duplicate joint names")
+    missing = [name for name in input_names if name not in set(output_names)]
+    if missing:
+        raise ValueError(
+            "Kimodo output skeleton omits internal constraint joints: "
+            + ", ".join(missing)
+        )
+
+
+def _validate_wire_skeleton(skeleton: Skeleton, expected_names: tuple[str, ...]) -> None:
+    """Validate canonical order, parent references, roots, and acyclicity."""
+    names = tuple(joint.name for joint in skeleton.joints)
+    if names != expected_names:
+        raise ValueError("MMCP canonical skeleton order differs from Kimodo output order")
+    parent_by_name = {joint.name: joint.parent for joint in skeleton.joints}
+    roots = [name for name, parent in parent_by_name.items() if parent is None]
+    if len(roots) != 1:
+        raise ValueError(f"MMCP canonical skeleton must have one root, found {len(roots)}")
+    for name, parent in parent_by_name.items():
+        if parent is not None and parent not in parent_by_name:
+            raise ValueError(f"joint {name!r} references unknown parent {parent!r}")
+        seen: set[str] = set()
+        cursor: str | None = name
+        while cursor is not None:
+            if cursor in seen:
+                raise ValueError(f"cycle detected in MMCP skeleton at {cursor!r}")
+            seen.add(cursor)
+            cursor = parent_by_name[cursor]
+
+
+def _validate_output_arrays(
+    rotations: np.ndarray,
+    root_translations: np.ndarray,
+    *,
+    joint_names: tuple[str, ...],
+    contacts: np.ndarray | None,
+    contact_joint_names: list[str],
+) -> None:
+    """Validate generated arrays before quaternion conversion/glTF encoding."""
+    if rotations.ndim != 5 or rotations.shape[-2:] != (3, 3):
+        raise ProtocolError(
+            "internal_error",
+            f"invalid local rotation shape {rotations.shape}; expected (B,T,J,3,3)",
+        )
+    if root_translations.ndim != 3 or root_translations.shape[-1] != 3:
+        raise ProtocolError(
+            "internal_error",
+            f"invalid root translation shape {root_translations.shape}; expected (B,T,3)",
+        )
+    if rotations.shape[:2] != root_translations.shape[:2]:
+        raise ProtocolError("internal_error", "rotation/root batch or frame counts differ")
+    if rotations.shape[2] != len(joint_names):
+        raise ProtocolError(
+            "internal_error",
+            f"model returned {rotations.shape[2]} joints; expected {len(joint_names)}",
+        )
+    if not np.isfinite(rotations).all() or not np.isfinite(root_translations).all():
+        raise ProtocolError("internal_error", "model returned non-finite animation data")
+    if contacts is not None:
+        expected = (*rotations.shape[:2], len(contact_joint_names))
+        if contacts.shape != expected:
+            raise ProtocolError(
+                "internal_error",
+                f"invalid foot-contact shape {contacts.shape}; expected {expected}",
+            )
 
 
 # ---- Origin canonicalization ---------------------------------------------

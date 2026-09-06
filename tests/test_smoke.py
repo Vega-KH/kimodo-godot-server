@@ -40,6 +40,16 @@ def test_resolve_foot_contact_joints_missing_returns_empty():
     assert resolve_foot_contact_joints(bones) == []
 
 
+def test_resolve_expanded_soma77_foot_contact_joints():
+    from motionmcp_kimodo.skeleton import resolve_foot_contact_joints
+
+    bones = [
+        "Hips", "LeftFoot", "LeftToeBase", "LeftToeEnd",
+        "RightFoot", "RightToeBase", "RightToeEnd",
+    ]
+    assert resolve_foot_contact_joints(bones, expanded_soma77=True) == bones[1:]
+
+
 def test_backbone_does_not_load_until_setup():
     """KimodoBackbone() must not try to load the model on construction —
     setup() is the lifecycle hook for that."""
@@ -126,6 +136,7 @@ def test_request_seed_is_applied(monkeypatch):
 
     instance = backbone_module.KimodoBackbone(model_id="test", device="cpu")
     instance.model = FakeModel()
+    instance._output_joint_names = ("Hips",)
     request = GenerateRequest.model_construct(options=Options(seed=1234), constraints=[])
 
     asyncio.run(instance.generate(request))

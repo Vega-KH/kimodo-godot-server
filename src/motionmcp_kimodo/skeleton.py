@@ -9,9 +9,8 @@ Two pieces:
 
 * :func:`skeleton_to_mmcp` — turn a Kimodo skeleton object into the
   MMCP ``Skeleton`` dict shape (joints[], coordinate_system, units).
-* :func:`resolve_foot_contact_joints` — pick the joint names this
-  skeleton uses for the four contact channels Kimodo emits
-  ``[L_heel, L_toe, R_heel, R_toe]``.
+* :func:`resolve_foot_contact_joints` — pick the joint names for Kimodo's
+  four-channel internal or six-channel expanded SOMA-77 contact output.
 """
 
 from __future__ import annotations
@@ -35,16 +34,34 @@ _FOOT_CONTACT_CANDIDATES: list[tuple[str, list[str]]] = [
     ("RightToe",  ["RightToe",  "RightToeBase",  "R_Toe",  "right_toe"]),
 ]
 
+_SOMA77_FOOT_CONTACT_CANDIDATES: list[tuple[str, list[str]]] = [
+    ("LeftHeel",    ["LeftHeel", "L_Heel", "LeftFoot", "left_heel"]),
+    ("LeftToe",     ["LeftToe", "LeftToeBase", "L_Toe", "left_toe"]),
+    ("LeftToeEnd",  ["LeftToeEnd", "L_ToeEnd", "left_toe_end"]),
+    ("RightHeel",   ["RightHeel", "R_Heel", "RightFoot", "right_heel"]),
+    ("RightToe",    ["RightToe", "RightToeBase", "R_Toe", "right_toe"]),
+    ("RightToeEnd", ["RightToeEnd", "R_ToeEnd", "right_toe_end"]),
+]
 
-def resolve_foot_contact_joints(bone_names: list[str]) -> list[str]:
-    """Pick the actual joint names this skeleton uses for the four contact channels.
 
-    Returns an empty list if any of the four channels has no match — clients
-    can then trust that this model won't emit per-joint contacts on this rig.
+def resolve_foot_contact_joints(
+    bone_names: list[str], *, expanded_soma77: bool = False,
+) -> list[str]:
+    """Pick joint names in the order of the model's contact channels.
+
+    The internal motion representation has four channels. Expanding a SOMA-30
+    result to SOMA-77 inserts the left and right toe-end channels, producing
+    ``[L_heel, L_toe, L_toe_end, R_heel, R_toe, R_toe_end]``. Returns an
+    empty list if every expected channel cannot be mapped unambiguously.
     """
     bone_set = set(bone_names)
     resolved: list[str] = []
-    for _, candidates in _FOOT_CONTACT_CANDIDATES:
+    candidates_by_channel = (
+        _SOMA77_FOOT_CONTACT_CANDIDATES
+        if expanded_soma77
+        else _FOOT_CONTACT_CANDIDATES
+    )
+    for _, candidates in candidates_by_channel:
         match = next((c for c in candidates if c in bone_set), None)
         if match is None:
             return []

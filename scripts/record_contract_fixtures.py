@@ -1,4 +1,4 @@
-"""Record the pre-SOMA-77 MMCP contract from a live loopback server."""
+"""Record the current SOMA-77 MMCP contract from a live loopback server."""
 
 from __future__ import annotations
 
@@ -16,7 +16,7 @@ import uvicorn
 
 from motionmcp_kimodo import KimodoBackbone
 
-FIXTURE_DIR = Path("tests/contract/fixtures/pre_soma77_mmcp_1_0")
+FIXTURE_DIR = Path("tests/contract/fixtures/soma77_mmcp_1_0")
 PORT = 8766
 SOURCE_COMMITS = {
     "motionmcp_sdk": "a298338bb3684a506ec313dce6d5cb12a6dc5167",
@@ -155,7 +155,7 @@ def main() -> None:
         "fixture_schema_version": 1,
         "recorded_on": "2026-09-06",
         "recording_method": "live_loopback",
-        "historical_boundary": "pre_soma77_mmcp_1_0",
+        "contract_boundary": "soma77_mmcp_1_0",
         "source_commits": {"backend": backend_commit, **SOURCE_COMMITS},
         "model": MODEL,
         "protocol": {

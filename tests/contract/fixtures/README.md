@@ -21,6 +21,10 @@ SOMA-77. Its `metadata.json` pins every source revision and hashes every
 payload. The generation response is self-contained glTF JSON with an embedded
 binary buffer; it contains animation data, not model weights.
 
+`soma77_mmcp_1_0/` is the corresponding live loopback recording after Goal 3.
+It proves the intentionally changed 77-joint canonical/output boundary and six
+expanded foot-contact channels. The pre-change set remains immutable.
+
 ## Compatibility intent
 
 Preserve these behaviors across the upcoming boundary change:
@@ -42,7 +46,7 @@ to change in Goal 3:
 Do not rewrite this fixture set when Goal 3 lands. Record a new fixture set so
 tests can distinguish deliberate protocol evolution from accidental drift.
 
-## Re-recording
+## Recording the current boundary
 
 From an authenticated environment with the pinned model already cached:
 
@@ -53,6 +57,6 @@ Remove-Item Env:KIMODO_QUANTIZE -ErrorAction SilentlyContinue
 python scripts/record_contract_fixtures.py
 ```
 
-Review the diff and run the contract tests offline before accepting a new
-recording. A changed source revision requires a new fixture directory rather
-than silently replacing this historical baseline.
+The recorder writes only the current `soma77_mmcp_1_0/` set. Review the diff
+and run the contract tests offline before accepting it. Never point the script
+at `pre_soma77_mmcp_1_0/`; that directory is historical evidence and immutable.

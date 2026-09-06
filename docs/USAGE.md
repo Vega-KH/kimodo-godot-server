@@ -56,4 +56,13 @@ kimodo-godot-server --quantize 4bit
 
 Clients pull the model’s canonical skeleton from `GET /capabilities` and send it verbatim in `POST /generate`. The wire format is documented in the [MMCP docs](https://animatica.ai/mmcp).
 
+For `kimodo-soma-rp`, the canonical wire skeleton is the 77-joint SOMA
+presentation rig and generated glTF contains rotations in that exact order.
+Kimodo still evaluates constraints on its internal SOMA-30 control rig.
+Therefore, constraint joint names are currently limited to the 30 names shared
+by both rigs; presentation-only finger segments, `HeadEnd`, and toe-end joints
+cannot yet be targeted directly. The capability response advertises six contact
+channels in generated order: left foot/toe/toe-end, then right
+foot/toe/toe-end.
+
 The officially supported client is **[Proscenium for Blender](https://github.com/animatica-ai/proscenium-blender)** — see [Installation](INSTALL.md) for setup.
