@@ -20,8 +20,9 @@ append-only progress record.
 - Never delete completed goals or tasks; add a correction or superseding note.
 - Run the goal's completion test before marking it complete.
 - When a goal passes, mark it complete, commit the record, report the result,
-  celebrate briefly, and end the turn. Do not begin the next goal until the
-  user explicitly asks.
+  and, unless a major blocker makes planning premature, lay out the next goal
+  for user review. Commit the checkpoint, celebrate briefly, and end the turn.
+  Do not begin the proposed goal until the user explicitly approves it.
 - If work exposes a blocker, record it and stop at a useful checkpoint rather
   than silently switching to another planned goal.
 
@@ -30,8 +31,8 @@ append-only progress record.
 - Preserve the standard MMCP capability and generation surface.
 - Keep the `motionmcp_kimodo` namespace until an explicit migration decision.
 - Return SOMA-77 at the service boundary; SOMA-30 is an internal model and
-  constraint representation. The upstream code does not meet this invariant
-  yet, so do not treat its current slicing behavior as the target design.
+  constraint representation. Goal 3 established this invariant and its golden
+  fixtures; do not restore the inherited 77-to-30 response slice.
 - Bind only to `127.0.0.1` by default. Remote access must be opt-in and must not
   weaken path, command, or token boundaries.
 - Never run model loading or inference in the Godot editor process.

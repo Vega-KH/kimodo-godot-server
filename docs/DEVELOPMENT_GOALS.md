@@ -17,8 +17,9 @@ one or two goals.
 - Completed goals and tasks are never deleted. Corrections are appended as
   notes so the project history remains understandable.
 - When a goal becomes complete, update this document, commit the checkpoint,
-  report and celebrate the result, and end the turn. Do not start the next
-  goal until the user explicitly requests it.
+  report and celebrate the result, and end the turn. When no major blocker
+  makes planning premature, also lay out the next goal for review. Do not
+  start that proposed goal until the user explicitly approves it.
 
 Checkboxes mean:
 
@@ -229,28 +230,32 @@ Completion test and evidence:
 
 ## Goal 4 — Bootstrap the Godot SOMA-77 playback fixture
 
-Status: **Planned — awaiting user review**
+Status: **Complete**
+Completed: 2026-09-06
 
 Outcome sought: an independently versioned Godot 4.7 extension repository can
 load the recorded SOMA-77 MMCP animation and prove the source skeleton and
 animation survive Godot import before networking or retargeting is added.
 
-- [ ] Create the `godot-kimodo` repository locally and on GitHub under
+- [x] Create the `godot-kimodo` repository locally and on GitHub under
   `Vega-KH`, with license, attribution, Godot ignore rules, and initial docs.
-- [ ] Record the reference engine as Godot 4.7.2 using
+- [x] Record the reference engine as Godot 4.7.2 using
   `C:\Godot-472\Godot_v4.7.2-stable_win64_console.exe` for automated checks.
-- [ ] Scaffold a minimal Godot project and `addons/kimodo_motion` editor plugin
+- [x] Scaffold a minimal Godot project and `addons/kimodo_motion` editor plugin
   that enables without parse errors.
-- [ ] Copy the Goal 3 SOMA-77 glTF fixture into the Godot test assets with its
+- [x] Copy the Goal 3 SOMA-77 glTF fixture into the Godot test assets with its
   source commit, license/provenance note, and SHA-256.
-- [ ] Implement a small GDScript fixture loader using `GLTFDocument` and an
+- [x] Implement a small GDScript fixture loader using `GLTFDocument` and an
   in-memory byte buffer rather than backend-specific parsing shortcuts.
-- [ ] Add a headless test that verifies the 77 bone names/order and hierarchy,
-  one 30 fps animation, 77 rotation tracks, one root-translation track, and
-  finite sampled transforms.
-- [ ] Add a minimal editor-openable fixture scene for visual inspection of the
+- [x] Add a headless test that verifies the 77 bone names/order and hierarchy,
+  one 30 fps animation, all 77 source rotation channels, one root-translation
+  channel, and finite native-animation samples.
+- [x] Record the Godot 4.7.2 importer behavior that removes nine identity-only
+  tracks while retaining their bones' rest rotations; verify the resulting 68
+  varying rotation tracks and one translation track.
+- [x] Add a minimal editor-openable fixture scene for visual inspection of the
   imported skeleton animation; no humanoid retargeting or live server call yet.
-- [ ] Document the exact headless command and short manual playback check.
+- [x] Document the exact headless command and short manual playback check.
 
 Completion test:
 
@@ -261,8 +266,71 @@ Completion test:
    recorded animation without altering source assets.
 
 Stop condition: mark Goal 4 Complete, commit and push the new repository,
-report and celebrate, then end the turn before adding backend networking or
-retargeting.
+add the Goal 5 plan for review, report and celebrate, then end the turn before
+starting native animation persistence.
+
+Completion test and evidence:
+
+- Created the public MIT-licensed repository at
+  `https://github.com/Vega-KH/godot-kimodo`; initial commit `f1f9982` is on
+  `main` with a clean worktree.
+- Confirmed Godot `4.7.2.stable.official.ed1daf0bf` and recorded the console
+  executable used by `scripts/test.ps1`.
+- The enabled `addons/kimodo_motion` plugin loads during a headless editor
+  startup without parser, plugin, or engine errors.
+- The fixture loader passes the recorded JSON glTF bytes directly through
+  `GLTFDocument.append_from_buffer` and generates a Godot scene.
+- The copied fixture remains byte-identical to Goal 3 at SHA-256
+  `54a7a63a326149d4573005be29df49142345bec43240f4cc2451db6bd70461b0`;
+  Git line-ending normalization is explicitly disabled for glTF artifacts.
+- The headless contract test proves 77 canonical bones in order, one root,
+  parent-before-child hierarchy, finite rest transforms, 77 source rotation
+  channels, one source translation channel, 30 samples, and finite native
+  animation interpolation at the start, midpoint, and end.
+- Godot generates 68 varying rotation tracks plus one root-translation track;
+  nine source rotations are constant identity and are safely represented by
+  the corresponding bones' rest rotations.
+- The playback scene ran without errors and rendered 15 GPU-backed frames.
+  Visual inspection of the first, middle, and final sampled images showed the
+  cyan SOMA-77 line rig progressing from its initial pose into a walking pose
+  with root motion.
+
+## Goal 5 — Persist a native Godot animation without runtime dependencies
+
+Status: **Planned — awaiting user review**
+
+Outcome sought: convert the imported SOMA-77 fixture into native Godot
+animation resources that survive save/reload and play without the extension,
+backend, or source glTF being present at runtime.
+
+- [ ] Define the minimal native source-motion representation and stable track
+  paths used between transport decoding and later retargeting.
+- [ ] Extract the imported SOMA-77 `Animation` into a new `AnimationLibrary`
+  without modifying the imported fixture or its generated resources.
+- [ ] Save the library and skeleton playback scene as native Godot resources
+  using unique output paths and explicit replacement refusal by default.
+- [ ] Reload the saved resources in a fresh headless scene and verify all 77
+  bones, animation duration, root motion, and expected optimized track counts.
+- [ ] Compare sampled root positions and bone rotations before and after the
+  save/reload round trip within recorded numerical tolerances.
+- [ ] Prove the native playback artifact loads after the addon is disabled and
+  with source-fixture loading excluded from the test path.
+- [ ] Add a native playback scene for visual comparison with the Goal 4
+  in-memory fixture scene.
+- [ ] Document ownership, unique naming, non-destructive output behavior, and
+  the exact automated/manual acceptance commands.
+
+Completion test:
+
+1. A headless bake creates a uniquely named native animation artifact without
+   changing the fixture or an existing destination.
+2. A clean reload reproduces the recorded poses/root trajectory within the
+   declared tolerance and succeeds with the addon disabled.
+3. The native visual scene plays the same one-second motion after source glTF
+   access is removed from the playback path.
+
+Stop condition: mark Goal 5 Complete, commit and push, propose Goal 6 for
+review, report and celebrate, then end the turn before networking work.
 
 ## Current blockers
 
@@ -381,3 +449,12 @@ authoritative 77-joint skeleton, corrected the expanded six-contact mapping,
 and retained native SOMA-30 constraint translation. Added golden/runtime
 validation, ADR 0003, and a separate fixed-seed live contract fixture. Planned
 Goal 4 for user review without beginning its Godot work.
+
+### 2026-09-06 — Bootstrap Godot SOMA-77 fixture playback
+
+Completed Goal 4. Created and published the independent Godot extension
+repository, enabled its first editor plugin, decoded the live MMCP fixture from
+memory, and proved its 77-bone hierarchy and animation data under Godot 4.7.2.
+Added a visible looping line-skeleton scene, automated plugin/fixture/playback
+checks, provenance safeguards, and the proposed Goal 5 plan without beginning
+native animation persistence.
