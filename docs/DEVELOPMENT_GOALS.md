@@ -366,32 +366,33 @@ Completion test and evidence:
 
 ## Goal 6 — Connect a minimal Godot dock to MMCP capabilities
 
-Status: **Planned — awaiting user review**
+Status: **Complete**
+Completed: 2026-09-06
 
 Outcome sought: an editor dock connects asynchronously to the local backend,
 shows trustworthy readiness/model information, and remains responsive and
 recoverable when the service is absent or returns incompatible data.
 
-- [ ] Add a small transport client for `GET /capabilities` with an explicit
+- [x] Add a small transport client for `GET /capabilities` with an explicit
   loopback URL, bounded timeout, cancellation, and no synchronous editor wait.
-- [ ] Parse and validate MMCP version, model id, fps, SOMA-77 skeleton order,
+- [x] Parse and validate MMCP version, model id, fps, SOMA-77 skeleton order,
   supported constraints, contact joints, and response formats into typed
   Godot-side data rather than passing raw dictionaries through the UI.
-- [ ] Replace the placeholder plugin with a minimal AI Motion dock containing
+- [x] Replace the placeholder plugin with a minimal AI Motion dock containing
   connection state, backend URL, Connect/Refresh action, model summary, and
   expandable technical error text.
-- [ ] Represent at least `Disconnected`, `Connecting`, `Ready`, and `Error`
+- [x] Represent at least `Disconnected`, `Connecting`, `Ready`, and `Error`
   states and prevent stale or concurrent responses from overwriting newer
   connection attempts.
-- [ ] Add deterministic tests for a valid recorded capability response,
+- [x] Add deterministic tests for a valid recorded capability response,
   connection refusal, timeout/cancellation, malformed JSON, unsupported MMCP
   version, and a non-SOMA-77 model response.
-- [ ] Verify plugin disable/re-enable and project restart do not leak HTTP
+- [x] Verify plugin disable/re-enable and project restart do not leak HTTP
   nodes, retain stale readiness, or freeze the editor.
-- [ ] Run one live capability handshake against `kimodo-godot-server` on
+- [x] Run one live capability handshake against `kimodo-godot-server` on
   loopback and confirm the dock reports the pinned model, 30 fps, 77 joints,
   three supported constraint types, and six contact channels.
-- [ ] Document the manual dock check and whether a Godot MCP/editor bridge now
+- [x] Document the manual dock check and whether a Godot MCP/editor bridge now
   provides enough benefit to adopt for later interactive viewport work.
 
 Completion test:
@@ -406,6 +407,78 @@ Completion test:
 Stop condition: mark Goal 6 Complete, commit and push both affected
 repositories, propose Goal 7 for review, report and celebrate, then end the
 turn before live motion generation from Godot.
+
+Completion test and evidence:
+
+- `MmcpCapabilitiesClient` performs a frame-asynchronous loopback-only HTTP
+  request, applies a deterministic client deadline, cancels in-flight work,
+  and uses monotonic attempt tokens so late responses cannot replace newer
+  connection state.
+- Typed parsing accepts the byte-identical Goal 3 capability fixture and
+  rejects malformed JSON, unsupported MMCP versions, incompatible skeletons,
+  missing constraint support, incorrect contacts, formats, coordinates,
+  rotations, units, and frame rate before data reaches the dock.
+- The right-side **AI Motion** dock presents Disconnected, Connecting, Ready,
+  and Error states; Connect/Cancel/Refresh actions; the loopback URL; an exact
+  model summary; and expandable technical details.
+- Offline transport tests pass actual TCP success, malformed response,
+  cancellation, deterministic timeout, connection refusal, and a simulated
+  stale completion. The event loop advances throughout each case.
+- Three create/state/free dock cycles leave no nodes behind. Two clean
+  headless editor startups in the full suite enable the plugin without parser,
+  orphan-node, lifecycle, or engine errors.
+- The complete Godot suite passes capability, editor restart, SOMA-77 fixture,
+  native round-trip, runtime-independence, and both playback checks.
+- A live dummy-encoder backend handshake at `127.0.0.1:8769` returned HTTP 200;
+  Godot reported exactly `kimodo-soma-rp`, 30 fps, 77 joints, three constraint
+  types, and six contact channels. Dummy mode is valid here because
+  `/capabilities` is independent of text embeddings.
+- The README records the manual dock check, live command, and loopback safety
+  boundary. A Godot MCP bridge remains deferred: direct editor startup,
+  GDScript integration tests, and rendered project scenes provide the needed
+  control today. Reassess when Goal 7 adds interactive viewport preview.
+- Godot implementation checkpoint: `b358606` on
+  `Vega-KH/godot-kimodo`.
+
+## Goal 7 — Generate and preview live SOMA-77 motion from the dock
+
+Status: **Planned — awaiting user review**
+
+Outcome sought: an artist enters a prompt in Godot, receives a live MMCP
+SOMA-77 animation without freezing the editor, and immediately previews the
+same line-skeleton motion used by the proven fixture pipeline.
+
+- [ ] Define typed Godot-side generation options for the initial vertical
+  slice: prompt, duration, seed, selected connected model, and glTF response.
+- [ ] Add an asynchronous, cancellable `POST /generate` client that reuses the
+  Goal 6 loopback and attempt-token rules and reports useful server errors.
+- [ ] Extend the AI Motion dock with prompt/options, Generate/Cancel actions,
+  generation status, and clear separation between connection and job state.
+- [ ] Validate every response against the negotiated MMCP/SOMA-77 contract and
+  decode its self-contained glTF bytes in memory without altering fixtures or
+  existing native animation resources.
+- [ ] Preview successful results in a plugin-owned, replaceable line-skeleton
+  scene with play/pause and looping controls; clean it up on replacement or
+  plugin disable.
+- [ ] Add deterministic offline tests for request encoding, success, protocol
+  errors, cancellation, stale results, invalid glTF, and preview lifecycle.
+- [ ] Run one live full-text-encoder prompt through the dock path and visually
+  compare the generated line skeleton with the recorded fixture behavior.
+- [ ] Reassess a Godot MCP/editor bridge based on whether direct viewport
+  automation is materially limiting interactive preview verification.
+
+Completion test:
+
+1. With the full local encoder running, “A person walks forward.” generates a
+   valid 77-joint motion from the Godot dock while the editor remains usable.
+2. The result can be played, paused, looped, replaced, and canceled without
+   stale state, leaked preview nodes, or modified source/native resources.
+3. Offline tests cover the complete request-to-preview path, and a manual
+   viewport check confirms visible articulated motion and root travel.
+
+Stop condition: mark Goal 7 Complete, commit and push both affected
+repositories, propose Goal 8 for review, report and celebrate, then end the
+turn before humanoid retargeting.
 
 ## Current blockers
 
@@ -541,3 +614,13 @@ source-motion paths, binary AnimationLibrary output, clean save/reload and
 dependency-closure tests, and an orange native-only playback scene. A visual
 gate caught and drove a fix for missing initial bone pose offsets. Accepted
 ADR 0001 and proposed Goal 6 without beginning networking work.
+
+### 2026-09-06 — Connect the editor dock to MMCP capabilities
+
+Completed Goal 6. Added an asynchronous, cancellable, loopback-only capability
+client; strict typed validation of the MMCP 1.0 SOMA-77 contract; and the first
+functional AI Motion editor dock. Offline tests cover success, compatibility,
+transport failures, stale responses, UI states, and lifecycle cleanup. A live
+backend handshake reported the exact expected model summary. Deferred a Godot
+MCP bridge until interactive preview work demonstrates a concrete need, and
+proposed Goal 7 without beginning live generation.
