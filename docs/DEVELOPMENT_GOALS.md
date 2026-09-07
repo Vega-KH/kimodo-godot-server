@@ -1,6 +1,6 @@
 # Development goals and session log
 
-Last updated: 2026-09-06
+Last updated: 2026-09-07
 
 This is the authoritative living record for near-term development. It keeps
 completed work visible while limiting planning to the active goal and the next
@@ -442,29 +442,30 @@ Completion test and evidence:
 
 ## Goal 7 — Generate and preview live SOMA-77 motion from the dock
 
-Status: **Planned — awaiting user review**
+Status: **Complete**
+Completed: 2026-09-07
 
 Outcome sought: an artist enters a prompt in Godot, receives a live MMCP
 SOMA-77 animation without freezing the editor, and immediately previews the
 same line-skeleton motion used by the proven fixture pipeline.
 
-- [ ] Define typed Godot-side generation options for the initial vertical
+- [x] Define typed Godot-side generation options for the initial vertical
   slice: prompt, duration, seed, selected connected model, and glTF response.
-- [ ] Add an asynchronous, cancellable `POST /generate` client that reuses the
+- [x] Add an asynchronous, cancellable `POST /generate` client that reuses the
   Goal 6 loopback and attempt-token rules and reports useful server errors.
-- [ ] Extend the AI Motion dock with prompt/options, Generate/Cancel actions,
+- [x] Extend the AI Motion dock with prompt/options, Generate/Cancel actions,
   generation status, and clear separation between connection and job state.
-- [ ] Validate every response against the negotiated MMCP/SOMA-77 contract and
+- [x] Validate every response against the negotiated MMCP/SOMA-77 contract and
   decode its self-contained glTF bytes in memory without altering fixtures or
   existing native animation resources.
-- [ ] Preview successful results in a plugin-owned, replaceable line-skeleton
+- [x] Preview successful results in a plugin-owned, replaceable line-skeleton
   scene with play/pause and looping controls; clean it up on replacement or
   plugin disable.
-- [ ] Add deterministic offline tests for request encoding, success, protocol
+- [x] Add deterministic offline tests for request encoding, success, protocol
   errors, cancellation, stale results, invalid glTF, and preview lifecycle.
-- [ ] Run one live full-text-encoder prompt through the dock path and visually
+- [x] Run one live full-text-encoder prompt through the dock path and visually
   compare the generated line skeleton with the recorded fixture behavior.
-- [ ] Reassess a Godot MCP/editor bridge based on whether direct viewport
+- [x] Reassess a Godot MCP/editor bridge based on whether direct viewport
   automation is materially limiting interactive preview verification.
 
 Completion test:
@@ -478,6 +479,81 @@ Completion test:
 
 Stop condition: mark Goal 7 Complete, commit and push both affected
 repositories, propose Goal 8 for review, report and celebrate, then end the
+turn before humanoid retargeting.
+
+Completion test and evidence:
+
+- `KimodoGenerationOptions` owns prompt, duration, seed, and diffusion-step
+  validation. Request encoding uses the connected model/version/fps and a deep
+  copy of the exact canonical skeleton validated from `/capabilities`.
+- `MmcpGenerationClient` performs frame-asynchronous `POST /generate` with an
+  explicit 8 MiB response bound, 120-second default deadline, cancellation,
+  artist-readable protocol errors, and monotonic attempt tokens. Connection
+  and generation remain independent state machines.
+- Responses must be glTF 2.0 JSON with the negotiated SOMA-77 names and exact
+  hierarchy, all 77 unique rotation channels, one root-translation channel,
+  one finite animation, and the requested duration before Godot previews them.
+- The dock now provides prompt, frame, and seed controls; Generate/Cancel;
+  independent job status/details; and an embedded green line-skeleton preview
+  with Play/Pause and Loop controls. A newer successful take frees and replaces
+  only the temporary preview scene.
+- Deterministic offline tests cover request encoding/validation, real TCP
+  success, server errors, invalid glTF, incompatible names and hierarchy,
+  cancellation, timeout, stale completion, play/pause/loop, replacement, and
+  node cleanup. The complete Goal 4–7 regression suite and two editor startups
+  pass without Godot or script errors.
+- With the cached full Llama 3/LLM2Vec encoder on CPU and Kimodo on CUDA, the
+  automated dock connected, submitted “A person walks forward.” at 30 frames,
+  five diffusion steps, and seed 1234, then received HTTP 200 in a 5.73-second
+  Godot run. The validated 79,483-byte response has SHA-256
+  `f5e939a32e406d75c53aeaa08dbcb6c104c4dd78df211b71a658ed5729a129dc`,
+  77 bones, and began playing immediately.
+- Three GPU-rendered samples at approximately 0.13, 0.53, and 0.93 seconds
+  visibly progress from the initial pose through a lifted-leg stride to a
+  distinct late walking pose with root travel.
+- ADR 0002 records validation-before-preview and ephemeral ownership. Native
+  Windows window control was unavailable during the visual check, but direct
+  Godot integration tests and GPU frame capture remained deterministic and
+  sufficient. A Godot MCP bridge is still deferred; retargeting may provide a
+  stronger interactive-editor use case.
+- Godot implementation checkpoint: `5680fa1` on
+  `Vega-KH/godot-kimodo`.
+
+## Goal 8 — Save a generated take as a native Godot asset
+
+Status: **Planned — awaiting user review**
+
+Outcome sought: an artist can promote the currently previewed generated take
+into the self-contained, non-destructive native artifact format proven in
+Goal 5, directly from the AI Motion dock.
+
+- [ ] Add a Save Native Take action that is enabled only for a validated
+  generated preview and asks for a project-relative destination/name.
+- [ ] Feed the generated imported scene into `NativeAnimationBaker` without
+  mutating or transferring ownership of the active preview.
+- [ ] Preserve Goal 5 unique-name/refuse-overwrite behavior and clearly report
+  the actual `.tscn` and `.res` paths created.
+- [ ] Keep save state separate from connection and generation state so a
+  backend disconnect cannot invalidate an already generated take.
+- [ ] Refresh/select the created resource in the Godot FileSystem dock where
+  supported, while keeping the core save path testable without editor UI.
+- [ ] Add offline tests proving preview-to-native pose equivalence, duplicate
+  naming, failure recovery, preview survival, and no glTF/addon dependency in
+  the saved resource closure.
+- [ ] Manually generate, save, reopen, and play one take with the backend
+  stopped, confirming the preview and saved copy remain visually equivalent.
+
+Completion test:
+
+1. Saving a live generated take creates unique native `.tscn` and `.res`
+   assets without overwriting an existing take or interrupting preview.
+2. The saved scene reloads and plays with the backend stopped and has no glTF,
+   addon, Python, model, or temporary-preview dependency.
+3. Automated samples match preview poses/root motion within Goal 5 tolerances,
+   followed by a successful manual reopen/playback check.
+
+Stop condition: mark Goal 8 Complete, commit and push both affected
+repositories, propose Goal 9 for review, report and celebrate, then end the
 turn before humanoid retargeting.
 
 ## Current blockers
@@ -624,3 +700,13 @@ transport failures, stale responses, UI states, and lifecycle cleanup. A live
 backend handshake reported the exact expected model summary. Deferred a Godot
 MCP bridge until interactive preview work demonstrates a concrete need, and
 proposed Goal 7 without beginning live generation.
+
+### 2026-09-07 — Generate and preview live motion in Godot
+
+Completed Goal 7. Added typed request construction, a cancellable/stale-safe
+generation transport, strict generated glTF/SOMA-77 validation, and an embedded
+playable line-skeleton preview. The full encoder produced “A person walks
+forward.” through the real dock workflow, and three rendered frames visibly
+confirmed an articulated walking progression. Accepted ADR 0002, kept the
+Godot bridge deferred after reassessment, and proposed Goal 8 without beginning
+native take saving.
