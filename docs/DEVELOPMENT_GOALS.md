@@ -521,26 +521,32 @@ Completion test and evidence:
 
 ## Goal 8 — Save a generated take as a native Godot asset
 
-Status: **Planned — awaiting user review**
+Status: **Complete**
+Completed: 2026-09-07
 
 Outcome sought: an artist can promote the currently previewed generated take
 into the self-contained, non-destructive native artifact format proven in
 Goal 5, directly from the AI Motion dock.
 
-- [ ] Add a Save Native Take action that is enabled only for a validated
+- [x] Add a Save Native Take action that is enabled only for a validated
   generated preview and asks for a project-relative destination/name.
-- [ ] Feed the generated imported scene into `NativeAnimationBaker` without
+- [x] Add a repository-root `start.bat` that starts the server with the local
+  CPU-offloaded text encoder in one click, independent of the inherited PATH.
+- [x] Expose the request's denoising-step count as a manual Godot dock control;
+  retain the current MMCP range and use a quality-oriented default rather than
+  the five-step integration-test setting.
+- [x] Feed the generated imported scene into `NativeAnimationBaker` without
   mutating or transferring ownership of the active preview.
-- [ ] Preserve Goal 5 unique-name/refuse-overwrite behavior and clearly report
+- [x] Preserve Goal 5 unique-name/refuse-overwrite behavior and clearly report
   the actual `.tscn` and `.res` paths created.
-- [ ] Keep save state separate from connection and generation state so a
+- [x] Keep save state separate from connection and generation state so a
   backend disconnect cannot invalidate an already generated take.
-- [ ] Refresh/select the created resource in the Godot FileSystem dock where
+- [x] Refresh/select the created resource in the Godot FileSystem dock where
   supported, while keeping the core save path testable without editor UI.
-- [ ] Add offline tests proving preview-to-native pose equivalence, duplicate
+- [x] Add offline tests proving preview-to-native pose equivalence, duplicate
   naming, failure recovery, preview survival, and no glTF/addon dependency in
   the saved resource closure.
-- [ ] Manually generate, save, reopen, and play one take with the backend
+- [x] Manually generate, save, reopen, and play one take with the backend
   stopped, confirming the preview and saved copy remain visually equivalent.
 
 Completion test:
@@ -555,6 +561,68 @@ Completion test:
 Stop condition: mark Goal 8 Complete, commit and push both affected
 repositories, propose Goal 9 for review, report and celebrate, then end the
 turn before humanoid retargeting.
+
+Completion test and evidence:
+
+- The dock exposes `Denoising steps` from 1–100 and encodes the selected value
+  into MMCP; its normal default is now 100 rather than the five-step Goal 7
+  integration shortcut.
+- `Save Native Take` accepts a `res://` directory and sanitized take name only
+  after a validated preview exists. It reports both created paths, refreshes
+  and selects the scene in the editor FileSystem dock, and uses Goal 5's
+  numeric-suffix behavior for duplicates.
+- Offline coverage saves directly from the owned preview scene, proves that
+  the preview survives success and failure, reloads the native scene, compares
+  animation samples within 0.001 radians / one micrometer, and verifies the
+  scene has no glTF or addon dependency.
+- The repository-root `start.bat` resolves `.venv` from its own location, sets
+  local LLM2Vec and CPU placement explicitly, accepts optional CLI arguments,
+  and successfully reached the real CLI help path without relying on PATH.
+- Full regression gates passed: backend 23 passed / 7 hardware tests skipped,
+  Ruff clean, and every Godot 4.7.2 editor, transport, fixture, native, preview,
+  lifecycle, and playback check passed without engine or script errors.
+- Live acceptance used the batch launcher and full CPU text encoder to generate
+  “A person walks forward.” at 30 frames, 100 denoising steps, and seed 1234 in
+  7.41 seconds. The dock received 79,474 bytes and saved a 77-bone native take
+  while its preview remained playing. After terminating the complete server
+  process tree and confirming loopback refusal, Godot reloaded and played the
+  saved `.tscn`; temporary acceptance assets were then removed.
+- Godot implementation checkpoint: `aa0a675` on `Vega-KH/godot-kimodo`.
+
+## Goal 9 — Retarget a saved SOMA-77 take to a Godot humanoid skeleton
+
+Status: **Planned — awaiting user review**
+
+Outcome sought: a saved native SOMA-77 take can drive a separate Godot humanoid
+test skeleton through an explicit, inspectable bone map without modifying the
+source take.
+
+- [ ] Define and document the SOMA-77-to-Godot-humanoid bone mapping, including
+  deliberately ignored face, finger, toe-end, and contact-only joints.
+- [ ] Add a repository-owned humanoid target fixture with a distinct rest pose
+  so the test proves actual retargeting rather than identical-skeleton playback.
+- [ ] Implement rest-pose-aware local rotation transfer and preserve intentional
+  root translation/heading in a new target `AnimationLibrary`.
+- [ ] Keep source, mapping, retargeted animation, and saved target scene as
+  separate non-destructive artifacts with unique output naming.
+- [ ] Add offline tests for mapped-bone coverage, hierarchy, finite transforms,
+  duration, source immutability, save/reload stability, and unmapped-bone rest
+  preservation.
+- [ ] Compare source and target line-skeleton playback visually at several
+  frames, then save/reopen one retargeted take and confirm recognizable motion.
+
+Completion test:
+
+1. A native SOMA-77 take retargets to the distinct humanoid fixture and saves
+   without changing either source asset or an existing destination.
+2. Automated checks prove all required humanoid bones receive finite,
+   rest-pose-corrected animation with preserved duration and root travel.
+3. A manual side-by-side playback confirms the target performs the same
+   recognizable action after a clean reload.
+
+Stop condition: mark Goal 9 Complete, commit and push, propose Goal 10 for
+review, report and celebrate, then end the turn before production-character
+mapping or automatic rig detection.
 
 ## Current blockers
 
@@ -591,9 +659,12 @@ machine; close other memory-heavy applications before cold startup.
   placement while adding quantization. The backend now pins the tested
   `Vega-KH/kimodo` repair at `3362b92`; upstream reconciliation remains due.
 - Transformers/PEFT emit adapter load reports containing missing/unexpected
-  key summaries plus a multiple-adapter warning. Text-conditioned generation
-  succeeds deterministically, but adapter-version compatibility should be
-  investigated before quality benchmarking.
+  key summaries plus a multiple-adapter warning. NVIDIA's Kimodo quick-start
+  explicitly identifies these LLM2Vec reports as expected and safe to ignore.
+- Early five-step previews sometimes collapsed more complex prompts, including
+  a roundhouse kick, toward idle motion. Goal 8 restored the normal 100-step
+  default. Defer a controlled multi-seed combat-vocabulary quality comparison
+  until qualitative motion evaluation is in scope.
 
 ## Design decisions and questions to track
 
@@ -710,3 +781,12 @@ forward.” through the real dock workflow, and three rendered frames visibly
 confirmed an articulated walking progression. Accepted ADR 0002, kept the
 Godot bridge deferred after reassessment, and proposed Goal 8 without beginning
 native take saving.
+
+### 2026-09-07 — Save generated takes as native Godot assets
+
+Completed Goal 8. Added the one-click Windows backend launcher, restored a
+quality-oriented 100-step generation default with an explicit dock control,
+and connected live preview ownership to the proven non-destructive native
+baker. Offline and live tests proved unique save paths, pose-equivalent native
+reloads, preview survival, and playback after the full backend was stopped.
+Proposed Goal 9 without beginning humanoid retargeting.

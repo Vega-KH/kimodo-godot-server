@@ -56,6 +56,13 @@ Install [Proscenium](https://github.com/animatica-ai/proscenium-blender/releases
 
 Install can take **30+ minutes** on first run (PyTorch, Kimodo, MotionCorrection compile). Use `pip install -v ...` to see progress.
 
+### Windows development checkout
+
+After completing the development install in this repository, double-click
+`start.bat` to start the loopback server with Kimodo on CUDA and the full local
+LLM2Vec text encoder offloaded to CPU. The launcher resolves `.venv` relative to
+itself, so neither Python nor `kimodo-godot-server` needs to be on `PATH`.
+
 ## Documentation
 
 | Guide | Description |
