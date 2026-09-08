@@ -601,24 +601,30 @@ Goal 8 usability amendment (2026-09-08):
 
 ## Goal 9 — Retarget a saved SOMA-77 take to a Godot humanoid skeleton
 
-Status: **Planned — awaiting user review**
+Status: **Complete**
+Completed: 2026-09-08
 
 Outcome sought: a saved native SOMA-77 take can drive a separate Godot humanoid
 test skeleton through an explicit, inspectable bone map without modifying the
 source take.
 
-- [ ] Define and document the SOMA-77-to-Godot-humanoid bone mapping, including
+- [x] Define and document the SOMA-77-to-Godot-humanoid bone mapping, including
   deliberately ignored face, finger, toe-end, and contact-only joints.
-- [ ] Add a repository-owned humanoid target fixture with a distinct rest pose
-  so the test proves actual retargeting rather than identical-skeleton playback.
-- [ ] Implement rest-pose-aware local rotation transfer and preserve intentional
-  root translation/heading in a new target `AnimationLibrary`.
-- [ ] Keep source, mapping, retargeted animation, and saved target scene as
+- [x] Generate and commit a deterministic, repository-owned A-pose
+  `Skeleton3D` fixture from Godot's `SkeletonProfileHumanoid`, with distinct
+  proportions and no mesh, so the test proves actual retargeting rather than
+  identical-skeleton playback.
+- [x] Evaluate Godot 4.7's `RetargetModifier3D` against the fixture, then use it
+  where it provides a deterministic bake path or document why an explicit
+  offline rest-delta bake is preferable.
+- [x] Implement rest-pose-aware rotation transfer and preserve intentional root
+  translation/heading in a new target `AnimationLibrary`.
+- [x] Keep source, mapping, retargeted animation, and saved target scene as
   separate non-destructive artifacts with unique output naming.
-- [ ] Add offline tests for mapped-bone coverage, hierarchy, finite transforms,
+- [x] Add offline tests for mapped-bone coverage, hierarchy, finite transforms,
   duration, source immutability, save/reload stability, and unmapped-bone rest
   preservation.
-- [ ] Compare source and target line-skeleton playback visually at several
+- [x] Compare source and target line-skeleton playback visually at several
   frames, then save/reopen one retargeted take and confirm recognizable motion.
 
 Completion test:
@@ -633,6 +639,74 @@ Completion test:
 Stop condition: mark Goal 9 Complete, commit and push, propose Goal 10 for
 review, report and celebrate, then end the turn before production-character
 mapping or automatic rig detection.
+
+Completion test and evidence:
+
+- The target fixture is generated from all 56 `SkeletonProfileHumanoid` bones,
+  with taller deterministic proportions, upper arms lowered 32 degrees into an
+  A-pose, no mesh, and no third-party asset. Repeated generation produces
+  byte-identical scene and animation artifacts.
+- The explicit mapping covers 22 Godot body targets. SOMA `Neck1` is collapsed;
+  four face joints, 48 finger joints, and two toe-end joints are intentionally
+  ignored. Contact values remain protocol metadata rather than transform tracks.
+- `RetargetModifier3D` accepts the Godot profile but only matches profile bone
+  names and exposes no `BoneMap`; it cannot directly express mappings such as
+  SOMA `LeftArm` to Godot `LeftUpperArm`. ADR 0003 records why the deterministic
+  offline rest-delta bake avoids an extra canonical proxy skeleton.
+- Each mapped rotation is transferred as a model-space delta from source rest
+  to target rest, then reconstructed into the target hierarchy. The target
+  keeps authored limb lengths; hips translation and heading are preserved.
+- The saved target contains 56 bones, 22 rotation tracks, one hips-position
+  track, and the unchanged 29/30-second duration. Its dependency closure is
+  exactly its `.tscn` and `.res`, with no addon, glTF, backend, or source take.
+- Automated coverage proves canonical source validation, mapping coverage,
+  profile hierarchy, finite data, model-space rest-delta equivalence within
+  0.001 radians, root travel within one micrometer, unmapped-bone rest
+  preservation, source/fixture immutability, unique naming, and clean reload.
+- The complete Godot 4.7.2 regression suite passes without engine or script
+  errors. GPU-rendered start, midpoint, and final side-by-side frames show the
+  cyan SOMA-77 source and pink A-pose target progressing through the same
+  recognizable walking stride and root travel.
+- Godot implementation checkpoint: `f40fc5d` on `Vega-KH/godot-kimodo`.
+
+## Goal 10 — Preview and save humanoid-retargeted motion from the dock
+
+Status: **Planned — awaiting user review**
+
+Outcome sought: an artist can turn the currently validated generated take into
+the proven Godot humanoid motion directly in the AI Motion dock, compare it
+with the SOMA source, and save the target without using a headless tool.
+
+- [ ] Refactor the Goal 9 retarget core so it can produce an owned in-memory
+  humanoid scene for preview as well as the existing native saved artifact.
+- [ ] Add a `Retarget to Humanoid` action that is enabled only while a validated
+  generated preview exists and uses the repository A-pose fixture for this
+  first UI slice.
+- [ ] Add source/humanoid preview selection or a compact side-by-side mode with
+  shared play, pause, loop, and scrub state.
+- [ ] Add a non-destructive `Save Humanoid Take` action with project-relative
+  naming, unique suffixes, clear output paths, and no ownership transfer from
+  either live preview.
+- [ ] Keep retarget/save errors separate from connection and generation state;
+  replacing a source take must safely replace its derived humanoid preview.
+- [ ] Add offline dock and lifecycle tests covering availability, successful
+  retarget, invalid source/fixture handling, preview replacement, unique save,
+  reload, and plugin disable/re-enable cleanup.
+- [ ] Generate one 100-step live take, retarget it in the dock, save/reopen it,
+  and visually confirm the source and humanoid previews perform the same action.
+
+Completion test:
+
+1. A live generated SOMA-77 take retargets and previews from the dock without
+   blocking generation controls or modifying the source preview.
+2. The humanoid result saves uniquely, survives clean reload with the backend
+   stopped, and remains equivalent to the in-memory humanoid preview.
+3. Automated lifecycle tests and one manual side-by-side playback pass under
+   Godot 4.7.2 without stale previews, leaked nodes, or engine errors.
+
+Stop condition: mark Goal 10 Complete, commit and push, propose Goal 11 for
+review, report and celebrate, then end the turn before importing a skinned
+Auto-Rig Pro character or adding arbitrary target-rig detection.
 
 ## Current blockers
 
@@ -808,3 +882,14 @@ Wrapped all AI Motion dock content in an automatic vertical scroll container
 and added constrained-height regression coverage, making the native save tools
 reachable after a generated preview appears. Goal 9 remains planned and was
 not started.
+
+### 2026-09-08 — Retarget SOMA-77 to a Godot humanoid
+
+Completed Goal 9. Added a deterministic 56-bone Godot humanoid A-pose fixture,
+an explicit 22-bone SOMA mapping, and a rest-aware model-space offline baker
+that preserves hips travel while retaining target proportions. Evaluated and
+documented why `RetargetModifier3D` cannot directly consume the differently
+named SOMA skeleton without a proxy. Automated and rendered side-by-side tests
+prove unique native save/reload, source immutability, unmapped rest behavior,
+and recognizable walking motion. Proposed Goal 10 without beginning dock UI
+integration or skinned-character work.
