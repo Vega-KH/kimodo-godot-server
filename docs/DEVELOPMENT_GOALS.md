@@ -604,6 +604,10 @@ Goal 8 usability amendment (2026-09-08):
 Status: **Complete**
 Completed: 2026-09-08
 
+Amendment status (2026-09-08): **Complete** — move planar locomotion from the
+target `Hips` to `Root` so the profile's root-to-hips segment does not stretch
+back to the take's starting position.
+
 Outcome sought: a saved native SOMA-77 take can drive a separate Godot humanoid
 test skeleton through an explicit, inspectable bone map without modifying the
 source take.
@@ -668,6 +672,21 @@ Completion test and evidence:
   cyan SOMA-77 source and pink A-pose target progressing through the same
   recognizable walking stride and root travel.
 - Godot implementation checkpoint: `f40fc5d` on `Vega-KH/godot-kimodo`.
+
+Goal 9 root-motion amendment (2026-09-08):
+
+- [x] Correct the target locomotion split so planar X/Z displacement animates
+  profile `Root`, while vertical pelvis displacement remains local to `Hips`.
+- [x] Add regression samples at 0%, 25%, 50%, 75%, and 100% proving the
+  root-to-hips segment remains vertically aligned and bounded throughout the
+  take.
+- [x] Regenerate, reload, and visually compare the committed target animation.
+  The long diagnostic line to the starting origin is gone and the recognizable
+  walking pose remains intact at the start, midpoint, and final frame.
+- This supersedes the earlier 23-track count: the corrected library contains
+  22 rotation tracks plus separate `Root` and `Hips` position tracks.
+- The complete Godot 4.7.2 suite remains clean. Amendment checkpoint:
+  `5327522` on `Vega-KH/godot-kimodo`.
 
 ## Goal 10 — Preview and save humanoid-retargeted motion from the dock
 
@@ -893,3 +912,12 @@ named SOMA skeleton without a proxy. Automated and rendered side-by-side tests
 prove unique native save/reload, source immutability, unmapped rest behavior,
 and recognizable walking motion. Proposed Goal 10 without beginning dock UI
 integration or skinned-character work.
+
+### 2026-09-08 — Correct humanoid root-motion ownership
+
+Reopened Goal 9 after the side-by-side line renderer exposed `Hips` traveling
+away from a stationary profile `Root`. Moved planar locomotion to `Root`, kept
+vertical pelvis motion on `Hips`, and added five-sample alignment and distance
+regressions. Full-suite and GPU-rendered playback confirm the trailing line is
+gone without degrading the retargeted walk. Goal 10 remains planned and was
+not started.
