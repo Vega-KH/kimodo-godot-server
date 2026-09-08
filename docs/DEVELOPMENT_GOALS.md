@@ -1,6 +1,6 @@
 # Development goals and session log
 
-Last updated: 2026-09-07
+Last updated: 2026-09-08
 
 This is the authoritative living record for near-term development. It keeps
 completed work visible while limiting planning to the active goal and the next
@@ -589,6 +589,16 @@ Completion test and evidence:
   saved `.tscn`; temporary acceptance assets were then removed.
 - Godot implementation checkpoint: `aa0a675` on `Vega-KH/godot-kimodo`.
 
+Goal 8 usability amendment (2026-09-08):
+
+- [x] Wrap the complete AI Motion dock in an automatic vertical scroll area so
+  generation, playback, and native-save controls remain reachable after the
+  preview expands beyond the editor's available height.
+- A constrained-height regression test proves the vertical scrollbar appears,
+  reaches content below the viewport, and does not introduce horizontal
+  scrolling. The complete Godot 4.7.2 suite remains clean.
+- Amendment checkpoint: `a6f1f0f` on `Vega-KH/godot-kimodo`.
+
 ## Goal 9 — Retarget a saved SOMA-77 take to a Godot humanoid skeleton
 
 Status: **Planned — awaiting user review**
@@ -790,3 +800,11 @@ and connected live preview ownership to the proven non-destructive native
 baker. Offline and live tests proved unique save paths, pose-equivalent native
 reloads, preview survival, and playback after the full backend was stopped.
 Proposed Goal 9 without beginning humanoid retargeting.
+
+### 2026-09-08 — Finish Goal 8 dock accessibility
+
+Reopened Goal 8 for a small usability correction discovered during manual use.
+Wrapped all AI Motion dock content in an automatic vertical scroll container
+and added constrained-height regression coverage, making the native save tools
+reachable after a generated preview appears. Goal 9 remains planned and was
+not started.
