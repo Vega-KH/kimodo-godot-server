@@ -1,6 +1,6 @@
 # Development goals and session log
 
-Last updated: 2026-09-08
+Last updated: 2026-09-23
 
 This is the authoritative living record for near-term development. It keeps
 completed work visible while limiting planning to the active goal and the next
@@ -690,28 +690,29 @@ Goal 9 root-motion amendment (2026-09-08):
 
 ## Goal 10 — Preview and save humanoid-retargeted motion from the dock
 
-Status: **Planned — awaiting user review**
+Status: **Complete**
+Completed: 2026-09-23
 
 Outcome sought: an artist can turn the currently validated generated take into
 the proven Godot humanoid motion directly in the AI Motion dock, compare it
 with the SOMA source, and save the target without using a headless tool.
 
-- [ ] Refactor the Goal 9 retarget core so it can produce an owned in-memory
+- [x] Refactor the Goal 9 retarget core so it can produce an owned in-memory
   humanoid scene for preview as well as the existing native saved artifact.
-- [ ] Add a `Retarget to Humanoid` action that is enabled only while a validated
+- [x] Add a `Retarget to Humanoid` action that is enabled only while a validated
   generated preview exists and uses the repository A-pose fixture for this
   first UI slice.
-- [ ] Add source/humanoid preview selection or a compact side-by-side mode with
+- [x] Add source/humanoid preview selection or a compact side-by-side mode with
   shared play, pause, loop, and scrub state.
-- [ ] Add a non-destructive `Save Humanoid Take` action with project-relative
+- [x] Add a non-destructive `Save Humanoid Take` action with project-relative
   naming, unique suffixes, clear output paths, and no ownership transfer from
   either live preview.
-- [ ] Keep retarget/save errors separate from connection and generation state;
+- [x] Keep retarget/save errors separate from connection and generation state;
   replacing a source take must safely replace its derived humanoid preview.
-- [ ] Add offline dock and lifecycle tests covering availability, successful
+- [x] Add offline dock and lifecycle tests covering availability, successful
   retarget, invalid source/fixture handling, preview replacement, unique save,
   reload, and plugin disable/re-enable cleanup.
-- [ ] Generate one 100-step live take, retarget it in the dock, save/reopen it,
+- [x] Generate one 100-step live take, retarget it in the dock, save/reopen it,
   and visually confirm the source and humanoid previews perform the same action.
 
 Completion test:
@@ -726,6 +727,75 @@ Completion test:
 Stop condition: mark Goal 10 Complete, commit and push, propose Goal 11 for
 review, report and celebrate, then end the turn before importing a skinned
 Auto-Rig Pro character or adding arbitrary target-rig detection.
+
+Completion test and evidence:
+
+- The dock now creates a separately owned 56-bone humanoid preview from the
+  current validated SOMA-77 source without mutating or transferring ownership
+  from either scene. Its default fixture is generated from addon code, so the
+  distributed plugin does not depend on the repository test directory.
+- A source/humanoid selector switches between cyan and pink line previews.
+  Shared play/pause, loop, and timeline scrub controls keep both players at the
+  same time, and accepting a replacement source safely frees its stale derived
+  humanoid preview.
+- Humanoid retarget and save status are independent from connection,
+  generation, and SOMA-native save status. Humanoid saves use project-relative
+  paths, preserve the live previews, and add numeric suffixes rather than
+  overwriting an existing take.
+- Offline coverage proves disabled/enabled states, invalid source and fixture
+  handling, 56-bone/24-track output, shared playback, preview replacement,
+  unique save, sample-equivalent reload, and complete node cleanup. The full
+  Godot 4.7.2 suite passes without engine or script errors.
+- Live acceptance loaded the full CPU LLM2Vec encoder, generated “A person
+  walks forward.” at 30 frames, 100 denoising steps, and seed 1234, received a
+  79,474-byte SOMA-77 response, retargeted it in the dock, and saved both
+  source and humanoid takes. GPU-rendered start, midpoint, and final frames
+  showed the same walking progression with no root-to-origin artifact.
+- After the complete backend process stopped and loopback refusal was
+  confirmed, Godot reopened the saved humanoid scene cleanly. Temporary live
+  assets and captures were then removed.
+- Godot implementation checkpoint: `ddd1e07` on `Vega-KH/godot-kimodo`.
+
+## Goal 11 — Drive the Jenny Auto-Rig Pro test character
+
+Status: **Proposed — awaiting review**
+
+Outcome sought: a repository-owned test scene plays a known humanoid take on
+the supplied skinned Jenny character while preserving the character's authored
+mesh, skin, rest pose, and intended root motion.
+
+- [ ] Record provenance and inspect both supplied exports — `Jenny03.glb` with
+  an exported root bone and `Jenny03-no-root-bone.glb` without one — including
+  skeleton hierarchy, bone names, skin bindings, import warnings, and Git/LFS
+  impact before choosing the canonical fixture.
+- [ ] Import both variants non-destructively in an isolated test area and
+  compare Godot's humanoid bone-map recognition, rest pose, scale, facing, and
+  root-motion behavior.
+- [ ] Evaluate the supplied `.research/arp_fixer.gd` and the current
+  `arp-importer` approach against Godot 4.7.2; document whether either fix is
+  still required and why the root or no-root export is selected.
+- [ ] Add the smallest explicit, inspectable mapping/runtime layer needed to
+  drive the selected Auto-Rig Pro skeleton from the Goal 10 humanoid take,
+  without modifying the source animation or imported character resource.
+- [ ] Add a test scene and automated checks for mapped coverage, finite poses,
+  skin/skeleton integrity, root travel, source immutability, reload stability,
+  and plugin lifecycle cleanup.
+- [ ] Generate or reuse one recognizable take, play it on the line humanoid and
+  skinned Jenny side by side, then visually inspect start, midpoint, and final
+  frames for equivalent action and plausible deformation.
+
+Completion test:
+
+1. The selected Jenny export plays a saved humanoid take through the plugin's
+   test workflow without changing the imported model or source take.
+2. Automated checks prove stable mapping, skin binding, root travel, and clean
+   reload under Godot 4.7.2.
+3. A manual side-by-side playback shows recognizable equivalent motion and no
+   obvious root-motion or deformation defect.
+
+Stop condition: mark Goal 11 Complete, commit and push, propose Goal 12 for
+review, report and celebrate, then end the turn before arbitrary user-rig
+detection, production import automation, or mesh-weight repair.
 
 ## Current blockers
 
@@ -782,6 +852,11 @@ machine; close other memory-heavy applications before cold startup.
   NVIDIA upstream after the baseline is complete.
 - Decide whether recorded binary glTF fixtures live directly in Git or use a
   separate fixture-release mechanism after their sizes are known.
+- Future skinned-character work can evaluate the user-owned Auto-Rig Pro test
+  exports at `../Models/Jenny03.glb` (with exported root) and
+  `../Models/Jenny03-no-root-bone.glb` (without it), plus the supplied research
+  script at `../.research/arp_fixer.gd`. Goal 10 deliberately does not import,
+  modify, or choose between these files.
 - Explore a quantized or smaller compatible text encoder after the MMCP
   boundary work. Measure semantic quality as well as download size, RAM,
   startup latency, and GPU impact; this is independent of exposing SOMA-77.
@@ -921,3 +996,13 @@ vertical pelvis motion on `Hips`, and added five-sample alignment and distance
 regressions. Full-suite and GPU-rendered playback confirm the trailing line is
 gone without degrading the retargeted walk. Goal 10 remains planned and was
 not started.
+
+### 2026-09-23 — Preview and save humanoid motion from the dock
+
+Completed Goal 10. Refactored the retarget baker for owned in-memory output,
+added synchronized source/humanoid previews and a timeline scrubber, and added
+non-destructive unique humanoid saving with independent status. Offline and
+live full-encoder acceptance prove clean lifecycle replacement, equivalent
+save/reload, recognizable side-by-side walking, and backend-independent native
+playback. Inventoried the supplied Jenny Auto-Rig Pro assets without importing
+or modifying them, and proposed Goal 11 for user review.
