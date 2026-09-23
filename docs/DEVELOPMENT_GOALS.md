@@ -693,6 +693,10 @@ Goal 9 root-motion amendment (2026-09-08):
 Status: **Complete**
 Completed: 2026-09-23
 
+Usability amendment status (2026-09-23): **Complete** — synchronized orbit,
+zoom, root-follow, and reset controls now serve both dock previews; the allowed
+denoising range is 1–200 while retaining 100 as the default.
+
 Outcome sought: an artist can turn the currently validated generated take into
 the proven Godot humanoid motion directly in the AI Motion dock, compare it
 with the SOMA source, and save the target without using a headless tool.
@@ -756,6 +760,35 @@ Completion test and evidence:
   assets and captures were then removed.
 - Godot implementation checkpoint: `ddd1e07` on `Vega-KH/godot-kimodo`.
 
+Goal 10 preview and quality amendment (2026-09-23):
+
+- [x] Add mouse orbit and wheel zoom to both embedded previews with bounded,
+  stable camera motion.
+- [x] Follow each preview's animated root translation by default so long
+  locomotion takes stay framed without forcing camera heading changes.
+- [x] Keep camera orbit/zoom state synchronized when switching between source
+  and humanoid previews, and provide explicit Follow Root and Reset View
+  controls.
+- [x] Raise the denoising-step maximum from 100 to 200 while retaining 100 as
+  the default and rejecting values outside the supported range.
+- [x] Add offline camera/control/contract coverage and complete one live
+  200-step generation acceptance test.
+
+Amendment completion evidence:
+
+- Left-drag orbit and wheel zoom are clamped to stable pitch and distance
+  ranges. Source and humanoid previews share the same orbit and zoom state,
+  while following their own animated `Hips` or `Root` planar translation.
+- Follow Root defaults on, can be disabled for a fixed world view, and Reset
+  View restores the original angle and distance without changing playback.
+- Automated coverage exercises synthetic long root travel, real mouse input
+  events, cross-preview synchronization, reset/follow controls, the unchanged
+  100-step default, acceptance of 200, and rejection of 201.
+- The complete Godot 4.7.2 suite passes without engine or script errors. A live
+  full-encoder 200-step request produced a 79,475-byte SOMA-77 take and a valid
+  56-bone humanoid preview; its diffusion pass completed in about 5.5 seconds.
+- Amendment checkpoint: `961218b` on `Vega-KH/godot-kimodo`.
+
 ## Goal 11 — Drive the Jenny Auto-Rig Pro test character
 
 Status: **Proposed — awaiting review**
@@ -781,8 +814,9 @@ mesh, skin, rest pose, and intended root motion.
   skin/skeleton integrity, root travel, source immutability, reload stability,
   and plugin lifecycle cleanup.
 - [ ] Generate or reuse one recognizable take, play it on the line humanoid and
-  skinned Jenny side by side, then visually inspect start, midpoint, and final
-  frames for equivalent action and plausible deformation.
+  skinned Jenny side by side, then use the Goal 10 orbit, zoom, reset, and root-
+  follow behavior as the viewing baseline for front, side, start, midpoint,
+  and final checks of equivalent action and plausible deformation.
 
 Completion test:
 
@@ -1006,3 +1040,12 @@ live full-encoder acceptance prove clean lifecycle replacement, equivalent
 save/reload, recognizable side-by-side walking, and backend-independent native
 playback. Inventoried the supplied Jenny Auto-Rig Pro assets without importing
 or modifying them, and proposed Goal 11 for user review.
+
+### 2026-09-23 — Improve preview navigation and quality range
+
+Reopened Goal 10 for a usability amendment. Added synchronized mouse orbit,
+wheel zoom, root-follow, and reset controls to the source and humanoid dock
+previews. Raised the denoising ceiling to 200 without changing the 100-step
+default. Full offline coverage and a live full-encoder 200-step generation
+passed. Goal 11 now explicitly uses these controls as its Jenny deformation
+inspection baseline and remains proposed rather than started.
