@@ -1,6 +1,6 @@
 # Development goals and session log
 
-Last updated: 2026-09-23
+Last updated: 2026-09-24
 
 This is the authoritative living record for near-term development. It keeps
 completed work visible while limiting planning to the active goal and the next
@@ -791,29 +791,30 @@ Amendment completion evidence:
 
 ## Goal 11 — Drive the Jenny Auto-Rig Pro test character
 
-Status: **Proposed — awaiting review**
+Status: **Complete**
+Completed: 2026-09-24
 
 Outcome sought: a repository-owned test scene plays a known humanoid take on
 the supplied skinned Jenny character while preserving the character's authored
 mesh, skin, rest pose, and intended root motion.
 
-- [ ] Record provenance and inspect both supplied exports — `Jenny03.glb` with
+- [x] Record provenance and inspect both supplied exports — `Jenny03.glb` with
   an exported root bone and `Jenny03-no-root-bone.glb` without one — including
   skeleton hierarchy, bone names, skin bindings, import warnings, and Git/LFS
   impact before choosing the canonical fixture.
-- [ ] Import both variants non-destructively in an isolated test area and
+- [x] Import both variants non-destructively in an isolated test area and
   compare Godot's humanoid bone-map recognition, rest pose, scale, facing, and
   root-motion behavior.
-- [ ] Evaluate the supplied `.research/arp_fixer.gd` and the current
+- [x] Evaluate the supplied `.research/arp_fixer.gd` and the current
   `arp-importer` approach against Godot 4.7.2; document whether either fix is
   still required and why the root or no-root export is selected.
-- [ ] Add the smallest explicit, inspectable mapping/runtime layer needed to
+- [x] Add the smallest explicit, inspectable mapping/runtime layer needed to
   drive the selected Auto-Rig Pro skeleton from the Goal 10 humanoid take,
   without modifying the source animation or imported character resource.
-- [ ] Add a test scene and automated checks for mapped coverage, finite poses,
+- [x] Add a test scene and automated checks for mapped coverage, finite poses,
   skin/skeleton integrity, root travel, source immutability, reload stability,
   and plugin lifecycle cleanup.
-- [ ] Generate or reuse one recognizable take, play it on the line humanoid and
+- [x] Generate or reuse one recognizable take, play it on the line humanoid and
   skinned Jenny side by side, then use the Goal 10 orbit, zoom, reset, and root-
   follow behavior as the viewing baseline for front, side, start, midpoint,
   and final checks of equivalent action and plausible deformation.
@@ -830,6 +831,78 @@ Completion test:
 Stop condition: mark Goal 11 Complete, commit and push, propose Goal 12 for
 review, report and celebrate, then end the turn before arbitrary user-rig
 detection, production import automation, or mesh-weight repair.
+
+Completion test and evidence:
+
+- Both supplied GLBs import cleanly under Godot 4.7.2 with identity skeleton
+  transforms, the same materials and 37,270 indexed triangles, and no embedded
+  animations. The root-bearing export has 61 bones and 61 skin binds; the
+  no-root export has 60 and uses `Hips` as its hierarchy root.
+- The canonical fixture is the 12,414,456-byte root-bearing export at SHA-256
+  `cea2da0dead498499b0433322d9aba04681da24e587d3e2a15004acfe2afeae9`.
+  Its dedicated `Root` matches the existing humanoid motion contract and avoids
+  synthesizing a root later. The single sub-50-MiB fixture is stored directly
+  in Git; embedded images import as Basis Universal instead of extracted copies.
+- The historical `arp_fixer.gd` targets object-level animation tracks. Neither
+  supplied GLB has animation, and the baker authors motion directly on `Root`,
+  so that script and the external `arp-importer` are unnecessary here.
+- `HumanoidCharacterBaker` transfers the 22 explicit body rotations plus
+  `Root` and `Hips` positions using model-space rest deltas. It leaves Jenny's
+  eight twist bones and fingers untracked so they retain authored rest/parent
+  behavior, and never modifies the imported GLB or source humanoid take.
+- Automated coverage proves the 61-bone hierarchy, eight skinned meshes,
+  37,270 triangles, all skin binds, 24 finite tracks, model-space rotation
+  equivalence at four samples, root travel, source/rest/mesh immutability,
+  unique saving, a self-contained dependency closure, equivalent clean reload,
+  and complete node cleanup.
+- The side-by-side Godot scene provides orbit, zoom, follow-root, and reset
+  controls. GPU-rendered front and side checks at start, midpoint, and end show
+  the same recognizable walking progression, plausible skinned deformation,
+  and no root trail or stretched geometry. The 40k-triangle authored export
+  presents no acceptance-scene performance concern; retain the available 10k
+  alternative only as a future optimization option.
+- The complete Godot 4.7.2 suite passes, including editor import, all prior
+  contracts, Jenny retarget/save/reload, and four playback smoke scenes, with
+  no engine or script errors.
+- Godot implementation checkpoint: `3466190` on `Vega-KH/godot-kimodo`.
+
+## Goal 12 — Preview and save a compatible skinned character from the dock
+
+Status: **Proposed**
+
+Outcome sought: an artist can choose a compatible skinned humanoid scene in
+the AI Motion dock, preview the current generated take on that character, and
+save a self-contained character take without entering the test workflow.
+
+- [ ] Add a project-resource target selector and explicit clear/reset action
+  for a `PackedScene`, without modifying the selected scene or its imports.
+- [ ] Validate one `Skeleton3D`, required `Root`/`Hips` and 22 body names,
+  skin bindings, finite rests, and supported animation ownership; report
+  actionable compatibility errors separately from generation and transport.
+- [ ] Reuse the Goal 11 rest-delta baker to create and replace an owned skinned
+  preview from the current humanoid result, with Jenny as the acceptance asset.
+- [ ] Integrate the skinned preview with the existing selector, synchronized
+  play/pause/loop/scrub state, orbit, zoom, follow-root, and reset behavior.
+- [ ] Add unique, non-destructive `Save Character Take` output that remains
+  playable after the backend stops and after the source model is unavailable.
+- [ ] Add offline dock/lifecycle coverage for valid selection, incompatible
+  rigs, replacement and clearing, regeneration, save/reload, and cleanup.
+- [ ] Complete one manual dock pass selecting Jenny, generating or reusing a
+  recognizable take, previewing it from multiple angles, saving it, and
+  reopening the saved character scene.
+
+Completion test:
+
+1. Selecting Jenny in the dock produces a synchronized skinned preview of the
+   current take without mutating Jenny, the source take, or imported resources.
+2. The character result saves uniquely and reopens with equivalent motion and
+   skinning while the backend is stopped.
+3. Automated lifecycle tests and one manual multi-angle playback pass under
+   Godot 4.7.2 without stale previews, leaked nodes, or engine errors.
+
+Stop condition: mark Goal 12 Complete, commit and push, propose Goal 13 for
+review, report and celebrate, then end the turn before automatic arbitrary
+bone-name inference, production import rewriting, or mesh-weight repair.
 
 ## Current blockers
 
@@ -886,11 +959,10 @@ machine; close other memory-heavy applications before cold startup.
   NVIDIA upstream after the baseline is complete.
 - Decide whether recorded binary glTF fixtures live directly in Git or use a
   separate fixture-release mechanism after their sizes are known.
-- Future skinned-character work can evaluate the user-owned Auto-Rig Pro test
-  exports at `../Models/Jenny03.glb` (with exported root) and
-  `../Models/Jenny03-no-root-bone.glb` (without it), plus the supplied research
-  script at `../.research/arp_fixer.gd`. Goal 10 deliberately does not import,
-  modify, or choose between these files.
+- Goal 11 selected the root-bearing Auto-Rig Pro export as the canonical Jenny
+  fixture. Its dedicated `Root` matches the current humanoid contract; neither
+  the historical `arp_fixer.gd` nor an external importer is needed for an
+  animation-free character driven by the rest-delta baker.
 - Explore a quantized or smaller compatible text encoder after the MMCP
   boundary work. Measure semantic quality as well as download size, RAM,
   startup latency, and GPU impact; this is independent of exposing SOMA-77.
@@ -1049,3 +1121,13 @@ previews. Raised the denoising ceiling to 200 without changing the 100-step
 default. Full offline coverage and a live full-encoder 200-step generation
 passed. Goal 11 now explicitly uses these controls as its Jenny deformation
 inspection baseline and remains proposed rather than started.
+
+### 2026-09-24 — Drive the Jenny Auto-Rig Pro character
+
+Completed Goal 11. Compared both supplied Auto-Rig Pro exports and selected
+the dedicated-root variant, recorded its provenance and import contract, and
+added a model-space rest-delta baker that preserves Jenny's skin, meshes, rest
+pose, and root travel. Automated save/reload coverage and a GPU-rendered
+side-by-side scene show the known walk on the textured character without a
+root trail or deformation defect. Proposed Goal 12 for user review without
+beginning dock integration for a selectable skinned target.
