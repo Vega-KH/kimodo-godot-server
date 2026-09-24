@@ -794,6 +794,10 @@ Amendment completion evidence:
 Status: **Complete**
 Completed: 2026-09-24
 
+Corrective amendment status (2026-09-24): **Complete** — a user-supplied
+holding-walk take exposed source/target rest-direction offsets leaking into
+animated poses at both humanoid retarget stages.
+
 Outcome sought: a repository-owned test scene plays a known humanoid take on
 the supplied skinned Jenny character while preserving the character's authored
 mesh, skin, rest pose, and intended root motion.
@@ -866,6 +870,53 @@ Completion test and evidence:
   no engine or script errors.
 - Godot implementation checkpoint: `3466190` on `Vega-KH/godot-kimodo`.
 
+Goal 11 rotation and asset-license amendment (2026-09-24):
+
+- [x] Align target semantic segment directions to their mapped source rest
+  directions before applying source world motion in both SOMA-to-humanoid and
+  humanoid-to-character bakers.
+- [x] Replace the self-confirming basis assertions with permanent tests whose
+  deliberately different A/T-pose and exporter rests fail under the old rule
+  and prove segment-direction equivalence after correction.
+- [x] Use the supplied holding-walk native/humanoid pair as a temporary
+  debugging oracle, visually confirm the corrected humanoid and Jenny poses,
+  then permanently remove those diagnostic animation files.
+- [x] Add a model-specific CC BY 4.0 notice crediting Kyle Howard and clarify
+  that Jenny is excluded from the repository's MIT code license.
+- [x] Preserve the user's `floor1` parser correction, run the complete Godot
+  4.7.2 suite, and record the corrective checkpoint before Goal 12 begins.
+
+Amendment completion evidence:
+
+- The original retarget retained each target rig's rest-direction offset in
+  every animated pose: the holding-walk showed 20.24° shoulder offsets and
+  exactly 32° upper/lower-arm offsets, matching the fixture's A/T-pose
+  differences. Multiplication-order reversal alone was rejected after rendered
+  Jenny output and quantitative tests showed 90–174° arm errors.
+- The final rule computes source world motion, minimally swings each target
+  semantic segment's rest direction onto the mapped source rest direction,
+  retains target roll/proportions, and applies the motion to that corrected
+  rest. Seventeen torso/limb parent-child relationships are explicit and
+  inspectable.
+- SOMA's collapsed neck is handled deliberately: `UpperChest` direction uses
+  `Chest -> Neck1`, while target `Neck` rotation continues to map from `Neck2`.
+- On the supplied holding-walk first frame, all six shoulder/arm segment errors
+  fell from 20–32° to below 0.00006°. The corrected humanoid-to-Jenny transfer
+  measured below 0.00004° for the same arm segments. Front, side, start,
+  midpoint, and final renders showed equivalent raised/bent arms without the
+  previous crossed-behind-back amplification.
+- Permanent tests now cover corrected rest bases, non-commuting fixtures,
+  visible segment directions, interpolation tolerance, root travel, skin/rest
+  immutability, unique save/reload, and cleanup across both retarget stages.
+- The user-supplied `animations/kimodo` debugging pair and all temporary bake,
+  diagnostic, and capture artifacts were permanently removed after acceptance.
+- `Jenny03.glb` remains the repository-owned test fixture and now has a
+  colocated CC BY 4.0 notice: copyright © 2026 Kyle Howard, with the requested
+  attribution text and an explicit exclusion from the MIT software license.
+- The complete Godot 4.7.2 suite passes without engine or script errors.
+  Corrective implementation checkpoint: `71346ad` on
+  `Vega-KH/godot-kimodo`.
+
 ## Goal 12 — Preview and save a compatible skinned character from the dock
 
 Status: **Proposed**
@@ -879,8 +930,9 @@ save a self-contained character take without entering the test workflow.
 - [ ] Validate one `Skeleton3D`, required `Root`/`Hips` and 22 body names,
   skin bindings, finite rests, and supported animation ownership; report
   actionable compatibility errors separately from generation and transport.
-- [ ] Reuse the Goal 11 rest-delta baker to create and replace an owned skinned
-  preview from the current humanoid result, with Jenny as the acceptance asset.
+- [ ] Reuse the corrected Goal 11 direction-normalized baker to create and
+  replace an owned skinned preview from the current humanoid result, with Jenny
+  as the acceptance asset.
 - [ ] Integrate the skinned preview with the existing selector, synchronized
   play/pause/loop/scrub state, orbit, zoom, follow-root, and reset behavior.
 - [ ] Add unique, non-destructive `Save Character Take` output that remains
@@ -1131,3 +1183,14 @@ pose, and root travel. Automated save/reload coverage and a GPU-rendered
 side-by-side scene show the known walk on the textured character without a
 root trail or deformation defect. Proposed Goal 12 for user review without
 beginning dock integration for a selectable skinned target.
+
+### 2026-09-24 — Correct rest-direction retargeting and license Jenny
+
+Reopened Goal 11 after a user-generated holding-walk exposed shoulder, arm,
+and neck discrepancies hidden by the original ordinary-walk acceptance pose.
+Replaced target-rest-offset leakage with explicit semantic segment-direction
+normalization in both retarget stages, including deliberate handling of the
+collapsed SOMA neck. Quantitative holding-walk checks, permanent regressions,
+and GPU-rendered Jenny views pass. Added Kyle Howard's CC BY 4.0 attribution,
+preserved the user parser correction, and removed all supplied diagnostic
+animations and temporary artifacts. Goal 12 remains proposed and unstarted.
