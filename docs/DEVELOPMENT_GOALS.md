@@ -919,27 +919,28 @@ Amendment completion evidence:
 
 ## Goal 12 — Preview and save a compatible skinned character from the dock
 
-Status: **Proposed**
+Status: **Complete**
+Completed: 2026-09-24
 
 Outcome sought: an artist can choose a compatible skinned humanoid scene in
 the AI Motion dock, preview the current generated take on that character, and
 save a self-contained character take without entering the test workflow.
 
-- [ ] Add a project-resource target selector and explicit clear/reset action
+- [x] Add a project-resource target selector and explicit clear/reset action
   for a `PackedScene`, without modifying the selected scene or its imports.
-- [ ] Validate one `Skeleton3D`, required `Root`/`Hips` and 22 body names,
+- [x] Validate one `Skeleton3D`, required `Root`/`Hips` and 22 body names,
   skin bindings, finite rests, and supported animation ownership; report
   actionable compatibility errors separately from generation and transport.
-- [ ] Reuse the corrected Goal 11 direction-normalized baker to create and
+- [x] Reuse the corrected Goal 11 direction-normalized baker to create and
   replace an owned skinned preview from the current humanoid result, with Jenny
   as the acceptance asset.
-- [ ] Integrate the skinned preview with the existing selector, synchronized
+- [x] Integrate the skinned preview with the existing selector, synchronized
   play/pause/loop/scrub state, orbit, zoom, follow-root, and reset behavior.
-- [ ] Add unique, non-destructive `Save Character Take` output that remains
+- [x] Add unique, non-destructive `Save Character Take` output that remains
   playable after the backend stops and after the source model is unavailable.
-- [ ] Add offline dock/lifecycle coverage for valid selection, incompatible
+- [x] Add offline dock/lifecycle coverage for valid selection, incompatible
   rigs, replacement and clearing, regeneration, save/reload, and cleanup.
-- [ ] Complete one manual dock pass selecting Jenny, generating or reusing a
+- [x] Complete one manual dock pass selecting Jenny, generating or reusing a
   recognizable take, previewing it from multiple angles, saving it, and
   reopening the saved character scene.
 
@@ -955,6 +956,79 @@ Completion test:
 Stop condition: mark Goal 12 Complete, commit and push, propose Goal 13 for
 review, report and celebrate, then end the turn before automatic arbitrary
 bone-name inference, production import rewriting, or mesh-weight repair.
+
+Completion test and evidence:
+
+- The editor dock now uses Godot's native `EditorResourcePicker` restricted to
+  `PackedScene` resources, plus an explicit Clear action. Jenny's imported GLB
+  can be selected directly without copying or changing its import settings.
+- Target validation requires a `Node3D` root, exactly one `Skeleton3D`, `Root`,
+  `Hips`, all 22 mapped body names, finite rests, at least one non-empty skin,
+  and no collision with the plugin-owned `KimodoAnimationPlayer`. Errors remain
+  local to the character workflow and identify the failed requirement.
+- A selected compatible target becomes a third preview after the humanoid
+  intermediate is ready. The textured character shares play/pause, loop,
+  timeline scrub, orbit, zoom, reset, and follow-root state with the SOMA-77
+  and line-humanoid views; unavailable preview choices remain disabled.
+- Clear frees only the derived character preview and returns to the humanoid.
+  Replacing a generated source frees both derived previews but preserves the
+  selected character so it can be applied again after humanoid retargeting.
+- `Save Character Take` writes a unique self-contained `.tscn` containing the
+  61-bone Jenny skeleton, all eight skinned meshes, and the 24-track editable
+  `motion` animation on `KimodoAnimationPlayer`. Save does not transfer live
+  preview ownership or modify the selected GLB, and a duplicate receives a
+  numeric suffix.
+- Clean reload reproduces the animation at four samples and reports an empty
+  dependency closure, proving playback/editing does not require the backend or
+  original character GLB. The README records how to open the saved scene and
+  edit `motion` in Godot's Animation panel.
+- Offline coverage exercises valid and invalid selection, missing root, extra
+  skeletons, missing skins, non-finite rests, reserved animation ownership,
+  selection/clear/replacement, synchronized controls, unique save, equivalent
+  reload, source immutability, and complete node cleanup.
+- A GPU-backed dock-pipeline pass rendered the recorded walk on textured Jenny
+  at start and midpoint from front and side views. The saved character was also
+  reopened through the automated acceptance path; temporary captures and
+  outputs were removed.
+- The complete Godot 4.7.2 suite passes without engine or script errors.
+  Implementation checkpoint: `d985782` on `Vega-KH/godot-kimodo`.
+
+## Goal 13 — Persist a generated motion draft with provenance
+
+Status: **Proposed**
+
+Outcome sought: an artist can save the current generation intent and accepted
+artifact references as a project-owned draft, reopen it later, and understand
+exactly how the take was produced without relying on the running backend.
+
+- [ ] Define a versioned `MotionDraft` Resource containing prompt, frame count,
+  seed, denoising steps, creation time, MMCP/model/fps/skeleton provenance, and
+  optional native, humanoid, character-target, and saved-character paths.
+- [ ] Record immutable generation provenance when a validated response enters
+  the dock, distinguishing requested settings from returned capability data.
+- [ ] Update draft artifact references only after the corresponding unique save
+  succeeds; never infer acceptance from a preview alone.
+- [ ] Add project-relative Save Draft and Load Draft controls with unique naming,
+  explicit missing/incompatible-version errors, and no automatic regeneration.
+- [ ] Restore editable generation inputs and display read-only provenance plus
+  resolvable artifact links when a draft is loaded after editor restart.
+- [ ] Add offline round-trip, schema-version, missing-artifact, unique-save,
+  source-immutability, and plugin lifecycle tests.
+- [ ] Save a draft for a Jenny take, restart the editor with the backend stopped,
+  reload it, and verify its settings/provenance and accepted character scene.
+
+Completion test:
+
+1. A generated and saved Jenny take produces a uniquely named `MotionDraft`
+   whose recorded request, backend contract, and artifact paths are exact.
+2. A clean editor restart with no backend loads the draft, restores authoring
+   inputs, and identifies available or missing artifacts without mutation.
+3. Automated round-trip/lifecycle tests and one manual reopen pass succeed
+   under Godot 4.7.2.
+
+Stop condition: mark Goal 13 Complete, commit and push, propose Goal 14 for
+review, report and celebrate, then end the turn before multi-candidate jobs,
+undo/redo acceptance, or constraint authoring.
 
 ## Current blockers
 
@@ -1194,3 +1268,13 @@ collapsed SOMA neck. Quantitative holding-walk checks, permanent regressions,
 and GPU-rendered Jenny views pass. Added Kyle Howard's CC BY 4.0 attribution,
 preserved the user parser correction, and removed all supplied diagnostic
 animations and temporary artifacts. Goal 12 remains proposed and unstarted.
+
+### 2026-09-24 — Preview and save Jenny from the AI Motion dock
+
+Completed Goal 12. Added a native PackedScene target picker, strict compatible-
+rig validation, a textured third preview synchronized with the existing motion
+controls, and non-destructive unique character saving. Jenny passes the full
+dock workflow and reloads as a self-contained editable scene with its skin and
+`motion` animation intact. Offline lifecycle coverage and GPU front/side views
+passed, and Goal 13 is proposed as the first small persistent `MotionDraft`
+slice without beginning that work.
