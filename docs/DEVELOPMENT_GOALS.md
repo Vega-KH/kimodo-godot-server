@@ -4,7 +4,7 @@ Last reviewed: **2026-09-25**
 
 Current product stage: **basic workflow**
 
-Current goal: **Goal 14 — Proposed; awaiting user approval**
+Current goal: **Goal 14 — Implementation complete; awaiting manual acceptance**
 
 ## How to use this document
 
@@ -196,9 +196,9 @@ native animation acceptance.
 
 ## Goal 14 — Session-first workspace and multiple takes
 
-Status: **Proposed; awaiting user approval**
+Status: **Implementation complete; awaiting manual acceptance**
 
-Do not implement this goal until the user approves it.
+Approved: **2026-09-25**
 
 ### Why this goal changed
 
@@ -245,9 +245,10 @@ The user's interpretation is correct, with one important seed caveat:
 
 Opening the plugin shows a quiet session chooser, not generation controls. An
 artist creates or opens a project-owned session, chooses a compatible
-character, generates a tested number of takes in one request, switches between
-those takes on the selected character, and closes/reopens Godot with the
-backend stopped without losing session state or generated take data.
+character, generates a tested number of takes in one request, and switches
+between those takes on the selected character. Unsaved take payloads are
+transient; closing/reopening Godot restores durable session state and saved
+artifact references without preserving every discarded motion.
 
 The session autosaves. There is no manual session Save button and no hidden
 dirty state that can be lost at Generate, target change, artifact save, editor
@@ -261,73 +262,114 @@ shutdown, or session switch.
   owns the request seed shared by its returned batch.
 - **Take:** one variation within a generation, identified by stable take ID,
   generation ID, sample index/name, and decoded-motion content hash.
-- **Session-managed source:** the exact validated MMCP response saved under the
-  session directory so takes remain previewable offline. This is not an
-  accepted animation.
+- **Transient take payload:** validated response bytes and decoded previews
+  retained in memory, with an optional disposable project cache. They are not
+  session history and may be removed when the editor or session closes.
 - **Saved artifact:** an explicit native/humanoid/character export linked to a
   take. It is not accepted merely because it exists.
 - **Accepted animation:** remains absent until the later acceptance goal.
 
 ### Scope
 
-- [ ] Introduce a versioned `KimodoSession` model and session store. Rename the
+- [x] Introduce a versioned `KimodoSession` model and session store. Rename the
   product/UI terminology from draft to session; do not merely relabel widgets
   while keeping draft-shaped ownership.
-- [ ] Add a lossless schema migration from Goal 13 `MotionDraft` resources.
+- [x] Add a lossless schema migration from Goal 13 `MotionDraft` resources.
   Preserve IDs, target signatures, editable intent, exact generation records,
   and artifact links. Loading an old draft must never overwrite it in place.
-- [ ] Start in a session landing state that exposes only New Session, Open
+- [x] Start in a session landing state that exposes only New Session, Open
   Session, and a small recent-session list. Backend, prompt, generation,
   preview, retarget, and export controls remain unconstructed or hidden until
   a session is active.
-- [ ] Require a validated project-owned character before Generate is enabled.
+- [x] Require a validated project-owned character before Generate is enabled.
   Keep diagnostic SOMA/humanoid layers available inside the session but
   secondary to the selected-character workflow.
-- [ ] Break the 1,400-line dock into focused session shell, generation/take,
+- [x] Break the 1,400-line dock into focused session shell, generation/take,
   preview, and output components with one explicit session controller. Avoid a
   visual-only rearrangement that leaves state transitions in the widget class.
-- [ ] Replace manual draft Save/Save As with atomic autosave and a visible
+- [x] Replace manual draft Save/Save As with atomic autosave and a visible
   `Saving…` / `Saved` / actionable-error indicator. Mark state dirty on edits,
   debounce ordinary field changes, and force a save at session creation,
   validated target change, immediately before Generate, after a validated
-  response is durably stored, after artifact save, before session switch, and
+  response provenance is recorded, after artifact save, before session switch, and
   on editor shutdown.
-- [ ] Never update the session manifest before its referenced response or
-  artifact exists. Use temporary files plus atomic rename/rollback so a crash
-  cannot leave a manifest pointing at partial data.
-- [ ] Persist each exact validated MMCP response in a project-contained session
-  directory and record its SHA-256. Create one take record per response
-  animation with sample index/name and a deterministic decoded-motion hash.
-- [ ] Add backend contract tests for `num_samples == 2` proving Kimodo-style
+- [x] Append generation provenance only after the complete response validates,
+  and never add an artifact reference before its file exists. Use temporary
+  files plus atomic rename/rollback so a crash cannot leave a partial session
+  manifest.
+- [x] Keep validated response bytes and decoded takes in memory or an explicitly
+  disposable cache until the user saves a take. Persist provenance and take
+  summaries/hashes in the session, not every generated animation payload.
+- [x] Add backend contract tests for `num_samples == 2` proving Kimodo-style
   `(B,T,J,...)` arrays survive `MotionResult` validation and serialize as two
   ordered glTF animations plus two matching metadata entries.
-- [ ] Run one short fixed-request live loopback generation with
+- [x] Run one short fixed-request live loopback generation with
   `num_samples == 2`. Verify both takes are structurally valid and distinct,
   record latency/RAM/VRAM relative to one sample, and reduce the exposed limit
   to tested behavior rather than trusting `max_num_samples: 16`.
-- [ ] Extend the Godot response layer to parse all response animations and
+- [x] Extend the Godot response layer to parse all response animations and
   correlate them one-to-one with `MMCP_motion.samples[]`. Reject duplicate
   names, count/order mismatches, invalid tracks, or cross-sample metadata.
-- [ ] Let the artist request the tested take count and switch quickly between
+- [x] Let the artist request the tested take count and switch quickly between
   takes on the selected character while preserving playback time, loop state,
   camera, and root-follow state. Use the term **take**, not candidate or sample,
   in artist-facing UI.
-- [ ] Keep every take non-destructive. Switching, regenerating, changing the
+- [x] Keep every take non-destructive. Switching, regenerating, changing the
   target, closing the editor, and reopening offline must not alter the source
-  character or existing project animation.
-- [ ] Autosave the old target state before changing character. Retain prior
+  character or existing project animation. Unsaved take previews need not
+  survive a restart and must be reported honestly as unavailable.
+- [x] Autosave the old target state before changing character. Retain prior
   generations/takes with their target snapshot and rebuild previews lazily for
   the new current target.
-- [ ] Add migration, session-gating, autosave/coalescing, atomic-failure,
-  response/take round-trip, multi-animation parsing, offline reopen, target
+- [x] Add migration, session-gating, autosave/coalescing, atomic-failure,
+  provenance/take-summary round-trip, multi-animation parsing, offline reopen, target
   switch, preview synchronization, source-immutability, and node-lifecycle
   tests.
-- [ ] Update the plan, README, and repair ledger, including measured
+- [x] Update the plan, README, and repair ledger, including measured
   multi-take behavior and the exact tested maximum exposed by the UI.
 - [ ] Manually verify the complete session-first workflow with Jenny: launch to
   the session chooser, create a session, choose Jenny, generate multiple takes,
-  switch takes, restart with the backend stopped, reopen the session, and
-  preview the same takes without mutation or regeneration.
+  switch takes, save one selected take, restart with the backend stopped,
+  reopen the session, and verify that session state plus the saved artifact
+  remain while unsaved take payloads are not presented as durable.
+
+### Implementation evidence — 2026-09-25
+
+- Added schema-versioned `KimodoSession`, atomic session store, explicit
+  session controller, and lossless `MotionDraft` migration. The original draft
+  is hash-checked and remains byte-identical; autosave covers debounced edits
+  plus every forced workflow boundary.
+- The dock now launches to a quiet chooser and constructs an active workspace
+  around focused session, generation/take, preview, and output components.
+  Generate requires both an active session and a validated character target.
+- The typed request permits the tested one- or two-take range. The response
+  parser enforces exact ordered animation/metadata correspondence, isolates
+  each animation into an independent scene, hashes decoded motion content,
+  and rejects duplicate names, count/order mismatches, and cross-sample data.
+- Take payloads are owned by a transient in-memory set. The durable session
+  records provenance and take summaries; only an explicitly saved selected
+  take becomes an artifact. Reopening offline does not pretend discarded
+  payloads are playable.
+- Backend boundary coverage proves a two-item `(B,T,77,4)` batch survives
+  `MotionResult` validation and serializes as ordered `sample_0`/`sample_1`
+  glTF animations with matching metadata.
+- A final live 20-step, two-take run completed in 5.85 seconds inference / 6.59
+  seconds wall time with a 147,763-byte response, 13.23 GiB peak server working
+  set, and 1,708 MiB baseline/peak total GPU allocation. Both decoded motions
+  had distinct hashes, retargeted to Jenny, switched cleanly, and leaked no
+  nodes. The exposed maximum remains two despite the backend advertising 16.
+- Comparative measurements are workload/cache sensitive. A same-session
+  back-to-back reference measured one take at 3.69 seconds generation / 4.45
+  seconds wall and two at 6.46 / 7.42 seconds; server working set and reported
+  total GPU allocation were effectively unchanged. This latency did not make
+  the editor materially unresponsive, so server job cancellation remains a
+  later hardening item rather than a Goal 14 blocker.
+- Final automated verification: all 23 Godot checks pass under Godot 4.7.2;
+  the backend reports 24 passed and 7 device-gated skips; Ruff passes. The only
+  warnings are 18 known `torch.jit` deprecations in pinned dependencies.
+- GPU-rendered dock captures verified the quiet landing state and the active
+  Generate/Preview/Output workspace. Final real-editor acceptance remains the
+  sole open gate.
 
 ### Decision gates
 
@@ -353,8 +395,9 @@ shutdown, or session switch.
 4. Take switching previews the selected variation on Jenny at the same
    playback/camera state and does not mutate Jenny or existing animation.
 5. After a clean restart with the backend stopped, reopening the session
-   restores target, intent, provenance, take list, selected take, and artifact
-   status; the persisted takes remain previewable without regeneration.
+   restores target, intent, provenance/take summaries, selection metadata, and
+   artifact status. Saved artifacts remain usable; unsaved take payloads are
+   clearly unavailable and were not silently retained as permanent history.
 6. A Goal 13 draft migrates losslessly to a new session while the original file
    remains byte-identical.
 7. All backend and Godot suites pass without unexpected engine errors, leaked
@@ -399,18 +442,17 @@ These are implementation findings and their current disposition.
    all three existing output flows now canonicalize `res://` paths, compare
    their absolute result with the project root, reject traversal and `user://`,
    and clean up earlier files when a later multi-file save stage fails.
-2. **Partially resolved in Goal 13 — cancellation remains client-side.** Cancel
+2. **Measured in Goal 14 — cancellation remains client-side.** Cancel
    and timeout messages now say that Godot stopped waiting while the local
    backend may still be finishing inference. Actual CUDA cancellation still
-   requires a server job/cancel mechanism. **Owner: Goal 14 if measured
-   multi-take latency makes it material; otherwise Goal 17.**
-3. **The multi-take protocol path is documented but not verified end to end.**
-   Kimodo and the pinned MMCP SDK represent `num_samples` as a batch and the SDK
-   serializes one animation/metadata entry per sample. The extension still
-   hardcodes one sample and requires exactly one animation, and no repository
-   or live test yet proves the two-take path. Do not expose the advertised
-   maximum of 16 until the complete path is tested and measured. **Owner: Goal
-   14.**
+   requires a server job/cancel mechanism. The measured two-take path remained
+   responsive enough for the tested limit, so this is not a Goal 14 blocker.
+   **Owner: Goal 17.**
+3. **Resolved in Goal 14 — two-take protocol path.** Backend and Godot contract
+   tests plus a live generation prove two ordered animations and metadata
+   entries, distinct decoded hashes, selected-character retargeting, switching,
+   and cleanup. The artist-facing maximum is deliberately two, not the
+   backend-advertised 16.
 4. **Finger rotations are deliberately dropped during retargeting.** The
    SOMA-77 humanoid map contains only 22 body targets and explicitly ignores 48
    finger joints; its regression test currently enforces that omission. The
@@ -427,13 +469,13 @@ These are implementation findings and their current disposition.
 
 ### Priority 2 — structural risks to address while nearby code changes
 
-1. **Partially addressed in Goal 13 — `ai_motion_dock.gd` remains large.** The
-   new resource model, draft store, canonical hashing, atomic persistence, and
-   path validation live in domain services rather than the dock. The dock still
-   owns substantial widget construction and workflow orchestration and is now
-   roughly 1,400 lines. Goal 14 must split session, generation/take, preview,
-   and output responsibilities while introducing the session controller; avoid
-   an unrelated rewrite beyond those boundaries. **Owner: Goal 14.**
+1. **Materially addressed in Goal 14 — dock responsibilities extracted.**
+   Session persistence/state transitions and transient take ownership now live
+   in domain controllers; the landing shell and generation, preview, and output
+   tabs are focused components. `ai_motion_dock.gd` still coordinates the
+   editor workflow and remains about 1,600 lines, so further UI decomposition
+   should happen alongside the future visual redesign, not as an unrelated
+   rewrite. **Owner: future UI overhaul.**
 2. **Retarget/save logic is duplicated.** The SOMA→humanoid and
    humanoid→character bakers duplicate global-rest sampling, direction
    correction, track indexing, unique naming, and save behavior. Their baseline
@@ -512,6 +554,22 @@ No external blocker is active. Gated access to
   cluttered; that finding directly shaped Goal 14's session-first shell and
   component split.
 
+## Verification snapshot — 2026-09-25 Goal 14 implementation
+
+- Godot: the complete 23-check suite passes under Godot 4.7.2, covering session
+  migration/autosave, atomic failure behavior, chooser gating, two-take parsing,
+  take switching, offline reopen, source immutability, retargeting, saving, and
+  all four playback smoke scenes.
+- Backend: `24 passed, 7 skipped`; skips are device-specific. Ruff passes. The
+  18 warnings are known `torch.jit` deprecations from pinned dependencies.
+- Live: a final two-take run returned 147,763 bytes, completed inference in
+  5.85 seconds (6.59 seconds wall), peaked at 13.23 GiB server working set, and
+  did not increase the 1,708 MiB reported total GPU allocation. Both takes were
+  distinct, retargeted, switchable, and cleaned up without ObjectDB leaks.
+- Rendered UI checks pass. Manual real-editor session creation, switching,
+  selected-take save, restart, and offline reopen remain required before Goal
+  14 is complete.
+
 ## Durable design decisions
 
 - Keep backend and extension independently versioned.
@@ -555,3 +613,8 @@ No external blocker is active. Gated access to
   sample. Confirmed that the current retarget map intentionally drops all 48
   SOMA finger joints. Added the detailed, approval-gated Goal 14 session/multiple-
   take proposal and assigned full-skeleton/finger repair to Goal 15.
+- **2026-09-25:** Implemented Goal 14's session-first chooser and workspace,
+  atomic autosave, lossless draft migration, focused UI/domain controllers,
+  typed two-take request/response path, transient payload ownership, take
+  switching on Jenny, and durable selected-take artifacts. Automated, rendered,
+  and live two-take gates pass; final real-editor acceptance is pending.

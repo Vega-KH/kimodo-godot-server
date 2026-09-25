@@ -10,6 +10,7 @@ import pytest
 from kimodo.skeleton import SOMASkeleton30, SOMASkeleton77
 from motionmcp import GenerateRequest
 from motionmcp.errors import ProtocolError
+from motionmcp.gltf import build_gltf
 
 from motionmcp_kimodo import backbone as backbone_module
 from motionmcp_kimodo.skeleton import skeleton_to_mmcp
@@ -82,13 +83,17 @@ class _FakeSomaModel:
     def __call__(self, **kwargs):
         self.received_constraints = kwargs["constraint_lst"]
         frames = sum(kwargs["num_frames"])
+        samples = kwargs["num_samples"]
         rotations = np.broadcast_to(
-            np.eye(3, dtype=np.float32), (1, frames, len(SOMA77_NAMES), 3, 3),
+            np.eye(3, dtype=np.float32), (samples, frames, len(SOMA77_NAMES), 3, 3),
         ).copy()
+        roots = np.zeros((samples, frames, 3), dtype=np.float32)
+        for sample in range(samples):
+            roots[sample, :, 0] = float(sample)
         return {
             "local_rot_mats": rotations,
-            "root_positions": np.zeros((1, frames, 3), dtype=np.float32),
-            "foot_contacts": np.zeros((1, frames, 6), dtype=bool),
+            "root_positions": roots,
+            "foot_contacts": np.zeros((samples, frames, 6), dtype=bool),
         }
 
 
@@ -137,6 +142,7 @@ def test_output_validation_rejects_wrong_joint_count_and_nonfinite_root():
         )
 
     rotations = np.broadcast_to(np.eye(3), (1, 2, 77, 3, 3))
+    roots = np.zeros((1, 2, 3))
     roots[0, 0, 0] = np.nan
     with pytest.raises(ProtocolError, match="non-finite"):
         backbone_module._validate_output_arrays(
@@ -147,6 +153,43 @@ def test_output_validation_rejects_wrong_joint_count_and_nonfinite_root():
             contact_joint_names=list(SOMA77_CONTACT_NAMES),
         )
 
+
+def test_two_samples_survive_backbone_and_serialize_as_ordered_takes(monkeypatch):
+    model = _FakeSomaModel()
+    monkeypatch.setattr(backbone_module, "load_model", lambda *_args, **_kwargs: model)
+    backend = backbone_module.KimodoBackbone(model_id="test", device="cpu")
+    backend.setup()
+    spec = backend.capabilities()
+    request = GenerateRequest.model_validate({
+        "protocol_version": "1.0",
+        "model": "test",
+        "skeleton": spec.canonical_skeleton.model_dump(),
+        "segments": [{"type": "text", "prompt": "two walks", "duration_frames": 5}],
+        "constraints": [],
+        "timing": {"fps": 30.0},
+        "options": {"diffusion_steps": 1, "num_samples": 2, "seed": 7},
+    })
+
+    result = asyncio.run(backend.generate(request))
+    assert result.rotations.shape == (2, 5, 77, 4)
+    assert result.root_translations.shape == (2, 5, 3)
+    assert not np.array_equal(result.root_translations[0], result.root_translations[1])
+
+    document = build_gltf(
+        skeleton=request.skeleton.model_dump(mode="json"),
+        joint_names=result.joint_names,
+        rotations_quat=result.rotations,
+        root_translations=result.root_translations,
+        fps=30.0,
+        model_id="test",
+        foot_contacts=result.foot_contacts,
+    )
+    assert [animation["name"] for animation in document["animations"]] == [
+        "sample_0", "sample_1",
+    ]
+    assert [sample["name"] for sample in document["extensions"]["MMCP_motion"]["samples"]] == [
+        "sample_0", "sample_1",
+    ]
 
 def test_output_validation_rejects_misaligned_contact_channels():
     rotations = np.broadcast_to(np.eye(3), (1, 2, 77, 3, 3))

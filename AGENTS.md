@@ -7,10 +7,11 @@ Godot. Keep it independently versioned from the Godot editor extension.
 
 Goals 0–13 established the backend/extension vertical slice and persistent
 target-first authoring state. Goal 13 passed its manual editor acceptance check.
-Goal 14 is proposed, not approved: it replaces the draft metaphor with a
-session-first workspace and validates multi-take generation end to end. Do not
-implement it until the user approves it. The project is finishing the basic
-workflow before advanced constraint authoring. Prefer small changes with tests
+Goal 14 implementation is complete and awaiting its final manual editor gate.
+It replaces the draft metaphor with a session-first workspace and validates
+two-take generation end to end. Unsaved take payloads remain transient until
+the user explicitly saves one. The project is finishing the basic workflow
+before advanced constraint authoring. Prefer small changes with tests
 and record consequential decisions in `docs/adr/`.
 
 ## Goal-oriented sessions
