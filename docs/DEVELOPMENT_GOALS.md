@@ -51,12 +51,11 @@ diagnostic layers, but they must not define the artist-facing workflow.
 
 | Repository | Current reviewed checkpoint | Notes |
 | --- | --- | --- |
-| `kimodo-godot-server` | `8e379dd` | Goal 12 ledger checkpoint on `codex/milestone-0-bootstrap` |
+| `kimodo-godot-server` | `bb5b57f` | Goal 13 completion and Goal 14 proposal on `codex/milestone-0-bootstrap` |
 | `godot-kimodo` | `3e415b2` | Goal 13 implementation on `main` |
 
-The server ledger checkpoint for Goal 13 is recorded after this proposal is
-committed. The Godot checkpoint is local until explicit push authorization is
-received for the source-code payload and remote.
+The Godot and server checkpoints are local until explicit push authorization
+is received for each source/document payload and remote.
 
 The repositories remain independently versioned. The server keeps the
 `motionmcp_kimodo` namespace and MMCP surface until a deliberate migration.
@@ -78,7 +77,7 @@ The repositories remain independently versioned. The server keeps the
 | 10 | 2026-09-23 | Added dock humanoid preview/save, synchronized scrub/playback, orbit/zoom/root-follow, and a 200-step ceiling. | Godot `ddd1e07`, `961218b`; server ledger `02a8f0f`, `418d86c` |
 | 11 | 2026-09-24 | Drove the rooted Jenny Auto-Rig Pro fixture; corrected rest-direction transfer after a holding-walk exposed shoulder/neck defects; added CC BY 4.0 attribution. | Godot `3466190`, `71346ad`; server ledger `0642202`, `ae973ca` |
 | 12 | 2026-09-24 | Added a `PackedScene` target picker, validated exact-name compatible rigs, synchronized skinned preview, and unique self-contained character-scene saving. | Godot `d985782`; server ledger `8e379dd` |
-| 13 | 2026-09-25 | Added target-first persistent authoring state, exact generation provenance, atomic project-contained save/load, and successful-save-only artifact tracking. | Godot `3e415b2`; server ledger pending current checkpoint |
+| 13 | 2026-09-25 | Added target-first persistent authoring state, exact generation provenance, atomic project-contained save/load, and successful-save-only artifact tracking. | Godot `3e415b2`; server ledger `bb5b57f` |
 
 ### Corrections that remain architecturally binding
 
