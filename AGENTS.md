@@ -5,23 +5,33 @@ Godot. Keep it independently versioned from the Godot editor extension.
 
 ## Current phase
 
-Milestone 0 establishes a reproducible upstream baseline before Studio API or
-UI feature work. Prefer small changes with tests and record consequential
-decisions in `docs/adr/`.
+Goals 0–13 established the backend/extension vertical slice and persistent
+target-first authoring state. Goal 13 passed its manual editor acceptance check.
+Goal 14 is proposed, not approved: it replaces the draft metaphor with a
+session-first workspace and validates multi-take generation end to end. Do not
+implement it until the user approves it. The project is finishing the basic
+workflow before advanced constraint authoring. Prefer small changes with tests
+and record consequential decisions in `docs/adr/`.
 
 ## Goal-oriented sessions
 
-Read `docs/DEVELOPMENT_GOALS.md` before choosing work. It is the authoritative,
-append-only progress record.
+Read `docs/DEVELOPMENT_GOALS.md` before choosing work. It is the authoritative
+current-goal and progress ledger; the product workflows in the root development
+plan take precedence if a historical note conflicts with them.
 
 - Work on only the active goal unless the user explicitly changes the goal.
 - Keep goals small enough for a focused session of roughly 20–60 minutes.
 - Update task checkboxes, evidence, blockers, and the session log as work lands.
-- Never delete completed goals or tasks; add a correction or superseding note.
+- Preserve the outcome, consequential corrections, acceptance evidence, and
+  checkpoint commit for every completed goal. Older task lists and session notes
+  may be summarized once they are more than three goals behind the current goal;
+  Git remains the detailed historical record.
+- Remove obsolete notes only when their useful decision/evidence has been
+  retained elsewhere in the ledger, an ADR, or version history.
 - Run the goal's completion test before marking it complete.
 - When a goal passes, mark it complete, commit the record, report the result,
   and, unless a major blocker makes planning premature, lay out the next goal
-  for user review. Commit the checkpoint, celebrate briefly, and end the turn.
+  for user review. Commit the checkpoint and end the turn.
   Do not begin the proposed goal until the user explicitly approves it.
 - If work exposes a blocker, record it and stop at a useful checkpoint rather
   than silently switching to another planned goal.

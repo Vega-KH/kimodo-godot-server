@@ -1,1280 +1,558 @@
-# Development goals and session log
+# Development goals and project ledger
 
-Last updated: 2026-09-24
+Last reviewed: **2026-09-25**
 
-This is the authoritative living record for near-term development. It keeps
-completed work visible while limiting planning to the active goal and the next
-one or two goals.
+Current product stage: **basic workflow**
 
-## How we use this document
+Current goal: **Goal 14 — Proposed; awaiting user approval**
 
-- Exactly one goal is **Active**, unless it is **Blocked** while awaiting the
-  user or an external system.
-- Goals should fit a focused session of roughly 20–60 minutes of active work.
-- Every goal ends with an explicit test or manual acceptance check.
-- A goal is **Complete** only after its completion test passes and evidence is
-  recorded here.
-- Completed goals and tasks are never deleted. Corrections are appended as
-  notes so the project history remains understandable.
-- When a goal becomes complete, update this document, commit the checkpoint,
-  report and celebrate the result, and end the turn. When no major blocker
-  makes planning premature, also lay out the next goal for review. Do not
-  start that proposed goal until the user explicitly approves it.
+## How to use this document
 
-Checkboxes mean:
+The basic and advanced workflows at the beginning of
+`../../Kimodo_Godot_Bridge_Research_and_Development_Plan.md` are the highest
+project authority. This ledger translates that product intent into small,
+reviewable implementation goals.
 
-- `[x]` complete
-- `[ ]` pending
-- `[!]` blocked
+- Work on exactly one user-approved goal at a time.
+- A goal is complete only after its stated acceptance test passes and evidence
+  is recorded here.
+- Completed goals may be summarized once they are more than three goals behind
+  the current goal. Preserve their outcome, important corrections, verification
+  evidence, and checkpoint commit; Git retains the detailed historical text.
+- Record newly discovered code defects in the repair ledger instead of
+  silently expanding the active goal.
+- After completing a goal, update this ledger, commit the affected repository
+  or repositories, propose the next goal, and stop until the user approves it.
+- Do not treat a preview or a saved diagnostic artifact as artist acceptance.
 
-## Goal 0 — Bootstrap the backend and Windows CUDA environment
+## Current direction
 
-Status: **Complete**
-Completed: 2026-09-04
+Goals 0–13 established a working transport, playback, retargeting, and
+persistent-authoring vertical slice. The next phase must turn it into the
+intended basic workflow:
 
-Outcome: a history-preserving, independently versioned backend fork and a
-reproducible Windows CUDA development environment are running on the reference
-machine.
+1. create or reopen a project-owned session before authoring controls appear;
+2. select the character and autosave every meaningful session transition;
+3. generate and compare several takes on that character;
+4. validate full-skeleton retargeting, including fingers;
+5. explicitly accept one take into native animation data.
 
-- [x] Clone Animatica `motionmcp-kimodo` with its Git history intact.
-- [x] Create the public GitHub fork at
-  `https://github.com/Vega-KH/kimodo-godot-server`.
-- [x] Keep Animatica as `upstream` and the Vega-KH fork as `origin`.
-- [x] Rename the distribution and preferred CLI to `kimodo-godot-server` while
-  preserving the legacy import namespace and executable alias.
-- [x] Change the default bind address from all interfaces to `127.0.0.1`.
-- [x] Create the Python 3.10.16 virtual environment and install `uv`.
-- [x] Verify Visual Studio 2022 MSVC, CMake, and MotionCorrection.
-- [x] Lock MMCP SDK, the candidate Kimodo fork, and PyTorch 2.12.1+cu130.
-- [x] Verify PyTorch CUDA access to the RTX 4070 Laptop GPU.
-- [x] Authenticate GitHub CLI as `Vega-KH` and Hugging Face CLI as `VegaKH`.
-- [x] Download and load NVIDIA Kimodo-SOMA-RP-v1.1.
-- [x] Confirm the model uses SOMA-30 input and SOMA-77 output skeletons.
-- [x] Run two short dummy-encoder generations with identical inputs and seed;
-  all output arrays matched exactly.
-- [x] Start the live MMCP server on loopback and receive HTTP 200 from
-  `/capabilities`.
+`MotionDraft` was the Goal 13 implementation name. The product concept is now
+**session**: a persistent, conversation-like workspace containing target and
+intent history, exact generation records, take references, and saved artifact
+references. A **take** is one motion variation returned by a generation. A
+session, generation, take, saved artifact, and accepted animation are distinct
+states and must remain distinct in code and UI.
 
-Completion test and evidence:
+SOMA-77, the synthetic Godot humanoid, and their save buttons remain valuable
+diagnostic layers, but they must not define the artist-facing workflow.
 
-- `pytest`: 10 passed, 7 hardware-specific tests skipped.
-- `ruff check .`: passed.
-- `torch.cuda.is_available()`: true; CUDA build 13.0.
-- MotionCorrection import: passed.
-- Five-step, 30-frame dummy generation: about 9.4 seconds including process
-  startup and cached model load.
-- Generated arrays included 77-joint local/global rotations, posed joints,
-  root motion, and six foot-contact channels.
-- Git checkpoints: `c90cf82` and `688ea8b` on
-  `codex/milestone-0-bootstrap`.
+## Repository checkpoints
 
-## Goal 1 — Run MMCP with the full CPU-offloaded text encoder
+| Repository | Current reviewed checkpoint | Notes |
+| --- | --- | --- |
+| `kimodo-godot-server` | `8e379dd` | Goal 12 ledger checkpoint on `codex/milestone-0-bootstrap` |
+| `godot-kimodo` | `3e415b2` | Goal 13 implementation on `main` |
 
-Status: **Complete**
-Completed: 2026-09-05
+The server ledger checkpoint for Goal 13 is recorded after this proposal is
+committed. The Godot checkpoint is local until explicit push authorization is
+received for the source-code payload and remote.
 
-Outcome sought: a text prompt travels through the live MMCP service and returns
-a structurally valid motion while the text encoder remains on CPU and the
-motion model remains within the 8 GB GPU budget.
+The repositories remain independently versioned. The server keeps the
+`motionmcp_kimodo` namespace and MMCP surface until a deliberate migration.
 
-- [x] Install and authenticate the Hugging Face CLI as `VegaKH`.
-- [x] Verify access to `nvidia/Kimodo-SOMA-RP-v1.1`.
-- [x] Identify the two McGill LLM2Vec adapter repositories.
-- [x] Confirm from adapter metadata that the required base is exactly
-  `meta-llama/Meta-Llama-3-8B-Instruct`.
-- [x] Obtain gated access to `meta-llama/Meta-Llama-3-8B-Instruct` for the
-  `VegaKH` account.
-- [x] Confirm access with an authenticated Hugging Face metadata request.
-- [x] Record the expected download size and available disk space.
-- [x] Restore and test explicit CPU device placement in the maintained
-  `Vega-KH/kimodo` fork after the inherited quantization patch regressed it.
-- [x] Load with `TEXT_ENCODER_MODE=local` and `TEXT_ENCODER_DEVICE=cpu`.
-- [x] Run one short, fixed-seed text-conditioned generation.
-- [x] Start `kimodo-godot-server` on loopback with the full encoder.
-- [x] Submit the same prompt through MMCP and validate the returned animation.
-- [x] Record cold/warm load time, generation latency, peak VRAM, peak system
-  RAM, model identifiers, and warnings.
-- [x] Update ADR 0002 with the result; keep it Proposed because its remaining
-  constraint-generation gate is still open.
+## Completed goals
 
-Completion test:
+| Goal | Date | Durable outcome | Checkpoint evidence |
+| --- | --- | --- | --- |
+| 0 | 2026-09-04 | Forked and locked the Windows/CUDA backend; verified model load, MotionCorrection, deterministic dummy generation, and MMCP capability service. | Server `c90cf82`, `688ea8b` |
+| 1 | 2026-09-05 | Loaded the full Meta-Llama-3/LLM2Vec encoder on CPU, generated through live loopback MMCP, and stayed below 8 GB VRAM. | Server `d3c2d43`; Kimodo patch `3362b92` |
+| 2 | 2026-09-06 | Froze the inherited pre-SOMA-77 contract with hashed capability, response, glTF, and error fixtures. | Server `4fc31b6` |
+| 3 | 2026-09-06 | Removed the inherited 77-to-30 response slice; kept SOMA-30 constraints internal and exposed SOMA-77 plus six contacts. | Server `06a5f8c`, `def4acf`; ADR 0003 |
+| 4 | 2026-09-06 | Created the Godot repository, imported the recorded glTF in memory, and played the canonical 77-bone fixture. | Godot `f1f9982`; server ledger `b1ddd16` |
+| 5 | 2026-09-06 | Baked deterministic, self-contained native SOMA-77 Godot animation and verified save/reload/playback. | Godot `986306a`; server ledger `6011277`; ADR 0001 |
+| 6 | 2026-09-06 | Added the loopback-only asynchronous capability client and the first functional AI Motion dock. | Godot `b358606`; server ledger `98815f3` |
+| 7 | 2026-09-07 | Added typed one-sample generation, strict glTF validation, cancellation-safe client state, and embedded source preview. | Godot `5680fa1`; server ledger `c755141`; ADR 0002 |
+| 8 | 2026-09-07/08 | Added backend launcher, 100-step default, unique native-take saving, backend-independent reload, and a scrollable dock. | Godot `aa0a675`, `a6f1f0f`; server ledger `188543e`, `7a66730` |
+| 9 | 2026-09-08 | Added deterministic SOMA-77→56-bone humanoid retargeting; corrected planar locomotion ownership from `Hips` to `Root`. | Godot `f40fc5d`, `5327522`; server ledger `ff1422c`, `7d98484`; ADR 0003 |
+| 10 | 2026-09-23 | Added dock humanoid preview/save, synchronized scrub/playback, orbit/zoom/root-follow, and a 200-step ceiling. | Godot `ddd1e07`, `961218b`; server ledger `02a8f0f`, `418d86c` |
+| 11 | 2026-09-24 | Drove the rooted Jenny Auto-Rig Pro fixture; corrected rest-direction transfer after a holding-walk exposed shoulder/neck defects; added CC BY 4.0 attribution. | Godot `3466190`, `71346ad`; server ledger `0642202`, `ae973ca` |
+| 12 | 2026-09-24 | Added a `PackedScene` target picker, validated exact-name compatible rigs, synchronized skinned preview, and unique self-contained character-scene saving. | Godot `d985782`; server ledger `8e379dd` |
+| 13 | 2026-09-25 | Added target-first persistent authoring state, exact generation provenance, atomic project-contained save/load, and successful-save-only artifact tracking. | Godot `3e415b2`; server ledger pending current checkpoint |
 
-1. The service becomes ready at `127.0.0.1` without OOM.
-2. `/capabilities` returns HTTP 200.
-3. A fixed text prompt produces a valid MMCP animation response.
-4. The result contains finite rotations/root translations at the advertised
-   30 fps and can be decoded without schema or glTF errors.
-5. Recorded peak VRAM stays within the reference 8 GB GPU.
+### Corrections that remain architecturally binding
 
-Stop condition: mark Goal 1 Complete, commit the measurements, report the
-result, and end the turn without starting Goal 2.
+- Service responses preserve all 77 SOMA joints; never restore the inherited
+  30-joint response slice.
+- Planar locomotion belongs to the profile `Root`; `Hips` retains vertical
+  pelvis motion.
+- Retargeting uses semantic rest-direction normalization. Directly transferring
+  target rest offsets reproduced visible arm/neck defects and must not return.
+- The rooted `Jenny03.glb` is the current acceptance asset. Its success proves
+  this rig convention only; it does not certify arbitrary Godot humanoids.
 
-Completion test and evidence:
-
-- Full-encoder environment: `TEXT_ENCODER_MODE=local`,
-  `TEXT_ENCODER_DEVICE=cpu`, and no quantization.
-- Exact model revisions: Meta Llama 3 `8afb486c1db24fe5011ec46dfbe5b5dccdb575c2`,
-  McGill MNTP adapter `31474e395ada192e8ed1586db6be79fb3b70c9c0`, and
-  McGill supervised adapter `baa8ebf04a1c2500e61288e7dad65e8ae42601a7`.
-- Hugging Face repository metadata totals 32.13 GB across all formats. The
-  files selected by Transformers occupy 14.958 GiB for the base, 0.165 GiB
-  for the MNTP adapter, and 0.156 GiB for the supervised adapter locally.
-- Download-inclusive cold setup: 3,218.4 seconds. Cached setup: 24.1 seconds.
-- Five-step, 30-frame generation: 6.10 seconds direct and 7.09 seconds over
-  live loopback HTTP, using seed 1234.
-- `/capabilities`: HTTP 200. `/generate`: HTTP 200 with
-  `model/gltf+json`.
-- Both responses decoded as one 30-joint, 30-frame animation at 30 fps;
-  all 3,720 accessor floats were finite. The direct and HTTP glTF documents
-  matched exactly by SHA-256.
-- Peak process RSS: 16.01 GiB. Peak system memory used across the cold and
-  cached runs: 28.52 GiB of 31.52 GiB.
-- Peak CUDA memory: 1.12 GiB allocated and 1.29 GiB reserved on the 8 GB
-  RTX 4070 Laptop GPU.
-- Kimodo dependency patch: `Vega-KH/kimodo` commit
-  `3362b92c37faa100fb697972f0fc5485dd94dd4f`; focused tests: 2 passed.
-- Backend tests: 11 passed, 7 hardware-specific tests skipped. Ruff passed.
-
-## Goal 2 — Freeze the current upstream MMCP contract
+## Goal 13 — Persist a target-first motion draft with provenance
 
 Status: **Complete**
-Completed: 2026-09-06
-
-Outcome sought: recorded, sanitized fixtures and automated parsers describe
-the inherited server before its SOMA output behavior changes.
-
-- [x] Create `tests/contract/fixtures/` and fixture-recording guidance.
-- [x] Define fixture metadata containing dependency commits and schema version.
-- [x] Record `/capabilities` for the pinned SOMA-RP model.
-- [x] Record one valid fixed-seed generation response.
-- [x] Record representative validation/error responses.
-- [x] Add tests that load and validate every fixture without model weights.
-- [x] Document fields that are deliberately preserved versus scheduled to
-  change.
-
-Completion test:
-
-- Contract tests pass offline with network and model loading disabled.
-- Every fixture identifies its source commits and contains no credentials,
-  absolute personal paths, or licensed model weights.
-
-Stop condition: mark Goal 2 Complete, commit the fixtures/tests, report the
-result, and end the turn without starting Goal 3.
-
-Completion test and evidence:
-
-- Recorded a live loopback MMCP 1.0 fixture set at
-  `tests/contract/fixtures/pre_soma77_mmcp_1_0/`.
-- Metadata pins backend `d3c2d43`, MMCP SDK `a298338`, Kimodo `3362b92`, and
-  Kimodo-SOMA-RP-v1.1 model revision `6c9233a`; every payload has a SHA-256.
-- Captured HTTP 200 capability and generation responses, including the exact
-  seed-1234 request and self-contained glTF animation.
-- Captured actual schema-validation (HTTP 422), unsupported-version (HTTP
-  400), and unknown-model (HTTP 400) envelopes.
-- Offline validation proves the historical response contains 30 nodes, 30
-  rotation channels, one root-translation channel, four contact channels,
-  30 frames at 30 fps, and 3,720 finite accessor floats.
-- Five contract tests pass with `HF_HUB_OFFLINE=1` and
-  `TRANSFORMERS_OFFLINE=1`. Fixtures contain no credentials or personal
-  absolute paths and are each under 250 KB, excluding model weights.
-
-## Goal 3 — Expose SOMA-77 at the service boundary
-
-Status: **Complete**
-Completed: 2026-09-06
-
-Outcome sought: the service advertises and returns the authoritative SOMA-77
-presentation skeleton while preserving SOMA-30 as the internal generation and
-constraint representation.
-
-- [x] Add golden assertions for the current 30-to-77 skeleton relationship.
-- [x] Separate input/constraint skeleton handling from output skeleton handling.
-- [x] Remove the inherited SOMA-77-to-SOMA-30 response slice.
-- [x] Advertise the correct output skeleton and contact channels.
-- [x] Validate joint order, hierarchy, rotations, root translation, and array
-  dimensions before encoding.
-- [x] Update contract fixtures and document the intentional protocol change.
-
-Completion test:
-
-- Unit and contract tests prove 77 output joints in canonical order.
-- A fixed live generation returns structurally valid SOMA-77 animation data.
-- The same request remains accepted using the internally supported SOMA-30
-  constraint representation.
-
-Stop condition: mark Goal 3 Complete, commit the boundary change, add only the
-Goal 4 plan for review, report the result, and end the turn before Godot work.
-
-Completion test and evidence:
-
-- Golden tests pin all 30 internal and 77 presentation joint names, their
-  subset mapping, canonical order, and parent-before-child hierarchy.
-- A SOMA-77 MMCP request containing a root-path constraint compiles to a real
-  Kimodo constraint whose skeleton is the internal SOMA-30 object.
-- Runtime guards reject invalid skeleton relationships, output joint counts,
-  dimensions, non-finite rotation/root values, and mismatched contact counts
-  before glTF encoding.
-- The inherited response slice is removed. `MotionResult.joint_names` now
-  explicitly identifies all 77 ordered output rotations.
-- The expanded contacts are correctly labeled as left foot/toe/toe-end,
-  followed by right foot/toe/toe-end. This also fixes a previously hidden
-  channel-to-name misalignment.
-- A full CPU-offloaded text-encoder run on CUDA returned HTTP 200 and recorded
-  a 30-frame, seed-1234 live fixture at
-  `tests/contract/fixtures/soma77_mmcp_1_0/`.
-- The live glTF has 77 named nodes in canonical order, 77 rotation channels,
-  one root-translation channel, six contacts, and 9,360 finite accessor
-  floats. The 111.3 KiB response contains no weights or private paths.
-- ADR 0003 records the boundary decision and its 30-joint constraint-name
-  limitation. Implementation checkpoint: `06a5f8c`.
-
-## Goal 4 — Bootstrap the Godot SOMA-77 playback fixture
-
-Status: **Complete**
-Completed: 2026-09-06
-
-Outcome sought: an independently versioned Godot 4.7 extension repository can
-load the recorded SOMA-77 MMCP animation and prove the source skeleton and
-animation survive Godot import before networking or retargeting is added.
-
-- [x] Create the `godot-kimodo` repository locally and on GitHub under
-  `Vega-KH`, with license, attribution, Godot ignore rules, and initial docs.
-- [x] Record the reference engine as Godot 4.7.2 using
-  `C:\Godot-472\Godot_v4.7.2-stable_win64_console.exe` for automated checks.
-- [x] Scaffold a minimal Godot project and `addons/kimodo_motion` editor plugin
-  that enables without parse errors.
-- [x] Copy the Goal 3 SOMA-77 glTF fixture into the Godot test assets with its
-  source commit, license/provenance note, and SHA-256.
-- [x] Implement a small GDScript fixture loader using `GLTFDocument` and an
-  in-memory byte buffer rather than backend-specific parsing shortcuts.
-- [x] Add a headless test that verifies the 77 bone names/order and hierarchy,
-  one 30 fps animation, all 77 source rotation channels, one root-translation
-  channel, and finite native-animation samples.
-- [x] Record the Godot 4.7.2 importer behavior that removes nine identity-only
-  tracks while retaining their bones' rest rotations; verify the resulting 68
-  varying rotation tracks and one translation track.
-- [x] Add a minimal editor-openable fixture scene for visual inspection of the
-  imported skeleton animation; no humanoid retargeting or live server call yet.
-- [x] Document the exact headless command and short manual playback check.
-
-Completion test:
-
-1. The addon enables and the project imports with no Godot errors.
-2. The automated fixture test exits zero under the Godot 4.7.2 console build
-   and proves the SOMA-77 hierarchy/animation invariants.
-3. Opening the fixture scene permits scrubbing or playing the one-second
-   recorded animation without altering source assets.
-
-Stop condition: mark Goal 4 Complete, commit and push the new repository,
-add the Goal 5 plan for review, report and celebrate, then end the turn before
-starting native animation persistence.
-
-Completion test and evidence:
-
-- Created the public MIT-licensed repository at
-  `https://github.com/Vega-KH/godot-kimodo`; initial commit `f1f9982` is on
-  `main` with a clean worktree.
-- Confirmed Godot `4.7.2.stable.official.ed1daf0bf` and recorded the console
-  executable used by `scripts/test.ps1`.
-- The enabled `addons/kimodo_motion` plugin loads during a headless editor
-  startup without parser, plugin, or engine errors.
-- The fixture loader passes the recorded JSON glTF bytes directly through
-  `GLTFDocument.append_from_buffer` and generates a Godot scene.
-- The copied fixture remains byte-identical to Goal 3 at SHA-256
-  `54a7a63a326149d4573005be29df49142345bec43240f4cc2451db6bd70461b0`;
-  Git line-ending normalization is explicitly disabled for glTF artifacts.
-- The headless contract test proves 77 canonical bones in order, one root,
-  parent-before-child hierarchy, finite rest transforms, 77 source rotation
-  channels, one source translation channel, 30 samples, and finite native
-  animation interpolation at the start, midpoint, and end.
-- Godot generates 68 varying rotation tracks plus one root-translation track;
-  nine source rotations are constant identity and are safely represented by
-  the corresponding bones' rest rotations.
-- The playback scene ran without errors and rendered 15 GPU-backed frames.
-  Visual inspection of the first, middle, and final sampled images showed the
-  cyan SOMA-77 line rig progressing from its initial pose into a walking pose
-  with root motion.
-
-## Goal 5 — Persist a native Godot animation without runtime dependencies
-
-Status: **Complete**
-Completed: 2026-09-06
-
-Outcome sought: convert the imported SOMA-77 fixture into native Godot
-animation resources that survive save/reload and play without the extension,
-backend, or source glTF being present at runtime.
-
-- [x] Define the minimal native source-motion representation and stable track
-  paths used between transport decoding and later retargeting.
-- [x] Extract the imported SOMA-77 `Animation` into a new `AnimationLibrary`
-  without modifying the imported fixture or its generated resources.
-- [x] Save the library and skeleton playback scene as native Godot resources
-  using unique output paths and explicit replacement refusal by default.
-- [x] Reload the saved resources in a fresh headless scene and verify all 77
-  bones, animation duration, root motion, and expected optimized track counts.
-- [x] Compare sampled root positions and bone rotations before and after the
-  save/reload round trip within recorded numerical tolerances.
-- [x] Prove the native playback artifact loads outside the editor process and
-  with source-fixture loading excluded from the test path.
-- [x] Add a native playback scene for visual comparison with the Goal 4
-  in-memory fixture scene.
-- [x] Document ownership, unique naming, non-destructive output behavior, and
-  the exact automated/manual acceptance commands.
-
-Completion test:
-
-1. A headless bake creates a uniquely named native animation artifact without
-   changing the fixture or an existing destination.
-2. A clean reload reproduces the recorded poses/root trajectory within the
-   declared tolerance and succeeds with the addon disabled.
-3. The native visual scene plays the same one-second motion after source glTF
-   access is removed from the playback path.
-
-Stop condition: mark Goal 5 Complete, commit and push, propose Goal 6 for
-review, report and celebrate, then end the turn before networking work.
-
-Completion test and evidence:
-
-- ADR 0001 defines a native `Soma77Motion` scene, `Soma77Skeleton` node,
-  `AnimationPlayer`, external binary `AnimationLibrary`, animation name
-  `motion`, and stable track paths of
-  `Soma77Skeleton:<SOMA-77 bone name>`.
-- `NativeAnimationBaker` creates new skeleton, animation, library, and scene
-  objects without taking ownership of or modifying the imported glTF scene.
-- The baker uses unique suffixes rather than replacement. Its automated test
-  bakes `walk`, then `walk_2`, and verifies the first scene and library remain
-  byte-identical after the second bake.
-- The committed native fixture is a 24.1 KiB reviewable `.tscn` skeleton scene
-  plus a 66.9 KiB binary `.res` animation library. Its complete runtime
-  dependency closure contains exactly those two files and rejects any
-  reference to `.gltf` or `addons/`.
-- Fresh-process runtime validation proves all 77 ordered bones, stable track
-  targets, 69 optimized native tracks, unchanged 29/30-second duration,
-  finite sampled global poses, and more than one meter of vertical bone span
-  so a collapsed skeleton cannot pass.
-- Save/reload comparisons cover the start, quarter, midpoint, and final sample
-  at tolerances of 0.001 radians (about 0.057 degrees) for rotations and one
-  micrometer for root positions. All comparisons pass.
-- The full `scripts/test.ps1` gate passes editor-plugin startup, source glTF
-  import, unique/non-destructive native round trip, runtime independence, and
-  both playback scenes without Godot or script errors.
-- The initial orange-rig render exposed missing copied bone pose offsets even
-  though structural tests passed. The baker now copies rest and initial pose
-  transforms, the runtime test guards against recurrence, and a corrected
-  15-frame GPU render visibly matches the Goal 4 cyan rig's movement.
-- Godot implementation checkpoint: `986306a` on `Vega-KH/godot-kimodo`.
-
-## Goal 6 — Connect a minimal Godot dock to MMCP capabilities
-
-Status: **Complete**
-Completed: 2026-09-06
-
-Outcome sought: an editor dock connects asynchronously to the local backend,
-shows trustworthy readiness/model information, and remains responsive and
-recoverable when the service is absent or returns incompatible data.
-
-- [x] Add a small transport client for `GET /capabilities` with an explicit
-  loopback URL, bounded timeout, cancellation, and no synchronous editor wait.
-- [x] Parse and validate MMCP version, model id, fps, SOMA-77 skeleton order,
-  supported constraints, contact joints, and response formats into typed
-  Godot-side data rather than passing raw dictionaries through the UI.
-- [x] Replace the placeholder plugin with a minimal AI Motion dock containing
-  connection state, backend URL, Connect/Refresh action, model summary, and
-  expandable technical error text.
-- [x] Represent at least `Disconnected`, `Connecting`, `Ready`, and `Error`
-  states and prevent stale or concurrent responses from overwriting newer
-  connection attempts.
-- [x] Add deterministic tests for a valid recorded capability response,
-  connection refusal, timeout/cancellation, malformed JSON, unsupported MMCP
-  version, and a non-SOMA-77 model response.
-- [x] Verify plugin disable/re-enable and project restart do not leak HTTP
-  nodes, retain stale readiness, or freeze the editor.
-- [x] Run one live capability handshake against `kimodo-godot-server` on
-  loopback and confirm the dock reports the pinned model, 30 fps, 77 joints,
-  three supported constraint types, and six contact channels.
-- [x] Document the manual dock check and whether a Godot MCP/editor bridge now
-  provides enough benefit to adopt for later interactive viewport work.
-
-Completion test:
-
-1. Automated transport/state tests pass for success, failure, cancellation,
-   stale-response, schema, and compatibility cases without external network.
-2. The Godot editor remains responsive while the backend is stopped and while
-   a live loopback capability request is in flight.
-3. With the backend ready, the dock displays the exact Goal 3 SOMA-77
-   capability summary and recovers cleanly after disconnect/reconnect.
-
-Stop condition: mark Goal 6 Complete, commit and push both affected
-repositories, propose Goal 7 for review, report and celebrate, then end the
-turn before live motion generation from Godot.
-
-Completion test and evidence:
-
-- `MmcpCapabilitiesClient` performs a frame-asynchronous loopback-only HTTP
-  request, applies a deterministic client deadline, cancels in-flight work,
-  and uses monotonic attempt tokens so late responses cannot replace newer
-  connection state.
-- Typed parsing accepts the byte-identical Goal 3 capability fixture and
-  rejects malformed JSON, unsupported MMCP versions, incompatible skeletons,
-  missing constraint support, incorrect contacts, formats, coordinates,
-  rotations, units, and frame rate before data reaches the dock.
-- The right-side **AI Motion** dock presents Disconnected, Connecting, Ready,
-  and Error states; Connect/Cancel/Refresh actions; the loopback URL; an exact
-  model summary; and expandable technical details.
-- Offline transport tests pass actual TCP success, malformed response,
-  cancellation, deterministic timeout, connection refusal, and a simulated
-  stale completion. The event loop advances throughout each case.
-- Three create/state/free dock cycles leave no nodes behind. Two clean
-  headless editor startups in the full suite enable the plugin without parser,
-  orphan-node, lifecycle, or engine errors.
-- The complete Godot suite passes capability, editor restart, SOMA-77 fixture,
-  native round-trip, runtime-independence, and both playback checks.
-- A live dummy-encoder backend handshake at `127.0.0.1:8769` returned HTTP 200;
-  Godot reported exactly `kimodo-soma-rp`, 30 fps, 77 joints, three constraint
-  types, and six contact channels. Dummy mode is valid here because
-  `/capabilities` is independent of text embeddings.
-- The README records the manual dock check, live command, and loopback safety
-  boundary. A Godot MCP bridge remains deferred: direct editor startup,
-  GDScript integration tests, and rendered project scenes provide the needed
-  control today. Reassess when Goal 7 adds interactive viewport preview.
-- Godot implementation checkpoint: `b358606` on
-  `Vega-KH/godot-kimodo`.
-
-## Goal 7 — Generate and preview live SOMA-77 motion from the dock
-
-Status: **Complete**
-Completed: 2026-09-07
-
-Outcome sought: an artist enters a prompt in Godot, receives a live MMCP
-SOMA-77 animation without freezing the editor, and immediately previews the
-same line-skeleton motion used by the proven fixture pipeline.
-
-- [x] Define typed Godot-side generation options for the initial vertical
-  slice: prompt, duration, seed, selected connected model, and glTF response.
-- [x] Add an asynchronous, cancellable `POST /generate` client that reuses the
-  Goal 6 loopback and attempt-token rules and reports useful server errors.
-- [x] Extend the AI Motion dock with prompt/options, Generate/Cancel actions,
-  generation status, and clear separation between connection and job state.
-- [x] Validate every response against the negotiated MMCP/SOMA-77 contract and
-  decode its self-contained glTF bytes in memory without altering fixtures or
-  existing native animation resources.
-- [x] Preview successful results in a plugin-owned, replaceable line-skeleton
-  scene with play/pause and looping controls; clean it up on replacement or
-  plugin disable.
-- [x] Add deterministic offline tests for request encoding, success, protocol
-  errors, cancellation, stale results, invalid glTF, and preview lifecycle.
-- [x] Run one live full-text-encoder prompt through the dock path and visually
-  compare the generated line skeleton with the recorded fixture behavior.
-- [x] Reassess a Godot MCP/editor bridge based on whether direct viewport
-  automation is materially limiting interactive preview verification.
-
-Completion test:
-
-1. With the full local encoder running, “A person walks forward.” generates a
-   valid 77-joint motion from the Godot dock while the editor remains usable.
-2. The result can be played, paused, looped, replaced, and canceled without
-   stale state, leaked preview nodes, or modified source/native resources.
-3. Offline tests cover the complete request-to-preview path, and a manual
-   viewport check confirms visible articulated motion and root travel.
-
-Stop condition: mark Goal 7 Complete, commit and push both affected
-repositories, propose Goal 8 for review, report and celebrate, then end the
-turn before humanoid retargeting.
-
-Completion test and evidence:
-
-- `KimodoGenerationOptions` owns prompt, duration, seed, and diffusion-step
-  validation. Request encoding uses the connected model/version/fps and a deep
-  copy of the exact canonical skeleton validated from `/capabilities`.
-- `MmcpGenerationClient` performs frame-asynchronous `POST /generate` with an
-  explicit 8 MiB response bound, 120-second default deadline, cancellation,
-  artist-readable protocol errors, and monotonic attempt tokens. Connection
-  and generation remain independent state machines.
-- Responses must be glTF 2.0 JSON with the negotiated SOMA-77 names and exact
-  hierarchy, all 77 unique rotation channels, one root-translation channel,
-  one finite animation, and the requested duration before Godot previews them.
-- The dock now provides prompt, frame, and seed controls; Generate/Cancel;
-  independent job status/details; and an embedded green line-skeleton preview
-  with Play/Pause and Loop controls. A newer successful take frees and replaces
-  only the temporary preview scene.
-- Deterministic offline tests cover request encoding/validation, real TCP
-  success, server errors, invalid glTF, incompatible names and hierarchy,
-  cancellation, timeout, stale completion, play/pause/loop, replacement, and
-  node cleanup. The complete Goal 4–7 regression suite and two editor startups
-  pass without Godot or script errors.
-- With the cached full Llama 3/LLM2Vec encoder on CPU and Kimodo on CUDA, the
-  automated dock connected, submitted “A person walks forward.” at 30 frames,
-  five diffusion steps, and seed 1234, then received HTTP 200 in a 5.73-second
-  Godot run. The validated 79,483-byte response has SHA-256
-  `f5e939a32e406d75c53aeaa08dbcb6c104c4dd78df211b71a658ed5729a129dc`,
-  77 bones, and began playing immediately.
-- Three GPU-rendered samples at approximately 0.13, 0.53, and 0.93 seconds
-  visibly progress from the initial pose through a lifted-leg stride to a
-  distinct late walking pose with root travel.
-- ADR 0002 records validation-before-preview and ephemeral ownership. Native
-  Windows window control was unavailable during the visual check, but direct
-  Godot integration tests and GPU frame capture remained deterministic and
-  sufficient. A Godot MCP bridge is still deferred; retargeting may provide a
-  stronger interactive-editor use case.
-- Godot implementation checkpoint: `5680fa1` on
-  `Vega-KH/godot-kimodo`.
-
-## Goal 8 — Save a generated take as a native Godot asset
-
-Status: **Complete**
-Completed: 2026-09-07
-
-Outcome sought: an artist can promote the currently previewed generated take
-into the self-contained, non-destructive native artifact format proven in
-Goal 5, directly from the AI Motion dock.
-
-- [x] Add a Save Native Take action that is enabled only for a validated
-  generated preview and asks for a project-relative destination/name.
-- [x] Add a repository-root `start.bat` that starts the server with the local
-  CPU-offloaded text encoder in one click, independent of the inherited PATH.
-- [x] Expose the request's denoising-step count as a manual Godot dock control;
-  retain the current MMCP range and use a quality-oriented default rather than
-  the five-step integration-test setting.
-- [x] Feed the generated imported scene into `NativeAnimationBaker` without
-  mutating or transferring ownership of the active preview.
-- [x] Preserve Goal 5 unique-name/refuse-overwrite behavior and clearly report
-  the actual `.tscn` and `.res` paths created.
-- [x] Keep save state separate from connection and generation state so a
-  backend disconnect cannot invalidate an already generated take.
-- [x] Refresh/select the created resource in the Godot FileSystem dock where
-  supported, while keeping the core save path testable without editor UI.
-- [x] Add offline tests proving preview-to-native pose equivalence, duplicate
-  naming, failure recovery, preview survival, and no glTF/addon dependency in
-  the saved resource closure.
-- [x] Manually generate, save, reopen, and play one take with the backend
-  stopped, confirming the preview and saved copy remain visually equivalent.
-
-Completion test:
-
-1. Saving a live generated take creates unique native `.tscn` and `.res`
-   assets without overwriting an existing take or interrupting preview.
-2. The saved scene reloads and plays with the backend stopped and has no glTF,
-   addon, Python, model, or temporary-preview dependency.
-3. Automated samples match preview poses/root motion within Goal 5 tolerances,
-   followed by a successful manual reopen/playback check.
-
-Stop condition: mark Goal 8 Complete, commit and push both affected
-repositories, propose Goal 9 for review, report and celebrate, then end the
-turn before humanoid retargeting.
-
-Completion test and evidence:
-
-- The dock exposes `Denoising steps` from 1–100 and encodes the selected value
-  into MMCP; its normal default is now 100 rather than the five-step Goal 7
-  integration shortcut.
-- `Save Native Take` accepts a `res://` directory and sanitized take name only
-  after a validated preview exists. It reports both created paths, refreshes
-  and selects the scene in the editor FileSystem dock, and uses Goal 5's
-  numeric-suffix behavior for duplicates.
-- Offline coverage saves directly from the owned preview scene, proves that
-  the preview survives success and failure, reloads the native scene, compares
-  animation samples within 0.001 radians / one micrometer, and verifies the
-  scene has no glTF or addon dependency.
-- The repository-root `start.bat` resolves `.venv` from its own location, sets
-  local LLM2Vec and CPU placement explicitly, accepts optional CLI arguments,
-  and successfully reached the real CLI help path without relying on PATH.
-- Full regression gates passed: backend 23 passed / 7 hardware tests skipped,
-  Ruff clean, and every Godot 4.7.2 editor, transport, fixture, native, preview,
-  lifecycle, and playback check passed without engine or script errors.
-- Live acceptance used the batch launcher and full CPU text encoder to generate
-  “A person walks forward.” at 30 frames, 100 denoising steps, and seed 1234 in
-  7.41 seconds. The dock received 79,474 bytes and saved a 77-bone native take
-  while its preview remained playing. After terminating the complete server
-  process tree and confirming loopback refusal, Godot reloaded and played the
-  saved `.tscn`; temporary acceptance assets were then removed.
-- Godot implementation checkpoint: `aa0a675` on `Vega-KH/godot-kimodo`.
-
-Goal 8 usability amendment (2026-09-08):
-
-- [x] Wrap the complete AI Motion dock in an automatic vertical scroll area so
-  generation, playback, and native-save controls remain reachable after the
-  preview expands beyond the editor's available height.
-- A constrained-height regression test proves the vertical scrollbar appears,
-  reaches content below the viewport, and does not introduce horizontal
-  scrolling. The complete Godot 4.7.2 suite remains clean.
-- Amendment checkpoint: `a6f1f0f` on `Vega-KH/godot-kimodo`.
-
-## Goal 9 — Retarget a saved SOMA-77 take to a Godot humanoid skeleton
-
-Status: **Complete**
-Completed: 2026-09-08
-
-Amendment status (2026-09-08): **Complete** — move planar locomotion from the
-target `Hips` to `Root` so the profile's root-to-hips segment does not stretch
-back to the take's starting position.
-
-Outcome sought: a saved native SOMA-77 take can drive a separate Godot humanoid
-test skeleton through an explicit, inspectable bone map without modifying the
-source take.
-
-- [x] Define and document the SOMA-77-to-Godot-humanoid bone mapping, including
-  deliberately ignored face, finger, toe-end, and contact-only joints.
-- [x] Generate and commit a deterministic, repository-owned A-pose
-  `Skeleton3D` fixture from Godot's `SkeletonProfileHumanoid`, with distinct
-  proportions and no mesh, so the test proves actual retargeting rather than
-  identical-skeleton playback.
-- [x] Evaluate Godot 4.7's `RetargetModifier3D` against the fixture, then use it
-  where it provides a deterministic bake path or document why an explicit
-  offline rest-delta bake is preferable.
-- [x] Implement rest-pose-aware rotation transfer and preserve intentional root
-  translation/heading in a new target `AnimationLibrary`.
-- [x] Keep source, mapping, retargeted animation, and saved target scene as
-  separate non-destructive artifacts with unique output naming.
-- [x] Add offline tests for mapped-bone coverage, hierarchy, finite transforms,
-  duration, source immutability, save/reload stability, and unmapped-bone rest
-  preservation.
-- [x] Compare source and target line-skeleton playback visually at several
-  frames, then save/reopen one retargeted take and confirm recognizable motion.
-
-Completion test:
-
-1. A native SOMA-77 take retargets to the distinct humanoid fixture and saves
-   without changing either source asset or an existing destination.
-2. Automated checks prove all required humanoid bones receive finite,
-   rest-pose-corrected animation with preserved duration and root travel.
-3. A manual side-by-side playback confirms the target performs the same
-   recognizable action after a clean reload.
-
-Stop condition: mark Goal 9 Complete, commit and push, propose Goal 10 for
-review, report and celebrate, then end the turn before production-character
-mapping or automatic rig detection.
-
-Completion test and evidence:
-
-- The target fixture is generated from all 56 `SkeletonProfileHumanoid` bones,
-  with taller deterministic proportions, upper arms lowered 32 degrees into an
-  A-pose, no mesh, and no third-party asset. Repeated generation produces
-  byte-identical scene and animation artifacts.
-- The explicit mapping covers 22 Godot body targets. SOMA `Neck1` is collapsed;
-  four face joints, 48 finger joints, and two toe-end joints are intentionally
-  ignored. Contact values remain protocol metadata rather than transform tracks.
-- `RetargetModifier3D` accepts the Godot profile but only matches profile bone
-  names and exposes no `BoneMap`; it cannot directly express mappings such as
-  SOMA `LeftArm` to Godot `LeftUpperArm`. ADR 0003 records why the deterministic
-  offline rest-delta bake avoids an extra canonical proxy skeleton.
-- Each mapped rotation is transferred as a model-space delta from source rest
-  to target rest, then reconstructed into the target hierarchy. The target
-  keeps authored limb lengths; hips translation and heading are preserved.
-- The saved target contains 56 bones, 22 rotation tracks, one hips-position
-  track, and the unchanged 29/30-second duration. Its dependency closure is
-  exactly its `.tscn` and `.res`, with no addon, glTF, backend, or source take.
-- Automated coverage proves canonical source validation, mapping coverage,
-  profile hierarchy, finite data, model-space rest-delta equivalence within
-  0.001 radians, root travel within one micrometer, unmapped-bone rest
-  preservation, source/fixture immutability, unique naming, and clean reload.
-- The complete Godot 4.7.2 regression suite passes without engine or script
-  errors. GPU-rendered start, midpoint, and final side-by-side frames show the
-  cyan SOMA-77 source and pink A-pose target progressing through the same
-  recognizable walking stride and root travel.
-- Godot implementation checkpoint: `f40fc5d` on `Vega-KH/godot-kimodo`.
-
-Goal 9 root-motion amendment (2026-09-08):
-
-- [x] Correct the target locomotion split so planar X/Z displacement animates
-  profile `Root`, while vertical pelvis displacement remains local to `Hips`.
-- [x] Add regression samples at 0%, 25%, 50%, 75%, and 100% proving the
-  root-to-hips segment remains vertically aligned and bounded throughout the
-  take.
-- [x] Regenerate, reload, and visually compare the committed target animation.
-  The long diagnostic line to the starting origin is gone and the recognizable
-  walking pose remains intact at the start, midpoint, and final frame.
-- This supersedes the earlier 23-track count: the corrected library contains
-  22 rotation tracks plus separate `Root` and `Hips` position tracks.
-- The complete Godot 4.7.2 suite remains clean. Amendment checkpoint:
-  `5327522` on `Vega-KH/godot-kimodo`.
-
-## Goal 10 — Preview and save humanoid-retargeted motion from the dock
-
-Status: **Complete**
-Completed: 2026-09-23
-
-Usability amendment status (2026-09-23): **Complete** — synchronized orbit,
-zoom, root-follow, and reset controls now serve both dock previews; the allowed
-denoising range is 1–200 while retaining 100 as the default.
-
-Outcome sought: an artist can turn the currently validated generated take into
-the proven Godot humanoid motion directly in the AI Motion dock, compare it
-with the SOMA source, and save the target without using a headless tool.
-
-- [x] Refactor the Goal 9 retarget core so it can produce an owned in-memory
-  humanoid scene for preview as well as the existing native saved artifact.
-- [x] Add a `Retarget to Humanoid` action that is enabled only while a validated
-  generated preview exists and uses the repository A-pose fixture for this
-  first UI slice.
-- [x] Add source/humanoid preview selection or a compact side-by-side mode with
-  shared play, pause, loop, and scrub state.
-- [x] Add a non-destructive `Save Humanoid Take` action with project-relative
-  naming, unique suffixes, clear output paths, and no ownership transfer from
-  either live preview.
-- [x] Keep retarget/save errors separate from connection and generation state;
-  replacing a source take must safely replace its derived humanoid preview.
-- [x] Add offline dock and lifecycle tests covering availability, successful
-  retarget, invalid source/fixture handling, preview replacement, unique save,
-  reload, and plugin disable/re-enable cleanup.
-- [x] Generate one 100-step live take, retarget it in the dock, save/reopen it,
-  and visually confirm the source and humanoid previews perform the same action.
-
-Completion test:
-
-1. A live generated SOMA-77 take retargets and previews from the dock without
-   blocking generation controls or modifying the source preview.
-2. The humanoid result saves uniquely, survives clean reload with the backend
-   stopped, and remains equivalent to the in-memory humanoid preview.
-3. Automated lifecycle tests and one manual side-by-side playback pass under
-   Godot 4.7.2 without stale previews, leaked nodes, or engine errors.
-
-Stop condition: mark Goal 10 Complete, commit and push, propose Goal 11 for
-review, report and celebrate, then end the turn before importing a skinned
-Auto-Rig Pro character or adding arbitrary target-rig detection.
-
-Completion test and evidence:
-
-- The dock now creates a separately owned 56-bone humanoid preview from the
-  current validated SOMA-77 source without mutating or transferring ownership
-  from either scene. Its default fixture is generated from addon code, so the
-  distributed plugin does not depend on the repository test directory.
-- A source/humanoid selector switches between cyan and pink line previews.
-  Shared play/pause, loop, and timeline scrub controls keep both players at the
-  same time, and accepting a replacement source safely frees its stale derived
-  humanoid preview.
-- Humanoid retarget and save status are independent from connection,
-  generation, and SOMA-native save status. Humanoid saves use project-relative
-  paths, preserve the live previews, and add numeric suffixes rather than
-  overwriting an existing take.
-- Offline coverage proves disabled/enabled states, invalid source and fixture
-  handling, 56-bone/24-track output, shared playback, preview replacement,
-  unique save, sample-equivalent reload, and complete node cleanup. The full
-  Godot 4.7.2 suite passes without engine or script errors.
-- Live acceptance loaded the full CPU LLM2Vec encoder, generated “A person
-  walks forward.” at 30 frames, 100 denoising steps, and seed 1234, received a
-  79,474-byte SOMA-77 response, retargeted it in the dock, and saved both
-  source and humanoid takes. GPU-rendered start, midpoint, and final frames
-  showed the same walking progression with no root-to-origin artifact.
-- After the complete backend process stopped and loopback refusal was
-  confirmed, Godot reopened the saved humanoid scene cleanly. Temporary live
-  assets and captures were then removed.
-- Godot implementation checkpoint: `ddd1e07` on `Vega-KH/godot-kimodo`.
-
-Goal 10 preview and quality amendment (2026-09-23):
-
-- [x] Add mouse orbit and wheel zoom to both embedded previews with bounded,
-  stable camera motion.
-- [x] Follow each preview's animated root translation by default so long
-  locomotion takes stay framed without forcing camera heading changes.
-- [x] Keep camera orbit/zoom state synchronized when switching between source
-  and humanoid previews, and provide explicit Follow Root and Reset View
-  controls.
-- [x] Raise the denoising-step maximum from 100 to 200 while retaining 100 as
-  the default and rejecting values outside the supported range.
-- [x] Add offline camera/control/contract coverage and complete one live
-  200-step generation acceptance test.
-
-Amendment completion evidence:
-
-- Left-drag orbit and wheel zoom are clamped to stable pitch and distance
-  ranges. Source and humanoid previews share the same orbit and zoom state,
-  while following their own animated `Hips` or `Root` planar translation.
-- Follow Root defaults on, can be disabled for a fixed world view, and Reset
-  View restores the original angle and distance without changing playback.
-- Automated coverage exercises synthetic long root travel, real mouse input
-  events, cross-preview synchronization, reset/follow controls, the unchanged
-  100-step default, acceptance of 200, and rejection of 201.
-- The complete Godot 4.7.2 suite passes without engine or script errors. A live
-  full-encoder 200-step request produced a 79,475-byte SOMA-77 take and a valid
-  56-bone humanoid preview; its diffusion pass completed in about 5.5 seconds.
-- Amendment checkpoint: `961218b` on `Vega-KH/godot-kimodo`.
-
-## Goal 11 — Drive the Jenny Auto-Rig Pro test character
-
-Status: **Complete**
-Completed: 2026-09-24
-
-Corrective amendment status (2026-09-24): **Complete** — a user-supplied
-holding-walk take exposed source/target rest-direction offsets leaking into
-animated poses at both humanoid retarget stages.
-
-Outcome sought: a repository-owned test scene plays a known humanoid take on
-the supplied skinned Jenny character while preserving the character's authored
-mesh, skin, rest pose, and intended root motion.
-
-- [x] Record provenance and inspect both supplied exports — `Jenny03.glb` with
-  an exported root bone and `Jenny03-no-root-bone.glb` without one — including
-  skeleton hierarchy, bone names, skin bindings, import warnings, and Git/LFS
-  impact before choosing the canonical fixture.
-- [x] Import both variants non-destructively in an isolated test area and
-  compare Godot's humanoid bone-map recognition, rest pose, scale, facing, and
-  root-motion behavior.
-- [x] Evaluate the supplied `.research/arp_fixer.gd` and the current
-  `arp-importer` approach against Godot 4.7.2; document whether either fix is
-  still required and why the root or no-root export is selected.
-- [x] Add the smallest explicit, inspectable mapping/runtime layer needed to
-  drive the selected Auto-Rig Pro skeleton from the Goal 10 humanoid take,
-  without modifying the source animation or imported character resource.
-- [x] Add a test scene and automated checks for mapped coverage, finite poses,
-  skin/skeleton integrity, root travel, source immutability, reload stability,
-  and plugin lifecycle cleanup.
-- [x] Generate or reuse one recognizable take, play it on the line humanoid and
-  skinned Jenny side by side, then use the Goal 10 orbit, zoom, reset, and root-
-  follow behavior as the viewing baseline for front, side, start, midpoint,
-  and final checks of equivalent action and plausible deformation.
-
-Completion test:
-
-1. The selected Jenny export plays a saved humanoid take through the plugin's
-   test workflow without changing the imported model or source take.
-2. Automated checks prove stable mapping, skin binding, root travel, and clean
-   reload under Godot 4.7.2.
-3. A manual side-by-side playback shows recognizable equivalent motion and no
-   obvious root-motion or deformation defect.
-
-Stop condition: mark Goal 11 Complete, commit and push, propose Goal 12 for
-review, report and celebrate, then end the turn before arbitrary user-rig
-detection, production import automation, or mesh-weight repair.
-
-Completion test and evidence:
-
-- Both supplied GLBs import cleanly under Godot 4.7.2 with identity skeleton
-  transforms, the same materials and 37,270 indexed triangles, and no embedded
-  animations. The root-bearing export has 61 bones and 61 skin binds; the
-  no-root export has 60 and uses `Hips` as its hierarchy root.
-- The canonical fixture is the 12,414,456-byte root-bearing export at SHA-256
-  `cea2da0dead498499b0433322d9aba04681da24e587d3e2a15004acfe2afeae9`.
-  Its dedicated `Root` matches the existing humanoid motion contract and avoids
-  synthesizing a root later. The single sub-50-MiB fixture is stored directly
-  in Git; embedded images import as Basis Universal instead of extracted copies.
-- The historical `arp_fixer.gd` targets object-level animation tracks. Neither
-  supplied GLB has animation, and the baker authors motion directly on `Root`,
-  so that script and the external `arp-importer` are unnecessary here.
-- `HumanoidCharacterBaker` transfers the 22 explicit body rotations plus
-  `Root` and `Hips` positions using model-space rest deltas. It leaves Jenny's
-  eight twist bones and fingers untracked so they retain authored rest/parent
-  behavior, and never modifies the imported GLB or source humanoid take.
-- Automated coverage proves the 61-bone hierarchy, eight skinned meshes,
-  37,270 triangles, all skin binds, 24 finite tracks, model-space rotation
-  equivalence at four samples, root travel, source/rest/mesh immutability,
-  unique saving, a self-contained dependency closure, equivalent clean reload,
-  and complete node cleanup.
-- The side-by-side Godot scene provides orbit, zoom, follow-root, and reset
-  controls. GPU-rendered front and side checks at start, midpoint, and end show
-  the same recognizable walking progression, plausible skinned deformation,
-  and no root trail or stretched geometry. The 40k-triangle authored export
-  presents no acceptance-scene performance concern; retain the available 10k
-  alternative only as a future optimization option.
-- The complete Godot 4.7.2 suite passes, including editor import, all prior
-  contracts, Jenny retarget/save/reload, and four playback smoke scenes, with
-  no engine or script errors.
-- Godot implementation checkpoint: `3466190` on `Vega-KH/godot-kimodo`.
-
-Goal 11 rotation and asset-license amendment (2026-09-24):
-
-- [x] Align target semantic segment directions to their mapped source rest
-  directions before applying source world motion in both SOMA-to-humanoid and
-  humanoid-to-character bakers.
-- [x] Replace the self-confirming basis assertions with permanent tests whose
-  deliberately different A/T-pose and exporter rests fail under the old rule
-  and prove segment-direction equivalence after correction.
-- [x] Use the supplied holding-walk native/humanoid pair as a temporary
-  debugging oracle, visually confirm the corrected humanoid and Jenny poses,
-  then permanently remove those diagnostic animation files.
-- [x] Add a model-specific CC BY 4.0 notice crediting Kyle Howard and clarify
-  that Jenny is excluded from the repository's MIT code license.
-- [x] Preserve the user's `floor1` parser correction, run the complete Godot
-  4.7.2 suite, and record the corrective checkpoint before Goal 12 begins.
-
-Amendment completion evidence:
-
-- The original retarget retained each target rig's rest-direction offset in
-  every animated pose: the holding-walk showed 20.24° shoulder offsets and
-  exactly 32° upper/lower-arm offsets, matching the fixture's A/T-pose
-  differences. Multiplication-order reversal alone was rejected after rendered
-  Jenny output and quantitative tests showed 90–174° arm errors.
-- The final rule computes source world motion, minimally swings each target
-  semantic segment's rest direction onto the mapped source rest direction,
-  retains target roll/proportions, and applies the motion to that corrected
-  rest. Seventeen torso/limb parent-child relationships are explicit and
-  inspectable.
-- SOMA's collapsed neck is handled deliberately: `UpperChest` direction uses
-  `Chest -> Neck1`, while target `Neck` rotation continues to map from `Neck2`.
-- On the supplied holding-walk first frame, all six shoulder/arm segment errors
-  fell from 20–32° to below 0.00006°. The corrected humanoid-to-Jenny transfer
-  measured below 0.00004° for the same arm segments. Front, side, start,
-  midpoint, and final renders showed equivalent raised/bent arms without the
-  previous crossed-behind-back amplification.
-- Permanent tests now cover corrected rest bases, non-commuting fixtures,
-  visible segment directions, interpolation tolerance, root travel, skin/rest
-  immutability, unique save/reload, and cleanup across both retarget stages.
-- The user-supplied `animations/kimodo` debugging pair and all temporary bake,
-  diagnostic, and capture artifacts were permanently removed after acceptance.
-- `Jenny03.glb` remains the repository-owned test fixture and now has a
-  colocated CC BY 4.0 notice: copyright © 2026 Kyle Howard, with the requested
-  attribution text and an explicit exclusion from the MIT software license.
-- The complete Godot 4.7.2 suite passes without engine or script errors.
-  Corrective implementation checkpoint: `71346ad` on
-  `Vega-KH/godot-kimodo`.
-
-## Goal 12 — Preview and save a compatible skinned character from the dock
-
-Status: **Complete**
-Completed: 2026-09-24
-
-Outcome sought: an artist can choose a compatible skinned humanoid scene in
-the AI Motion dock, preview the current generated take on that character, and
-save a self-contained character take without entering the test workflow.
-
-- [x] Add a project-resource target selector and explicit clear/reset action
-  for a `PackedScene`, without modifying the selected scene or its imports.
-- [x] Validate one `Skeleton3D`, required `Root`/`Hips` and 22 body names,
-  skin bindings, finite rests, and supported animation ownership; report
-  actionable compatibility errors separately from generation and transport.
-- [x] Reuse the corrected Goal 11 direction-normalized baker to create and
-  replace an owned skinned preview from the current humanoid result, with Jenny
-  as the acceptance asset.
-- [x] Integrate the skinned preview with the existing selector, synchronized
-  play/pause/loop/scrub state, orbit, zoom, follow-root, and reset behavior.
-- [x] Add unique, non-destructive `Save Character Take` output that remains
-  playable after the backend stops and after the source model is unavailable.
-- [x] Add offline dock/lifecycle coverage for valid selection, incompatible
-  rigs, replacement and clearing, regeneration, save/reload, and cleanup.
-- [x] Complete one manual dock pass selecting Jenny, generating or reusing a
-  recognizable take, previewing it from multiple angles, saving it, and
-  reopening the saved character scene.
-
-Completion test:
-
-1. Selecting Jenny in the dock produces a synchronized skinned preview of the
-   current take without mutating Jenny, the source take, or imported resources.
-2. The character result saves uniquely and reopens with equivalent motion and
-   skinning while the backend is stopped.
-3. Automated lifecycle tests and one manual multi-angle playback pass under
-   Godot 4.7.2 without stale previews, leaked nodes, or engine errors.
-
-Stop condition: mark Goal 12 Complete, commit and push, propose Goal 13 for
-review, report and celebrate, then end the turn before automatic arbitrary
-bone-name inference, production import rewriting, or mesh-weight repair.
-
-Completion test and evidence:
-
-- The editor dock now uses Godot's native `EditorResourcePicker` restricted to
-  `PackedScene` resources, plus an explicit Clear action. Jenny's imported GLB
-  can be selected directly without copying or changing its import settings.
-- Target validation requires a `Node3D` root, exactly one `Skeleton3D`, `Root`,
-  `Hips`, all 22 mapped body names, finite rests, at least one non-empty skin,
-  and no collision with the plugin-owned `KimodoAnimationPlayer`. Errors remain
-  local to the character workflow and identify the failed requirement.
-- A selected compatible target becomes a third preview after the humanoid
-  intermediate is ready. The textured character shares play/pause, loop,
-  timeline scrub, orbit, zoom, reset, and follow-root state with the SOMA-77
-  and line-humanoid views; unavailable preview choices remain disabled.
-- Clear frees only the derived character preview and returns to the humanoid.
-  Replacing a generated source frees both derived previews but preserves the
-  selected character so it can be applied again after humanoid retargeting.
-- `Save Character Take` writes a unique self-contained `.tscn` containing the
-  61-bone Jenny skeleton, all eight skinned meshes, and the 24-track editable
-  `motion` animation on `KimodoAnimationPlayer`. Save does not transfer live
-  preview ownership or modify the selected GLB, and a duplicate receives a
-  numeric suffix.
-- Clean reload reproduces the animation at four samples and reports an empty
-  dependency closure, proving playback/editing does not require the backend or
-  original character GLB. The README records how to open the saved scene and
-  edit `motion` in Godot's Animation panel.
-- Offline coverage exercises valid and invalid selection, missing root, extra
-  skeletons, missing skins, non-finite rests, reserved animation ownership,
-  selection/clear/replacement, synchronized controls, unique save, equivalent
-  reload, source immutability, and complete node cleanup.
-- A GPU-backed dock-pipeline pass rendered the recorded walk on textured Jenny
-  at start and midpoint from front and side views. The saved character was also
-  reopened through the automated acceptance path; temporary captures and
-  outputs were removed.
-- The complete Godot 4.7.2 suite passes without engine or script errors.
-  Implementation checkpoint: `d985782` on `Vega-KH/godot-kimodo`.
-
-## Goal 13 — Persist a generated motion draft with provenance
-
-Status: **Proposed**
-
-Outcome sought: an artist can save the current generation intent and accepted
-artifact references as a project-owned draft, reopen it later, and understand
-exactly how the take was produced without relying on the running backend.
-
-- [ ] Define a versioned `MotionDraft` Resource containing prompt, frame count,
-  seed, denoising steps, creation time, MMCP/model/fps/skeleton provenance, and
-  optional native, humanoid, character-target, and saved-character paths.
-- [ ] Record immutable generation provenance when a validated response enters
-  the dock, distinguishing requested settings from returned capability data.
-- [ ] Update draft artifact references only after the corresponding unique save
-  succeeds; never infer acceptance from a preview alone.
-- [ ] Add project-relative Save Draft and Load Draft controls with unique naming,
-  explicit missing/incompatible-version errors, and no automatic regeneration.
-- [ ] Restore editable generation inputs and display read-only provenance plus
-  resolvable artifact links when a draft is loaded after editor restart.
-- [ ] Add offline round-trip, schema-version, missing-artifact, unique-save,
-  source-immutability, and plugin lifecycle tests.
-- [ ] Save a draft for a Jenny take, restart the editor with the backend stopped,
-  reload it, and verify its settings/provenance and accepted character scene.
-
-Completion test:
-
-1. A generated and saved Jenny take produces a uniquely named `MotionDraft`
-   whose recorded request, backend contract, and artifact paths are exact.
-2. A clean editor restart with no backend loads the draft, restores authoring
-   inputs, and identifies available or missing artifacts without mutation.
-3. Automated round-trip/lifecycle tests and one manual reopen pass succeed
-   under Godot 4.7.2.
-
-Stop condition: mark Goal 13 Complete, commit and push, propose Goal 14 for
-review, report and celebrate, then end the turn before multi-candidate jobs,
-undo/redo acceptance, or constraint authoring.
-
-## Current blockers
-
-### Gated Meta Llama 3 access
-
-Resolved 2026-09-05: gated access was granted and verified for `VegaKH`. The
-required repository is:
-
-`https://huggingface.co/meta-llama/Meta-Llama-3-8B-Instruct`
-
-Do not choose Llama 3.1 or 3.2 as a substitute: the pinned McGill adapter
-configuration and weights name the original Llama 3 checkpoint.
-
-No active external blocker is known. The full text-encoder load is proven, but
-its 28.52 GiB peak system usage leaves limited headroom on this 31.52 GiB
-machine; close other memory-heavy applications before cold startup.
-
-## Known issues and risks
-
-- Resolved in Goal 3: the inherited adapter advertised 30 canonical joints and
-  sliced 77-joint output to 30. Current capabilities and responses preserve
-  authoritative SOMA-77 output; the old behavior remains in historical
-  fixtures only.
-- Hugging Face reports degraded caching because Windows symlinks are disabled;
-  downloads still work but may consume more disk space. Do not enable Windows
-  Developer Mode solely for this project without a separate decision.
-- PyTorch emits deprecation warnings for Kimodo's `torch.jit` usage. They do
-  not currently fail tests or inference.
-- Python, CMake, and GitHub CLI are not all on the inherited process `PATH`.
-  Use `.venv` and `scripts/check-system.ps1`.
-- The Animatica Kimodo fork contains useful Windows/low-memory patches but is
-  behind NVIDIA on benchmark fixes. ADR 0002 remains Proposed.
-- Animatica commit `390fadb` accidentally removed explicit text-encoder
-  placement while adding quantization. The backend now pins the tested
-  `Vega-KH/kimodo` repair at `3362b92`; upstream reconciliation remains due.
-- Transformers/PEFT emit adapter load reports containing missing/unexpected
-  key summaries plus a multiple-adapter warning. NVIDIA's Kimodo quick-start
-  explicitly identifies these LLM2Vec reports as expected and safe to ignore.
-- Early five-step previews sometimes collapsed more complex prompts, including
-  a roundhouse kick, toward idle motion. Goal 8 restored the normal 100-step
-  default. Defer a controlled multi-seed combat-vocabulary quality comparison
-  until qualitative motion evaluation is in scope.
-
-## Design decisions and questions to track
-
-- Keep the growing progress history here; keep only durable working rules in
-  `AGENTS.md`.
-- Keep the Godot extension and Python backend independently versioned.
-- Preserve MMCP compatibility and add Studio endpoints separately.
-- Bind locally by default and make remote access an explicit advanced mode.
-- Evaluate a Godot MCP/editor bridge only when interactive editor work begins;
-  backend and headless Godot tests do not require it.
-- Decide how to maintain the Windows/low-memory Kimodo patches on top of
-  NVIDIA upstream after the baseline is complete.
-- Decide whether recorded binary glTF fixtures live directly in Git or use a
-  separate fixture-release mechanism after their sizes are known.
-- Goal 11 selected the root-bearing Auto-Rig Pro export as the canonical Jenny
-  fixture. Its dedicated `Root` matches the current humanoid contract; neither
-  the historical `arp_fixer.gd` nor an external importer is needed for an
-  animation-free character driven by the rest-delta baker.
-- Explore a quantized or smaller compatible text encoder after the MMCP
-  boundary work. Measure semantic quality as well as download size, RAM,
-  startup latency, and GPU impact; this is independent of exposing SOMA-77.
-- If no suitable checkpoint exists, investigate producing an exact
-  base-plus-LLM2Vec-adapter quantized checkpoint on rented GPU hardware. Before
-  publishing it on Hugging Face, review the Meta Llama 3 Community License,
-  acceptable-use terms, adapter licenses, attribution, and weight-
-  redistribution requirements; the existence of other community conversions
-  is not by itself permission.
-
-### Future text-encoder investigation
-
-- Runtime BitsAndBytes 4-bit/8-bit quantization should reduce resident model
-  memory, but it still starts from the full-precision Hugging Face checkpoint
-  and therefore is not expected to reduce the initial ~15.3 GiB selected-file
-  download. Verify this rather than assuming otherwise.
-- A pre-quantized checkpoint could reduce both transfer and storage, but must
-  preserve the exact LLM2Vec base/adapters and licensing provenance.
-- GPU 4-bit inference may fit beside the ~1.3 GiB Kimodo workload on an 8 GB
-  GPU, but leaves narrow headroom. CPU quantization, an encoder-only service,
-  and persistent embedding caches are separate candidates.
-- Replacing Llama 3 with a smaller encoder is not plug-compatible merely
-  because it can emit 4,096 values; semantic alignment with Kimodo training
-  matters. Evaluate motion quality using a fixed prompt suite before adopting
-  any replacement.
-- Benchmark encoder-only latency separately from diffusion generation, plus
-  cold/cached download, startup, system RAM, VRAM, and prompt quality.
-
-## Session log
-
-### 2026-09-04 — Backend bootstrap and CUDA baseline
-
-Completed Goal 0. Created and pushed the fork, locked the environment, verified
-CUDA and MotionCorrection, authenticated GitHub/Hugging Face, loaded the
-SOMA-RP model, proved dummy-generation determinism, and exercised the live
-MMCP capability endpoint.
-
-### 2026-09-05 — Adopt goal-oriented development
-
-Created this living goal document and linked it from `AGENTS.md`. Goal 1 is
-blocked only on access to the exact gated Meta Llama 3 base model.
-
-### 2026-09-05 — Full CPU text encoder and live MMCP generation
-
-Completed Goal 1. Repaired the inherited text-encoder device regression in a
-maintained Kimodo fork, applied MMCP request-level seeds, loaded the full
-Llama 3/LLM2Vec stack on CPU, and generated matching finite glTF animation
-both directly and through the live loopback service while staying below the
-8 GB GPU budget.
-
-### 2026-09-06 — Freeze the pre-SOMA-77 MMCP contract
-
-Completed Goal 2. Recorded and hashed the live MMCP 1.0 capability, seeded
-generation, glTF, and representative error envelopes. Added offline parsers
-that validate structure, finite animation data, provenance, size, and
-sanitization. Documented which 30-joint fields are historical and deliberately
-scheduled to change in Goal 3.
-
-### 2026-09-06 — Expose the complete SOMA-77 service boundary
-
-Completed Goal 3. Removed the inherited 77-to-30 output slice, advertised the
-authoritative 77-joint skeleton, corrected the expanded six-contact mapping,
-and retained native SOMA-30 constraint translation. Added golden/runtime
-validation, ADR 0003, and a separate fixed-seed live contract fixture. Planned
-Goal 4 for user review without beginning its Godot work.
-
-### 2026-09-06 — Bootstrap Godot SOMA-77 fixture playback
-
-Completed Goal 4. Created and published the independent Godot extension
-repository, enabled its first editor plugin, decoded the live MMCP fixture from
-memory, and proved its 77-bone hierarchy and animation data under Godot 4.7.2.
-Added a visible looping line-skeleton scene, automated plugin/fixture/playback
-checks, provenance safeguards, and the proposed Goal 5 plan without beginning
-native animation persistence.
-
-### 2026-09-06 — Persist self-contained native Godot motion
-
-Completed Goal 5. Added a non-destructive native animation baker, stable
-source-motion paths, binary AnimationLibrary output, clean save/reload and
-dependency-closure tests, and an orange native-only playback scene. A visual
-gate caught and drove a fix for missing initial bone pose offsets. Accepted
-ADR 0001 and proposed Goal 6 without beginning networking work.
-
-### 2026-09-06 — Connect the editor dock to MMCP capabilities
-
-Completed Goal 6. Added an asynchronous, cancellable, loopback-only capability
-client; strict typed validation of the MMCP 1.0 SOMA-77 contract; and the first
-functional AI Motion editor dock. Offline tests cover success, compatibility,
-transport failures, stale responses, UI states, and lifecycle cleanup. A live
-backend handshake reported the exact expected model summary. Deferred a Godot
-MCP bridge until interactive preview work demonstrates a concrete need, and
-proposed Goal 7 without beginning live generation.
-
-### 2026-09-07 — Generate and preview live motion in Godot
-
-Completed Goal 7. Added typed request construction, a cancellable/stale-safe
-generation transport, strict generated glTF/SOMA-77 validation, and an embedded
-playable line-skeleton preview. The full encoder produced “A person walks
-forward.” through the real dock workflow, and three rendered frames visibly
-confirmed an articulated walking progression. Accepted ADR 0002, kept the
-Godot bridge deferred after reassessment, and proposed Goal 8 without beginning
-native take saving.
-
-### 2026-09-07 — Save generated takes as native Godot assets
-
-Completed Goal 8. Added the one-click Windows backend launcher, restored a
-quality-oriented 100-step generation default with an explicit dock control,
-and connected live preview ownership to the proven non-destructive native
-baker. Offline and live tests proved unique save paths, pose-equivalent native
-reloads, preview survival, and playback after the full backend was stopped.
-Proposed Goal 9 without beginning humanoid retargeting.
-
-### 2026-09-08 — Finish Goal 8 dock accessibility
-
-Reopened Goal 8 for a small usability correction discovered during manual use.
-Wrapped all AI Motion dock content in an automatic vertical scroll container
-and added constrained-height regression coverage, making the native save tools
-reachable after a generated preview appears. Goal 9 remains planned and was
-not started.
-
-### 2026-09-08 — Retarget SOMA-77 to a Godot humanoid
-
-Completed Goal 9. Added a deterministic 56-bone Godot humanoid A-pose fixture,
-an explicit 22-bone SOMA mapping, and a rest-aware model-space offline baker
-that preserves hips travel while retaining target proportions. Evaluated and
-documented why `RetargetModifier3D` cannot directly consume the differently
-named SOMA skeleton without a proxy. Automated and rendered side-by-side tests
-prove unique native save/reload, source immutability, unmapped rest behavior,
-and recognizable walking motion. Proposed Goal 10 without beginning dock UI
-integration or skinned-character work.
-
-### 2026-09-08 — Correct humanoid root-motion ownership
-
-Reopened Goal 9 after the side-by-side line renderer exposed `Hips` traveling
-away from a stationary profile `Root`. Moved planar locomotion to `Root`, kept
-vertical pelvis motion on `Hips`, and added five-sample alignment and distance
-regressions. Full-suite and GPU-rendered playback confirm the trailing line is
-gone without degrading the retargeted walk. Goal 10 remains planned and was
-not started.
-
-### 2026-09-23 — Preview and save humanoid motion from the dock
-
-Completed Goal 10. Refactored the retarget baker for owned in-memory output,
-added synchronized source/humanoid previews and a timeline scrubber, and added
-non-destructive unique humanoid saving with independent status. Offline and
-live full-encoder acceptance prove clean lifecycle replacement, equivalent
-save/reload, recognizable side-by-side walking, and backend-independent native
-playback. Inventoried the supplied Jenny Auto-Rig Pro assets without importing
-or modifying them, and proposed Goal 11 for user review.
-
-### 2026-09-23 — Improve preview navigation and quality range
-
-Reopened Goal 10 for a usability amendment. Added synchronized mouse orbit,
-wheel zoom, root-follow, and reset controls to the source and humanoid dock
-previews. Raised the denoising ceiling to 200 without changing the 100-step
-default. Full offline coverage and a live full-encoder 200-step generation
-passed. Goal 11 now explicitly uses these controls as its Jenny deformation
-inspection baseline and remains proposed rather than started.
-
-### 2026-09-24 — Drive the Jenny Auto-Rig Pro character
-
-Completed Goal 11. Compared both supplied Auto-Rig Pro exports and selected
-the dedicated-root variant, recorded its provenance and import contract, and
-added a model-space rest-delta baker that preserves Jenny's skin, meshes, rest
-pose, and root travel. Automated save/reload coverage and a GPU-rendered
-side-by-side scene show the known walk on the textured character without a
-root trail or deformation defect. Proposed Goal 12 for user review without
-beginning dock integration for a selectable skinned target.
-
-### 2026-09-24 — Correct rest-direction retargeting and license Jenny
-
-Reopened Goal 11 after a user-generated holding-walk exposed shoulder, arm,
-and neck discrepancies hidden by the original ordinary-walk acceptance pose.
-Replaced target-rest-offset leakage with explicit semantic segment-direction
-normalization in both retarget stages, including deliberate handling of the
-collapsed SOMA neck. Quantitative holding-walk checks, permanent regressions,
-and GPU-rendered Jenny views pass. Added Kyle Howard's CC BY 4.0 attribution,
-preserved the user parser correction, and removed all supplied diagnostic
-animations and temporary artifacts. Goal 12 remains proposed and unstarted.
-
-### 2026-09-24 — Preview and save Jenny from the AI Motion dock
-
-Completed Goal 12. Added a native PackedScene target picker, strict compatible-
-rig validation, a textured third preview synchronized with the existing motion
-controls, and non-destructive unique character saving. Jenny passes the full
-dock workflow and reloads as a self-contained editable scene with its skin and
-`motion` animation intact. Offline lifecycle coverage and GPU front/side views
-passed, and Goal 13 is proposed as the first small persistent `MotionDraft`
-slice without beginning that work.
+
+Completed: **2026-09-25**
+
+### Why this goal changed
+
+The earlier proposal persisted the current generation form and described saved
+artifact references as accepted output. That would preserve the existing
+source-first engineering workflow and create an acceptance concept before the
+product has an Accept action. The revised goal makes the selected character
+and draft the basic-workflow entry point, separates editable intent from an
+immutable generation record, and reserves acceptance for Goal 15.
+
+### Outcome sought
+
+An artist can select a compatible character, create or open a project-owned
+`MotionDraft`, edit generation intent, generate one current candidate, save the
+draft, restart Godot with the backend stopped, and recover the target, intent,
+provenance, and valid artifact references without mutation or regeneration.
+
+### Scope
+
+- [x] Define a versioned `MotionDraft` `Resource` with a stable draft ID and
+  UTC creation/update times.
+- [x] Store target state as project-relative data: character scene path,
+  deterministic skeleton signature, optional future rig-profile reference,
+  and intended animation destination. Do not serialize live nodes.
+- [x] Store editable intent separately: prompt, frame count, seed, denoising
+  steps, and fields reserved for later candidate count/presets.
+- [x] Store an immutable generation record when a validated response enters
+  the dock: exact request JSON and hash, capability snapshot and hash,
+  protocol/model/fps/skeleton identity, response hash, and generation time.
+  Requested settings and returned/negotiated data must remain distinguishable.
+- [x] Store artifact references by type and save status. Update a reference
+  only after its corresponding save succeeds. A preview is not an artifact and
+  a saved artifact is not yet an accepted candidate.
+- [x] Add one centralized project-path validator used by draft and existing
+  save flows. Resolve/canonicalize paths and prove the result remains under the
+  project root; a `res://` string prefix alone is insufficient.
+- [x] Keep draft serialization, hashing, and path handling outside
+  `ai_motion_dock.gd`. Extract enough state/controller code that adding
+  persistence does not further entangle the current 1,073-line UI class.
+- [x] Present draft and target selection before generation in the dock. Loading
+  a draft restores the compatible target and editable inputs; the diagnostic
+  source-only path may remain available but must be visually secondary.
+- [x] Add explicit New, Save, Save As, and Load behavior. New/Save As choose a
+  unique project-relative path; Save updates the explicitly loaded draft;
+  unsupported schema versions and invalid paths fail without partial writes.
+- [x] On offline load, report missing target/artifact paths individually and
+  keep the remaining draft usable. Never contact the backend or regenerate as
+  a side effect of loading.
+- [x] Add round-trip, schema-version, deterministic-hash, path-containment,
+  missing-artifact, unique-save, source-immutability, and plugin-lifecycle
+  tests.
+- [x] Save a Jenny draft after one known generation, restart the editor with
+  the backend stopped, reload it, and manually verify target, inputs,
+  provenance, and artifact status.
+
+### Implementation evidence — 2026-09-25
+
+- `KimodoMotionDraft`, `KimodoMotionDraftStore`, and `KimodoProjectPaths` keep
+  the versioned resource, state transitions, canonical hashing, atomic save,
+  and project-containment rules outside the dock.
+- The dock now starts with draft/target controls before prompt generation,
+  retains the exact MMCP request, capability response, and returned bytes as
+  hashed provenance, and attaches only successfully saved artifacts.
+- Native and humanoid multi-file bakers remove partial output if a later save
+  stage fails. All existing save flows use the centralized canonical path
+  validator.
+- New and Load clear transient source/humanoid/character previews, disable
+  stale save actions, and reset their status text before the next generation.
+- A clean automated dock destruction/recreation with disconnected clients
+  restored Jenny, editable intent, provenance, and artifact links without a
+  connection or generation side effect. The Jenny source hash was unchanged.
+- The real Windows OpenGL renderer produced a 480×1000 narrow-dock capture;
+  target-first ordering, status text, provenance summary, and scrolling were
+  visually sound.
+- The user completed the real Godot editor check: after a known Jenny
+  generation and restart with the backend stopped, the draft restored its
+  target, inputs, provenance, and artifact state correctly. The user also
+  reported that the dock has become confusing and cluttered; that finding
+  directly motivates Goal 14's session-first UI boundary.
+
+### Completion test
+
+1. Jenny can be selected before generation and is represented in a new draft
+   by a project-relative path plus a repeatable skeleton signature.
+2. A generated result produces an exact, immutable generation record; changing
+   editable inputs afterward does not rewrite that record.
+3. Only successful native/humanoid/character saves update their artifact
+   entries, and none is labeled accepted.
+4. After a clean Godot 4.7.2 restart with the backend stopped, loading the
+   draft restores target and inputs and reports available/missing artifacts
+   without touching the target or starting generation.
+5. All existing offline tests plus the new draft/path/lifecycle suite pass
+   without script errors, engine errors, stale nodes, or partial files.
+
+Stop condition: mark Goal 13 Complete, record evidence in this ledger, commit
+and push the affected repository or repositories, propose Goal 14, and stop
+before multi-candidate generation, comparison, server job orchestration, or
+native animation acceptance.
+
+## Goal 14 — Session-first workspace and multiple takes
+
+Status: **Proposed; awaiting user approval**
+
+Do not implement this goal until the user approves it.
+
+### Why this goal changed
+
+Goal 13 proved persistence but exposed the wrong product metaphor and an
+overgrown dock. The resource called `MotionDraft` does not contain a draft
+animation; it contains authoring state, generation history, and references to
+saved data. The user wants the ChatGPT-like model instead: open or create a
+session first, then work inside it, with automatic persistence at every
+meaningful boundary. Generation controls should not exist outside an active
+session.
+
+This restructure must happen before adding several takes; otherwise take
+comparison would deepen the current UI/state entanglement and make migration
+more painful.
+
+### `num_samples` research result
+
+The user's interpretation is correct, with one important seed caveat:
+
+- NVIDIA's [Kimodo CLI documentation](https://research.nvidia.com/labs/sil/projects/kimodo/docs/user_guide/cli.html)
+  defines `num_samples` as the number of motion variations and writes one file
+  per sample for values greater than one.
+- Kimodo's [model implementation](https://github.com/nv-tlabs/kimodo/blob/main/kimodo/model/kimodo_model.py)
+  uses `num_samples` as batch dimension `B`; output arrays have one motion per
+  batch entry.
+- The pinned MMCP SDK's
+  [`MotionResult`](https://github.com/animatica-ai/motionmcp/blob/a298338bb3684a506ec313dce6d5cb12a6dc5167/motionmcp/backbone.py)
+  defines rotations as `(B,T,J,4)`; its
+  [glTF encoder](https://github.com/animatica-ai/motionmcp/blob/a298338bb3684a506ec313dce6d5cb12a6dc5167/motionmcp/gltf.py)
+  writes one animation named `sample_0`, `sample_1`, and so on and creates one
+  matching `MMCP_motion.samples[]` entry per animation. The request schema
+  accepts 1–16, and the advertised default limit is 16.
+- The current Kimodo adapter already passes `options.num_samples` to the model
+  and returns the full batch. However, this repository has only tested
+  `num_samples == 1`, and the Godot parser currently requires exactly one
+  source animation. The advertised limit is therefore not yet a product claim.
+- A request has one seed. Kimodo seeds once and samples a batch; it does not
+  return an independent seed for each variation. Changing batch size can also
+  change deterministic results. A take must therefore be identified by its
+  generation record plus sample index and content hash, never by an invented
+  per-take seed.
+
+### Outcome sought
+
+Opening the plugin shows a quiet session chooser, not generation controls. An
+artist creates or opens a project-owned session, chooses a compatible
+character, generates a tested number of takes in one request, switches between
+those takes on the selected character, and closes/reopens Godot with the
+backend stopped without losing session state or generated take data.
+
+The session autosaves. There is no manual session Save button and no hidden
+dirty state that can be lost at Generate, target change, artifact save, editor
+shutdown, or session switch.
+
+### State model
+
+- **Session:** project-owned workspace, title/identity, current target and
+  settings, generation/take history, artifact references, and timestamps.
+- **Generation:** one exact request/capability/response provenance event. It
+  owns the request seed shared by its returned batch.
+- **Take:** one variation within a generation, identified by stable take ID,
+  generation ID, sample index/name, and decoded-motion content hash.
+- **Session-managed source:** the exact validated MMCP response saved under the
+  session directory so takes remain previewable offline. This is not an
+  accepted animation.
+- **Saved artifact:** an explicit native/humanoid/character export linked to a
+  take. It is not accepted merely because it exists.
+- **Accepted animation:** remains absent until the later acceptance goal.
+
+### Scope
+
+- [ ] Introduce a versioned `KimodoSession` model and session store. Rename the
+  product/UI terminology from draft to session; do not merely relabel widgets
+  while keeping draft-shaped ownership.
+- [ ] Add a lossless schema migration from Goal 13 `MotionDraft` resources.
+  Preserve IDs, target signatures, editable intent, exact generation records,
+  and artifact links. Loading an old draft must never overwrite it in place.
+- [ ] Start in a session landing state that exposes only New Session, Open
+  Session, and a small recent-session list. Backend, prompt, generation,
+  preview, retarget, and export controls remain unconstructed or hidden until
+  a session is active.
+- [ ] Require a validated project-owned character before Generate is enabled.
+  Keep diagnostic SOMA/humanoid layers available inside the session but
+  secondary to the selected-character workflow.
+- [ ] Break the 1,400-line dock into focused session shell, generation/take,
+  preview, and output components with one explicit session controller. Avoid a
+  visual-only rearrangement that leaves state transitions in the widget class.
+- [ ] Replace manual draft Save/Save As with atomic autosave and a visible
+  `Saving…` / `Saved` / actionable-error indicator. Mark state dirty on edits,
+  debounce ordinary field changes, and force a save at session creation,
+  validated target change, immediately before Generate, after a validated
+  response is durably stored, after artifact save, before session switch, and
+  on editor shutdown.
+- [ ] Never update the session manifest before its referenced response or
+  artifact exists. Use temporary files plus atomic rename/rollback so a crash
+  cannot leave a manifest pointing at partial data.
+- [ ] Persist each exact validated MMCP response in a project-contained session
+  directory and record its SHA-256. Create one take record per response
+  animation with sample index/name and a deterministic decoded-motion hash.
+- [ ] Add backend contract tests for `num_samples == 2` proving Kimodo-style
+  `(B,T,J,...)` arrays survive `MotionResult` validation and serialize as two
+  ordered glTF animations plus two matching metadata entries.
+- [ ] Run one short fixed-request live loopback generation with
+  `num_samples == 2`. Verify both takes are structurally valid and distinct,
+  record latency/RAM/VRAM relative to one sample, and reduce the exposed limit
+  to tested behavior rather than trusting `max_num_samples: 16`.
+- [ ] Extend the Godot response layer to parse all response animations and
+  correlate them one-to-one with `MMCP_motion.samples[]`. Reject duplicate
+  names, count/order mismatches, invalid tracks, or cross-sample metadata.
+- [ ] Let the artist request the tested take count and switch quickly between
+  takes on the selected character while preserving playback time, loop state,
+  camera, and root-follow state. Use the term **take**, not candidate or sample,
+  in artist-facing UI.
+- [ ] Keep every take non-destructive. Switching, regenerating, changing the
+  target, closing the editor, and reopening offline must not alter the source
+  character or existing project animation.
+- [ ] Autosave the old target state before changing character. Retain prior
+  generations/takes with their target snapshot and rebuild previews lazily for
+  the new current target.
+- [ ] Add migration, session-gating, autosave/coalescing, atomic-failure,
+  response/take round-trip, multi-animation parsing, offline reopen, target
+  switch, preview synchronization, source-immutability, and node-lifecycle
+  tests.
+- [ ] Update the plan, README, and repair ledger, including measured
+  multi-take behavior and the exact tested maximum exposed by the UI.
+- [ ] Manually verify the complete session-first workflow with Jenny: launch to
+  the session chooser, create a session, choose Jenny, generate multiple takes,
+  switch takes, restart with the backend stopped, reopen the session, and
+  preview the same takes without mutation or regeneration.
+
+### Decision gates
+
+- If the real backend does not return one valid animation and metadata entry
+  per requested sample, stop and discuss the contract instead of inventing a
+  client workaround.
+- If batch latency, memory use, or client-only cancellation makes the editor
+  materially unresponsive, stop and decide on a versioned server job/progress/
+  cancel API before shipping multi-take UI.
+- If lossless migration would require silently changing old provenance or
+  artifact meaning, keep the old resource read-only and discuss the migration
+  boundary rather than rewriting history.
+
+### Completion test
+
+1. A fresh editor shows no generation controls until a new or existing session
+   is active; Generate remains disabled until that session has a valid target.
+2. One fixed, live `num_samples == 2` request returns two ordered, distinct
+   takes in a single response. Each take has a stable ID, sample index/name,
+   and content hash; both correctly share the request seed.
+3. Generate, target change, artifact save, and session switch each leave an
+   atomically saved session with no manual Save action or stale dirty state.
+4. Take switching previews the selected variation on Jenny at the same
+   playback/camera state and does not mutate Jenny or existing animation.
+5. After a clean restart with the backend stopped, reopening the session
+   restores target, intent, provenance, take list, selected take, and artifact
+   status; the persisted takes remain previewable without regeneration.
+6. A Goal 13 draft migrates losslessly to a new session while the original file
+   remains byte-identical.
+7. All backend and Godot suites pass without unexpected engine errors, leaked
+   nodes, partial files, or writes outside the project.
+
+Stop condition: mark Goal 14 Complete only after the live and manual gates pass,
+record evidence, commit and push the affected repositories, add a detailed Goal
+15 proposal for approval, and stop before full-skeleton repair or animation
+acceptance.
+
+## Planned goals after Goal 14
+
+### Goal 15 — Full-skeleton retarget fidelity
+
+Audit every animated SOMA-77 joint against the humanoid and character outputs,
+implement a tested finger-chain mapping, quantify rotation transfer across the
+whole mapped skeleton, and replace exact-name assumptions with the first
+explicit rig-profile data where necessary. This must pass before generated
+takes are treated as acceptance-ready.
+
+### Goal 16 — Accept one take as native Godot animation
+
+Choose an animation destination, explicitly accept the selected take in one
+undoable editor operation, and preserve existing animation unless the user
+chooses replacement. Reject/regenerate must restore the exact prior state.
+This goal completes the core six-step basic workflow.
+
+### Goal 17 — Basic-workflow hardening and release gate
+
+Exercise at least one additional redistributable humanoid with different
+proportions/hierarchy, finish setup and recovery diagnostics, measure defaults,
+and resolve remaining basic-workflow repair items before advanced pose,
+effector, waypoint, path, and timeline authoring begins.
+
+## Code-review repair ledger
+
+These are implementation findings and their current disposition.
+
+### Priority 1 — before the affected workflow is claimed complete
+
+1. **Resolved in Goal 13 — save-path containment and partial saves.** Draft and
+   all three existing output flows now canonicalize `res://` paths, compare
+   their absolute result with the project root, reject traversal and `user://`,
+   and clean up earlier files when a later multi-file save stage fails.
+2. **Partially resolved in Goal 13 — cancellation remains client-side.** Cancel
+   and timeout messages now say that Godot stopped waiting while the local
+   backend may still be finishing inference. Actual CUDA cancellation still
+   requires a server job/cancel mechanism. **Owner: Goal 14 if measured
+   multi-take latency makes it material; otherwise Goal 17.**
+3. **The multi-take protocol path is documented but not verified end to end.**
+   Kimodo and the pinned MMCP SDK represent `num_samples` as a batch and the SDK
+   serializes one animation/metadata entry per sample. The extension still
+   hardcodes one sample and requires exactly one animation, and no repository
+   or live test yet proves the two-take path. Do not expose the advertised
+   maximum of 16 until the complete path is tested and measured. **Owner: Goal
+   14.**
+4. **Finger rotations are deliberately dropped during retargeting.** The
+   SOMA-77 humanoid map contains only 22 body targets and explicitly ignores 48
+   finger joints; its regression test currently enforces that omission. The
+   user's observation that Jenny's humanoid fingers remain in rest pose is
+   therefore a confirmed implementation gap, not merely a visual suspicion.
+   Audit every animated joint and add tested finger-chain transfer before any
+   take is acceptance-ready. **Owner: Goal 15.**
+5. **General rig compatibility is overclaimed.** Validation checks exact bone
+   names, finite rests, and the existence of a non-empty skin, but not a full
+   semantic `BoneMap`, hierarchy/reference-pose correctness, skin-to-skeleton
+   binding, or scale policy. Character root/hips travel is transferred without
+   an explicit proportional scale. Jenny is valid evidence for Jenny, not for
+   arbitrary humanoids. **Owner: Goal 15 and the later Rig Wizard.**
+
+### Priority 2 — structural risks to address while nearby code changes
+
+1. **Partially addressed in Goal 13 — `ai_motion_dock.gd` remains large.** The
+   new resource model, draft store, canonical hashing, atomic persistence, and
+   path validation live in domain services rather than the dock. The dock still
+   owns substantial widget construction and workflow orchestration and is now
+   roughly 1,400 lines. Goal 14 must split session, generation/take, preview,
+   and output responsibilities while introducing the session controller; avoid
+   an unrelated rewrite beyond those boundaries. **Owner: Goal 14.**
+2. **Retarget/save logic is duplicated.** The SOMA→humanoid and
+   humanoid→character bakers duplicate global-rest sampling, direction
+   correction, track indexing, unique naming, and save behavior. Their baseline
+   assumptions already differ. Consolidate only with regression fixtures in
+   place and where the full-skeleton audit makes the shared behavior explicit.
+   **Owner: Goal 15.**
+3. **Backend origin normalization mutates the validated request.** That is
+   currently hidden from the client, but it complicates retries, hashes, and
+   server-side provenance. Preserve the original request and normalize a copy
+   before introducing retained jobs or server audit records.
+4. **Capability parsing is stricter than the basic workflow needs.** The Godot
+   client rejects a model unless all three advanced constraint types and the
+   exact contact layout are present, even though basic text generation does
+   not use them. Keep strict SOMA-77 validation, but capability-gate optional
+   advanced UI instead of rejecting an otherwise usable basic model.
+
+### Priority 3 — before remote access or broader distribution
+
+1. The backend converts arbitrary model exceptions into `internal_error` text
+   containing the exception message. Keep detailed local logs, but sanitize
+   client responses before any remote/LAN mode.
+2. The generated glTF validator intentionally assumes a skeleton-only,
+   exactly-77-node response. That is correct for the pinned server fixture but
+   should be described as a contract constraint and revisited before accepting
+   output from other MMCP backends.
+
+## Current blockers and operational risks
+
+No external blocker is active. Gated access to
+`meta-llama/Meta-Llama-3-8B-Instruct` was granted and verified on 2026-09-05.
+
+- The full text encoder peaked near 28.52 GiB of system memory on the 31.52 GiB
+  reference machine. Close other memory-heavy applications before cold start.
+- Windows Hugging Face caching works without symlinks but can use more disk.
+- PyTorch emits known `torch.jit` deprecation warnings from pinned Kimodo code.
+- The owner-created Python `.venv` cannot be launched directly by Codex's
+  restricted sandbox identity. Running the same environment in the project
+  owner's context passes; this is host isolation, not a broken project venv.
+- The maintained `Vega-KH/kimodo` pin includes the required Windows/low-memory
+  text-encoder placement repair. Reconciliation with newer NVIDIA fixes is
+  still a separate decision.
+- Low-step generations can collapse complex prompts toward idle motion. The
+  dock default remains 100 steps; qualitative prompt/seed benchmarking belongs
+  in a later quality goal.
+- The Godot working tree currently contains an untracked `animations/`
+  directory. Treat it as user-owned output; do not delete or rewrite it during
+  implementation.
+
+## Verification snapshot — 2026-09-25 Goal 13 implementation
+
+- Backend: `23 passed, 7 skipped`; skips are device-specific; Ruff passed.
+- Backend warnings: 18 pinned-dependency `torch.jit` deprecations; no test
+  failure.
+- Godot: all 15 substantive offline scripts passed under Godot 4.7.2, including
+  the new draft domain and target-first offline dock-reopen tests, plus
+  transport, generation, native round-trip, humanoid retarget, Jenny retarget,
+  and character dock coverage.
+- Two clean editor startups loaded the plugin without product errors.
+- All four short playback scene smoke checks also exited cleanly: SOMA-77
+  fixture, native take, humanoid retarget, and Jenny character playback.
+- `scripts/test.ps1` now suppresses only Godot's exact sandboxed-Windows root
+  certificate-store diagnostic and continues to fail on every other engine or
+  script error. Its complete 21-check run passed.
+- A GPU-backed Windows OpenGL capture verified the revised narrow dock layout.
+- An auxiliary `--editor --script` run exercised the actual
+  `EditorResourcePicker` branch and passed the draft lifecycle assertions. It
+  is not counted as a clean suite check because Godot reports editor-owned RID
+  leaks when that test harness terminates the editor process abruptly.
+- No new live model generation was needed: exact provenance used the recorded
+  known generation fixture, while Goals 1, 7, 8, 10, 11, and 12 retain their
+  live/manual evidence.
+- The user completed the final real-editor Jenny workflow: after a known
+  generation and restart with the backend stopped, the draft reopened with its
+  target and authoring state intact. Goal 13's manual gate passed. The user also
+  reported that the accumulated dock controls are becoming confusing and
+  cluttered; that finding directly shaped Goal 14's session-first shell and
+  component split.
+
+## Durable design decisions
+
+- Keep backend and extension independently versioned.
+- Bind locally by default; remote access remains explicit and deferred.
+- Keep MMCP compatibility and add Studio endpoints only for demonstrated
+  product needs.
+- Preserve SOMA-77 at the service boundary and SOMA-30 internally.
+- Keep generated animations usable without the extension or backend.
+- Use the rooted Jenny fixture for current visual acceptance, with its CC BY
+  4.0 attribution; add other rigs before general compatibility claims.
+- Evaluate a smaller or quantized text encoder only with a fixed prompt suite
+  and measurements of download, RAM, VRAM, latency, and motion quality.
+
+## Compact session log
+
+- **2026-09-04–09-07:** Goals 0–8 established the backend baseline, full CPU
+  text encoder, SOMA-77 MMCP contract, Godot playback, native save, capability
+  dock, live generation, and native take saving.
+- **2026-09-08:** Goal 9 added humanoid retargeting and corrected root-motion
+  ownership.
+- **2026-09-23:** Goal 10 integrated humanoid preview/save and navigation into
+  the dock.
+- **2026-09-24:** Goals 11–12 added and corrected Jenny retargeting, then added
+  selectable skinned-character preview/save to the dock.
+- **2026-09-25:** Documentation-only review re-centered the roadmap on the
+  authoritative basic/advanced workflows, condensed completed history,
+  recorded the repair ledger, and revised proposed Goal 13. No product code was
+  modified.
+- **2026-09-25:** Implemented Goal 13's target-first persistent `MotionDraft`,
+  exact generation provenance, atomic project-owned persistence, artifact
+  tracking, offline reload, centralized save containment, partial-save cleanup,
+  honest cancellation text, and regression coverage. Automated and rendered
+  checks pass. A follow-up audit fixed stale New/Load save-state presentation
+  and exercised the real editor resource-picker branch. The user then passed
+  the manual Jenny restart/offline-reload gate, closing Goal 13, and requested
+  that drafts become autosaved conversation-like sessions before any authoring
+  controls appear.
+- **2026-09-25:** Researched `num_samples`: NVIDIA defines it as the number of
+  motion variations, Kimodo generates them as one batch sharing the request
+  seed, and the pinned MMCP SDK serializes one animation and metadata entry per
+  sample. Confirmed that the current retarget map intentionally drops all 48
+  SOMA finger joints. Added the detailed, approval-gated Goal 14 session/multiple-
+  take proposal and assigned full-skeleton/finger repair to Goal 15.
