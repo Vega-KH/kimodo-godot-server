@@ -843,6 +843,14 @@ No external blocker is active. Gated access to
   `closed_fists.tscn` confirmed 30 non-rest source finger rotations, 30 in the
   converted humanoid animation, and 30 in the Jenny animation. This directly
   reproduces and repairs the motion that originally exposed the omission.
+- A later `fistpump` manual comparison exposed compounded wrist dorsiflexion:
+  the old transfer preserved world-space hand rotation but not the anatomical
+  hand frame. Goal 15 now constructs each hand frame from wrist-to-middle
+  forward and index-to-little lateral axes, validates degeneracy, and transfers
+  both flexion and palm roll. On the real saved fixture, worst directional error
+  fell from about 59° to 1.8°, while humanoid and Jenny agree within 0.0001°.
+- A synthetic 62-bone Jenny fixture confirms an unmapped ponytail branch is
+  accepted, receives no authored track, and inherits animated Head motion.
 - `KimodoHumanoidRigProfile` separates canonical semantics from target bone
   names. A renamed-bone fixture proves character retargeting consumes the
   profile instead of branching on Jenny.
@@ -917,3 +925,9 @@ No external blocker is active. Gated access to
   AnimationLibrary exports, retained explicit Character Preview export, compact
   save control, and richer session artifact metadata. Automated and rendered
   gates pass; manual editor acceptance is pending before completion/push.
+- **2026-09-26:** Diagnosed the user's `fistpump` screenshots as a real
+  anatomical wrist-frame error rather than weight painting. Replaced the
+  underconstrained hand transfer with a validated two-axis palm frame, added
+  full-frame and extra-bone regressions, and reduced the measured visual-axis
+  error from roughly 59° to 1.8°. The complete suite and GPU render pass;
+  corrected manual acceptance remains pending.
