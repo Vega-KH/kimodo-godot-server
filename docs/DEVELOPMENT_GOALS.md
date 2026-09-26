@@ -1,10 +1,10 @@
 # Development goals and project ledger
 
-Last reviewed: **2026-09-25**
+Last reviewed: **2026-09-26**
 
 Current product stage: **basic workflow**
 
-Current goal: **Goal 15 — Implemented; automated and rendered gates passed; manual acceptance pending**
+Current goal: **Goal 16 — Proposed; awaiting approval**
 
 ## How to use this document
 
@@ -56,12 +56,11 @@ Animation Library or complete Preview Scene).
 
 | Repository | Current reviewed checkpoint | Notes |
 | --- | --- | --- |
-| `kimodo-godot-server` | `c79c9df` | Goal 14 implementation evidence on `codex/milestone-0-bootstrap` |
-| `godot-kimodo` | `fb16d7b` | Goal 14 implementation and UI refactor on `main` |
+| `kimodo-godot-server` | `c5f2d70` | Goal 15 implementation evidence on `codex/milestone-0-bootstrap` |
+| `godot-kimodo` | `ad5d23b` | Goal 15 implementation and final digit-roll repair on `main` |
 
-The user authorized pushes after each completed and tested goal. Goal 14's
-completion record and implementation checkpoints are pushed before Goal 15
-begins.
+The user authorized pushes after each completed and tested goal. Goal 15's
+implementation and completion record are pushed before Goal 16 begins.
 
 The repositories remain independently versioned. The server keeps the
 `motionmcp_kimodo` namespace and MMCP surface until a deliberate migration.
@@ -442,18 +441,18 @@ acceptance.
 
 ## Goal 15 — Full-skeleton retarget fidelity and rig-aware export
 
-Status: **Implemented — automated and rendered gates passed; manual acceptance pending**
+Status: **Complete — automated, rendered, and manual acceptance passed 2026-09-26**
 
 ### Why this goal
 
 Goal 14 completed the session and multiple-take workflow, but two connected
-correctness gaps remain before a generated take can be accepted as useful
+correctness gaps remained before a generated take could be accepted as useful
 character animation:
 
-1. The current SOMA-77→humanoid map transfers only the body subset and
-   deliberately drops all 48 SOMA finger joints. Jenny therefore keeps her
-   fingers at rest even when the source motion animates them.
-2. **Character take** currently packs the entire instantiated Jenny scene into
+1. The earlier SOMA-77→humanoid map transferred only the body subset and
+   deliberately dropped all 48 SOMA finger joints. Jenny therefore kept her
+   fingers at rest even when the source motion animated them.
+2. **Character take** previously packed the entire instantiated Jenny scene into
    every `.tscn`. This produces files above 15 MB because meshes, materials,
    textures, skin data, and the animation are saved together. It is a useful
    diagnostic preview but the wrong durable form for a library of motions.
@@ -470,7 +469,7 @@ instead of saving the resulting `AnimationLibrary` independently.
 Godot's documented model supports the intended fix: animation transform tracks
 store exact node/bone `NodePath`s, `AnimationMixer.root_node` defines where
 those paths resolve from, and a standalone `AnimationLibrary` can be attached
-to a compatible player. Therefore Goal 15 will save the already-baked Jenny
+to a compatible player. Therefore Goal 15 saves the already-baked Jenny
 tracks as a small target-specific `.res` whose paths resolve on Jenny, without
 duplicating Jenny's model or textures.
 
@@ -525,58 +524,58 @@ it, and replacing/merging with UndoRedo remain Goal 17.
 
 ### Scope
 
-- [ ] Inventory all 77 SOMA joints, every source animation track, the canonical
+- [x] Inventory all 77 SOMA joints, every source animation track, the canonical
   56-bone humanoid, and Jenny's 61-bone hierarchy. Record for each source joint
   its target, collapse rule, or explicit exclusion.
-- [ ] Replace the body-only hardcoded map with declarative retarget-profile data
+- [x] Replace the body-only hardcoded map with declarative retarget-profile data
   that includes supported finger chains and keeps source/target names,
   hierarchy assumptions, root-motion ownership, and target signature explicit.
   Transfer and sampling functions operate on profile/skeleton inputs rather
   than Jenny-specific constants or branches; Jenny remains the acceptance
   fixture, not the architecture.
-- [ ] Map the meaningful left/right thumb, index, middle, ring, and little-
+- [x] Map the meaningful left/right thumb, index, middle, ring, and little-
   finger rotations into the canonical Godot humanoid and Jenny. Treat end/tip
   joints and any differing chain lengths deliberately rather than guessing or
   copying rotations by index.
-- [ ] Preserve the corrected rest-aware model-space transfer for the body and
+- [x] Preserve the corrected rest-aware model-space transfer for the body and
   extend it to fingers. Do not regress Root/Hips translation, shoulder/neck
   direction, loop state, duration, or source immutability.
-- [ ] Add a full-skeleton audit fixture with non-identity rotations on every
+- [x] Add a full-skeleton audit fixture with non-identity rotations on every
   supported chain. At representative frames, compare source intent,
   humanoid-local results, and Jenny model-space deltas with documented numeric
   tolerances; fail on missing, duplicate, non-finite, or unresolved tracks.
-- [ ] Keep one save dropdown and one Save button with exactly four choices:
+- [x] Keep one save dropdown and one Save button with exactly four choices:
   Character animation (default), Humanoid animation, SOMA-77 animation, and
   Character Preview.
-- [ ] Save each Animation Library as a standalone `.res` containing a deep copy
+- [x] Save each Animation Library as a standalone `.res` containing a deep copy
   of the selected rig's animation. A Selected Character library must not pack
   meshes, skins, materials, textures, or the character scene.
-- [ ] Retain the existing complete selected-character scene exporter as
+- [x] Retain the existing complete selected-character scene exporter as
   Character Preview. Do not silently create any preview scene for the three
   animation choices.
-- [ ] Make the save dialog's extension, filename suggestion, size warning, and
+- [x] Make the save dialog's extension, filename suggestion, size warning, and
   collision checks follow the selected option. `.res` is used for all three
   animations; `.tscn` is used only for Character Preview. Clearly warn that
   Character Preview embeds the complete character and can be large.
-- [ ] Prove the saved character library can be loaded onto a canonical Jenny
+- [x] Prove the saved character library can be loaded onto a canonical Jenny
   scene/player in the Godot editor and plays every track without
   `couldn't resolve track` warnings. Verify that the generic humanoid library is
   still rejected or clearly described as incompatible rather than pretending
   it is character-ready.
-- [ ] Record the target skeleton signature, rig layer, artifact form, and path
+- [x] Record the target skeleton signature, rig layer, artifact form, and path
   with the saved session artifact so later history/acceptance can diagnose
   incompatible targets without guessing from extensions.
-- [ ] Add save/reload, dependency, size, path-resolution, target-signature,
+- [x] Add save/reload, dependency, size, path-resolution, target-signature,
   finger-transfer, whole-skeleton numeric, legacy-artifact, source-immutability,
   and node-lifecycle regression coverage.
-- [ ] Measure representative output size. The character `.res` must contain no
+- [x] Measure representative output size. The character `.res` must contain no
   dependency on Jenny's mesh/texture payload and should remain in the animation-
   data scale (expected hundreds of KB, not tens of MB). Record the intentionally
   large Selected Character Preview Scene separately rather than treating its
   size as a failure.
-- [ ] Update README, plan, repair ledger, and artifact terminology with the
+- [x] Update README, plan, repair ledger, and artifact terminology with the
   exact compatibility boundary and editor instructions.
-- [ ] Manually inspect a generated finger-rich take on SOMA-77, the canonical
+- [x] Manually inspect a generated finger-rich take on SOMA-77, the canonical
   humanoid, and Jenny from several angles; then load the saved character `.res`
   into Jenny in the editor and verify body, fingers, root motion, looping, and
   track resolution.
@@ -628,34 +627,199 @@ it, and replacing/merging with UndoRedo remain Goal 17.
 6. All automated Godot/backend checks, rendered checks, and the manual multi-
    angle/library-load gate pass without leaks, partial files, or source changes.
 
+Stop condition passed: the user confirmed that the regenerated Jenny wrist and
+finger motion matches the SOMA-77 source and described the transfer as perfect.
+Goal 15 is complete. Its implementation and completion record are committed and
+pushed before Goal 16 work begins.
+
+## Goal 16 — Durable generated-take history and preview-cache lifecycle
+
+Status: **Proposed — awaiting user approval**
+
+### Why this goal
+
+Goal 14 records exact generation provenance but labels unsaved take payloads as
+transient. Closing Godot or switching sessions frees those motions, leaving a
+record of what was generated but no animation to reopen. That was an honest
+intermediate policy, but it conflicts with the intended conversation-like
+session: every successfully generated take is valuable and should remain
+available until the artist explicitly deletes it.
+
+Saving every derived character preview would solve the wrong problem. Preview
+scenes duplicate meshes and textures and can exceed 15 MB; humanoid and
+character animations can also be regenerated as retargeting improves. The
+smallest lossless source is the validated SOMA-77 animation plus the exact
+source-rig rest/hierarchy data required to interpret it.
+
+### Outcome sought
+
+Every validated generation becomes a durable chronological entry before the UI
+reports success. Each take owns a lightweight SOMA-77 `AnimationLibrary`; each
+distinct source skeleton owns a deduplicated, versioned rig snapshot containing
+bone names, parents, local rest transforms, skeleton transform, and its hash.
+Together those resources are sufficient to reconstruct the original source
+motion without the backend, response glTF, selected character, or the plugin
+version that created it.
+
+A **History** workspace lists generations by prompt and creation time, with
+their takes in response order. Selecting any available take lazily reconstructs
+the SOMA-77 source, retargets it through the current humanoid/character code,
+and makes it the active Preview & Save take. Derived previews remain disposable;
+only explicit Save actions create durable humanoid, character, or preview-scene
+artifacts.
+
+### Durability and storage contract
+
+- The canonical archive layer is SOMA-77. Humanoid and selected-character
+  outputs are derived and may improve when retargeting changes.
+- Stable UUIDs, not prompts or take names, identify directories and files.
+  Human-readable prompts remain metadata and UI titles.
+- Session-owned data lives under
+  `res://animations/kimodo/session_data/<session_id>/`. A proposed layout is:
+  `rigs/<skeleton_signature>.tres` and
+  `generations/<record_id>/take_<sample_index>.res`, plus a compact generation
+  manifest used for verification and crash recovery.
+- A take record stores archive path, decoded-motion content hash, saved-file
+  hash, byte size, duration, sample index/name, SOMA contract version, source
+  rig signature, and availability/deletion state. Existing request,
+  capability, response, model, seed, target, and timestamp provenance remains.
+- A generation is committed as a batch. Write all take libraries and the
+  manifest into a same-parent staging directory, reload and validate every
+  resource, then promote the complete directory and atomically save the session
+  reference. Controlled failures roll back new files and leave the prior
+  session byte-identical.
+- Cross-file operations cannot be perfectly transactional across a process or
+  power loss. The generation manifest makes the narrow promotion/save window
+  recoverable: opening a session scans only its own data directory, completes or
+  reports a fully verified orphan generation, and removes an incomplete staging
+  directory only when its state proves it contains no committed take.
+- Archived source takes are immutable. Explicit Save creates a separate user
+  artifact and never moves, renames, or repurposes the archive copy.
+- Derived SOMA scene instances, humanoid motions, character motions, and render
+  resources are an in-memory preview cache. They are freed on take, target, or
+  session changes and rebuilt on demand. No automatic `.tscn` preview is written
+  to disk. An explicitly saved Character Preview remains a durable user artifact
+  and is never cache-cleaned.
+- Deleting an archived take always requires confirmation. It removes only the
+  automatic SOMA source archive, never explicit exports or future accepted
+  animations. The session retains a small tombstone and truthful descendant
+  references so provenance is not rewritten.
+
+### Session migration and compatibility
+
+- Advance `KimodoSession` to a new schema version with an explicit v1→v2
+  migration. The original v1 resource remains untouched until the migrated
+  session is successfully saved.
+- Legacy Goal 14/15 records with `payload_status == "transient"` remain visible
+  as unavailable historical entries. Migration must not invent an archive path
+  or claim that a separately saved artifact is the original generated payload.
+- Existing saved artifact records, target signatures, active generation, and
+  selected take survive migration unchanged. If an archived file is later
+  moved, corrupted, or deleted outside the add-on, the UI reports missing or
+  hash-mismatched state without crashing, regenerating, or rewriting history.
+- A rig snapshot is keyed by the full rest/hierarchy signature, not merely the
+  name SOMA-77. Future compatible contracts may coexist without silently
+  interpreting old animation against a new rest pose.
+
+### Scope
+
+- [ ] Define the versioned source-rig snapshot and prove that snapshot plus a
+  SOMA-77 `.res` library reconstructs source transforms exactly at sampled
+  frames. Keep one snapshot per distinct rig signature within session storage.
+- [ ] Add a dedicated take-archive service responsible for deterministic paths,
+  staging, deep-copy library creation, reload validation, hashing, promotion,
+  rollback, orphan recovery, and explicit deletion. Keep filesystem transaction
+  logic out of the dock UI.
+- [ ] Change generation completion order so every returned take is archived and
+  verified before its generation record becomes durable or the UI reports the
+  batch ready. If any take fails, preserve all returned motions in memory when
+  safe, report the failure, and commit none of the batch.
+- [ ] Extend take summaries and session validation with durable archive metadata
+  and clear `available`, `missing`, `corrupt`, `legacy_transient`, and `deleted`
+  states. Validate paths remain under the owning session data directory.
+- [ ] Implement lossless v1→v2 session migration and offline loading of both
+  migrated legacy history and new durable history.
+- [ ] Add a focused History workspace without broad dock redesign. Group entries
+  by generation, title each group with its prompt, show timestamp/take order and
+  concise availability, and keep the selected historical take synchronized with
+  Preview & Save.
+- [ ] Lazily rehydrate a selected source take from its rig snapshot and library,
+  then run the existing humanoid and selected-character bakers. Preserve play,
+  pause, scrub, loop, camera, take switching, and the four Goal 15 save choices.
+- [ ] Rebuild only derived previews when the selected character changes. Never
+  modify the archived source or require the backend for history playback.
+- [ ] Add confirmed per-take deletion with safe active-selection fallback,
+  tombstone metadata, descendant warnings, and a guarantee that explicit saved
+  artifacts are untouched. Do not add automatic age, quota, or session-close
+  deletion of source takes.
+- [ ] Release all preview/cache nodes and resources during repeated history,
+  target, and session switching. Keep explicit preview scenes outside cache
+  ownership.
+- [ ] Update README, development plan, session details, status language, and
+  recovery messages so no generated take is described as transient after a
+  successful Goal 16 generation.
+
+### Out of scope
+
+- Accepting, merging, naming, or replacing animation inside an artist-selected
+  production `AnimationLibrary`, and UndoRedo integration (Goal 17).
+- Automatically converting legacy transient records into source archives when
+  their original payload no longer exists.
+- Persisting humanoid/character derived previews merely to make history switch
+  faster, or deleting explicit user saves as cache.
+- Cloud synchronization, repository-independent media storage, compression or
+  quota policy, and whole-session deletion UX.
+- Server job cancellation/progress changes, arbitrary-rig discovery, a Rig
+  Wizard, or a broad visual redesign.
+
+### Decision gates
+
+- If a SOMA-77 library plus the proposed rig snapshot cannot reproduce the
+  imported source exactly, stop and choose a measured lightweight self-contained
+  source format rather than archiving incomplete data.
+- If Godot import behavior makes directory promotion unsafe, stop and adopt an
+  explicit manifest state/recovery protocol; do not describe a merely ordered
+  sequence of writes as atomic.
+- If failure injection finds a state that can lose a completed take or make the
+  session claim a missing take, repair the archive transaction before building
+  History UI.
+- If History materially overloads the current dock, stop with a small wireframe
+  and choose navigation with the user instead of folding more controls into the
+  Preview & Save panel.
+- If archive loading depends on a mutable editor fixture, test asset, or current
+  target character, move that dependency into the versioned source archive
+  contract before continuing.
+
+### Completion test
+
+1. Generate two batches of two takes. Four immutable SOMA-77 libraries and the
+   required rig snapshot exist before both generation records report complete;
+   paths, hashes, sizes, order, prompts, and provenance survive restart.
+2. With the backend stopped and response glTF absent, reopen the session,
+   select every historical take, and reproduce its SOMA-77 sampled transforms
+   exactly. Humanoid and Jenny previews rebuild and remain synchronized.
+3. Inject failure at every archive step, including the second take, validation,
+   promotion, and session save. No session claims a partial generation, prior
+   history remains byte-identical, and staged/orphan data is either safely
+   rolled back or deterministically recovered.
+4. Open a v1 session containing transient history and saved Goal 15 artifacts.
+   Migration preserves every field and labels unavailable source payloads
+   honestly; it does not alter the original file or relabel saved exports.
+5. Corrupt or externally remove one archived take. Other history remains usable,
+   and the affected entry reports its exact state without regeneration or data
+   loss. Repeated switching does not leak nodes or retain stale character data.
+6. Delete one archived take with explicit confirmation. Its source file is gone,
+   its tombstone remains, sibling takes and explicit exports remain byte-identical,
+   and reopening the session produces the same truthful history.
+7. The complete Godot/backend suites, rendered History layout, and a manual
+   generate→restart→offline-history→retarget→save→delete walkthrough pass.
+
 Stop condition: after the user approves this proposal, implement only this
-scope. When all gates pass, mark Goal 15 complete, commit and push the affected
-repositories, propose detailed Goal 16 for approval, and stop before accepting
-or merging animation into production libraries.
+scope. When all gates pass, mark Goal 16 complete, record and push the affected
+repositories, propose detailed Goal 17 for approval, and stop before accepting
+or merging animation into a production library.
 
-## Planned goals after Goal 15
-
-### Goal 16 — Durable generated-take history and preview-cache lifecycle
-
-Atomically save every validated generated take as an authoritative SOMA-77
-Animation Library under project-owned session storage before recording the
-generation as complete. SOMA-77 is retained because it preserves all source
-joints and can be reprocessed by improved future retargeters; the humanoid and
-selected-character forms are derived views, not the archival source.
-
-Extend the session schema with each take's durable path, content hash, size,
-skeleton/contract identity, and availability. Add a chronological **History**
-workspace grouped by generation, using the prompt as the primary title with
-time/take disambiguation. Selecting a historical take lazily loads its source,
-rebuilds humanoid/character previews, and never creates a persistent preview
-scene unless the artist explicitly saves one.
-
-Generated source takes remain until explicit confirmed deletion. Automatic
-preview nodes and derived temporary data are disposable and must be freed on
-selection/session changes. Use atomic batch persistence and rollback: a session
-must never claim a durable generation whose take files were only partly saved.
-Define deletion behavior for saved/accepted descendants and preserve legacy
-Goal 14 sessions whose payloads were honestly transient.
+## Planned goals after Goal 16
 
 ### Goal 17 — Accept one take into native Godot animation data
 
@@ -869,8 +1033,10 @@ No external blocker is active. Gated access to
   ten times smaller than the self-contained preview scene in the automated
   fixture.
 - The complete Godot suite passed on Godot 4.7.2. A GPU-backed Windows OpenGL
-  render at 480×1000 verified the compact Preview & Save layout. Final manual
-  editor library-load and finger-rich visual acceptance remains pending.
+  render at 480×1000 verified the compact Preview & Save layout. The user then
+  regenerated the corrected motion and confirmed that Jenny's wrist and finger
+  bends match the SOMA-77 source, describing the transfer as perfect. Goal 15's
+  manual gate passed.
 
 ## Compact session log
 
@@ -943,5 +1109,8 @@ No external blocker is active. Gated access to
   wrist adopted the full palm frame. Assigned the shared palm frame to every
   mapped finger and thumb joint, added bounded local-compensation regressions,
   and measured only 0.009° worst thumb-bend drift across 31 samples of the real
-  `Fistpump2` fixture. The complete Godot suite passes; regenerated-preview
-  manual acceptance remains pending.
+  `Fistpump2` fixture. The complete Godot suite passes. The user confirmed the
+  regenerated Jenny preview matches SOMA-77 at the wrists and fingers, closing
+  Goal 15. Goal 16 is now proposed for approval with durable SOMA source
+  archives, versioned rig snapshots, recoverable batch persistence, offline
+  History, explicit deletion, and disposable derived previews.
