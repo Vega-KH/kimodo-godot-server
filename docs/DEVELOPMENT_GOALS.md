@@ -4,7 +4,7 @@ Last reviewed: **2026-09-25**
 
 Current product stage: **basic workflow**
 
-Current goal: **Goal 14 — Implementation complete; awaiting manual acceptance**
+Current goal: **Goal 15 — Proposed; awaiting approval**
 
 ## How to use this document
 
@@ -51,11 +51,12 @@ diagnostic layers, but they must not define the artist-facing workflow.
 
 | Repository | Current reviewed checkpoint | Notes |
 | --- | --- | --- |
-| `kimodo-godot-server` | `bb5b57f` | Goal 13 completion and Goal 14 proposal on `codex/milestone-0-bootstrap` |
-| `godot-kimodo` | `3e415b2` | Goal 13 implementation on `main` |
+| `kimodo-godot-server` | `c79c9df` | Goal 14 implementation evidence on `codex/milestone-0-bootstrap` |
+| `godot-kimodo` | `fb16d7b` | Goal 14 implementation and UI refactor on `main` |
 
-The Godot and server checkpoints are local until explicit push authorization
-is received for each source/document payload and remote.
+The user authorized pushes after each completed and tested goal. Goal 14's
+completion record and implementation checkpoints are pushed before Goal 15
+begins.
 
 The repositories remain independently versioned. The server keeps the
 `motionmcp_kimodo` namespace and MMCP surface until a deliberate migration.
@@ -78,6 +79,7 @@ The repositories remain independently versioned. The server keeps the
 | 11 | 2026-09-24 | Drove the rooted Jenny Auto-Rig Pro fixture; corrected rest-direction transfer after a holding-walk exposed shoulder/neck defects; added CC BY 4.0 attribution. | Godot `3466190`, `71346ad`; server ledger `0642202`, `ae973ca` |
 | 12 | 2026-09-24 | Added a `PackedScene` target picker, validated exact-name compatible rigs, synchronized skinned preview, and unique self-contained character-scene saving. | Godot `d985782`; server ledger `8e379dd` |
 | 13 | 2026-09-25 | Added target-first persistent authoring state, exact generation provenance, atomic project-contained save/load, and successful-save-only artifact tracking. | Godot `3e415b2`; server ledger `bb5b57f` |
+| 14 | 2026-09-25 | Replaced drafts with autosaved sessions, added strict two-take generation and transient payload ownership, split the dock into focused components, and simplified preview/save into a selected-take workflow. | Godot `0898724`–`fb16d7b`; server `f5cb0a5`, `c79c9df` |
 
 ### Corrections that remain architecturally binding
 
@@ -196,7 +198,7 @@ native animation acceptance.
 
 ## Goal 14 — Session-first workspace and multiple takes
 
-Status: **Implementation complete; awaiting manual acceptance**
+Status: **Complete — 2026-09-25**
 
 Approved: **2026-09-25**
 
@@ -335,7 +337,7 @@ shutdown, or session switch.
   tests.
 - [x] Update the plan, README, and repair ledger, including measured
   multi-take behavior and the exact tested maximum exposed by the UI.
-- [ ] Manually verify the complete session-first workflow with Jenny: launch to
+- [x] Manually verify the complete session-first workflow with Jenny: launch to
   the session chooser, create a session, choose Jenny, generate multiple takes,
   switch takes, save one selected take, restart with the backend stopped,
   reopen the session, and verify that session state plus the saved artifact
@@ -388,8 +390,11 @@ shutdown, or session switch.
   the backend reports 24 passed and 7 device-gated skips; Ruff passes. The only
   warnings are 18 known `torch.jit` deprecations in pinned dependencies.
 - GPU-rendered dock captures verified the quiet landing state and the active
-  Generate and Preview & Save workspace. Final real-editor acceptance remains
-  the sole open gate.
+  Generate and Preview & Save workspace.
+- The user completed the final real-editor walkthrough after the Preview &
+  Save refactor: session gating, two-take generation and switching, selected-
+  take saving through Godot's file dialog, collision handling, and offline
+  session/artifact recovery all passed.
 
 ### Decision gates
 
@@ -430,22 +435,178 @@ record evidence, commit and push the affected repositories, add a detailed Goal
 15 proposal for approval, and stop before full-skeleton repair or animation
 acceptance.
 
-## Planned goals after Goal 14
+## Goal 15 — Full-skeleton retarget fidelity and lightweight character libraries
 
-### Goal 15 — Full-skeleton retarget fidelity
+Status: **Proposed; awaiting approval**
 
-Audit every animated SOMA-77 joint against the humanoid and character outputs,
-implement a tested finger-chain mapping, quantify rotation transfer across the
-whole mapped skeleton, and replace exact-name assumptions with the first
-explicit rig-profile data where necessary. This must pass before generated
-takes are treated as acceptance-ready.
+### Why this goal
 
-### Goal 16 — Accept one take as native Godot animation
+Goal 14 completed the session and multiple-take workflow, but two connected
+correctness gaps remain before a generated take can be accepted as useful
+character animation:
 
-Choose an animation destination, explicitly accept the selected take in one
-undoable editor operation, and preserve existing animation unless the user
-chooses replacement. Reject/regenerate must restore the exact prior state.
-This goal completes the core six-step basic workflow.
+1. The current SOMA-77→humanoid map transfers only the body subset and
+   deliberately drops all 48 SOMA finger joints. Jenny therefore keeps her
+   fingers at rest even when the source motion animates them.
+2. **Character take** currently packs the entire instantiated Jenny scene into
+   every `.tscn`. This produces files above 15 MB because meshes, materials,
+   textures, skin data, and the animation are saved together. It is a useful
+   diagnostic preview but the wrong durable form for a library of motions.
+
+The generic humanoid `.res` is not a substitute for a character-specific
+library. Its tracks intentionally target paths such as
+`HumanoidSkeleton:RightLowerLeg`, while Jenny's animation uses the actual path
+from its `AnimationPlayer.root_node` to Jenny's `Skeleton3D`. Bone names alone
+also do not make two skeletons interchangeable: Godot 4 animation values
+include bone-rest orientation. The existing character baker already performs
+that rest-aware conversion; it simply embeds the result in a packed scene
+instead of saving the resulting `AnimationLibrary` independently.
+
+Godot's documented model supports the intended fix: animation transform tracks
+store exact node/bone `NodePath`s, `AnimationMixer.root_node` defines where
+those paths resolve from, and a standalone `AnimationLibrary` can be attached
+to a compatible player. Therefore Goal 15 will save the already-baked Jenny
+tracks as a small target-specific `.res` whose paths resolve on Jenny, without
+duplicating Jenny's model or textures.
+
+### Outcome sought
+
+Every deliberately supported animated SOMA-77 joint has an explicit,
+documented disposition: transferred to the humanoid/character, intentionally
+collapsed into another joint, or excluded for a measured reason. Finger motion
+visibly and numerically survives through SOMA-77, the canonical humanoid, and
+Jenny.
+
+The default **Character animation** output is a lightweight target-specific
+`AnimationLibrary` that can be attached to the canonical Jenny
+`AnimationPlayer` in the editor and plays without unresolved-track warnings.
+It contains animation data, not another copy of the character. Diagnostic
+humanoid/SOMA preview scenes may remain available, but a packed character scene
+is no longer the primary saved character artifact.
+
+This goal validates and saves a standalone character library. Choosing an
+existing production `AnimationLibrary`, naming an accepted animation inside
+it, and replacing/merging with UndoRedo remain Goal 16.
+
+### Compatibility contract
+
+- A humanoid library is compatible with the canonical humanoid preview rig,
+  not automatically with Jenny.
+- A character library is baked for one recorded target skeleton signature,
+  rest pose, hierarchy, and track namespace. Goal 15 proves this contract for
+  Jenny and must not claim arbitrary-humanoid portability.
+- Track paths are resolved from a documented `AnimationPlayer.root_node`.
+  Saving and reload tests must use the same contract an artist uses in the
+  editor, not a test-only path rewrite.
+- Existing imported character resources, scenes, skins, materials, and prior
+  animation libraries remain unmodified.
+- Old Goal 12–14 packed character scenes and session artifact records remain
+  readable. No migration may relabel a packed scene as a lightweight library.
+
+### Scope
+
+- [ ] Inventory all 77 SOMA joints, every source animation track, the canonical
+  56-bone humanoid, and Jenny's 61-bone hierarchy. Record for each source joint
+  its target, collapse rule, or explicit exclusion.
+- [ ] Replace the body-only hardcoded map with declarative retarget-profile data
+  that includes supported finger chains and keeps source/target names,
+  hierarchy assumptions, root-motion ownership, and target signature explicit.
+- [ ] Map the meaningful left/right thumb, index, middle, ring, and little-
+  finger rotations into the canonical Godot humanoid and Jenny. Treat end/tip
+  joints and any differing chain lengths deliberately rather than guessing or
+  copying rotations by index.
+- [ ] Preserve the corrected rest-aware model-space transfer for the body and
+  extend it to fingers. Do not regress Root/Hips translation, shoulder/neck
+  direction, loop state, duration, or source immutability.
+- [ ] Add a full-skeleton audit fixture with non-identity rotations on every
+  supported chain. At representative frames, compare source intent,
+  humanoid-local results, and Jenny model-space deltas with documented numeric
+  tolerances; fail on missing, duplicate, non-finite, or unresolved tracks.
+- [ ] Change the default save type label from **Character take** to
+  **Character animation** and save a standalone `.res` `AnimationLibrary`
+  containing a deep copy of the selected character-baked animation. Do not pack
+  meshes, skins, materials, textures, or the character scene into that file.
+- [ ] Make the save dialog's extension and collision checks follow the selected
+  artifact type. Character animation defaults to `.res`; diagnostic preview
+  scenes, if retained, remain explicit rather than silently accompanying every
+  character save.
+- [ ] Prove the saved character library can be loaded onto a canonical Jenny
+  scene/player in the Godot editor and plays every track without
+  `couldn't resolve track` warnings. Verify that the generic humanoid library is
+  still rejected or clearly described as incompatible rather than pretending
+  it is character-ready.
+- [ ] Record the target skeleton signature and artifact kind with the saved
+  session artifact so later acceptance can diagnose incompatible targets.
+- [ ] Add save/reload, dependency, size, path-resolution, target-signature,
+  finger-transfer, whole-skeleton numeric, legacy-artifact, source-immutability,
+  and node-lifecycle regression coverage.
+- [ ] Measure representative output size. The character `.res` must contain no
+  dependency on Jenny's mesh/texture payload and should remain in the animation-
+  data scale (expected hundreds of KB, not tens of MB).
+- [ ] Update README, plan, repair ledger, and artifact terminology with the
+  exact compatibility boundary and editor instructions.
+- [ ] Manually inspect a generated finger-rich take on SOMA-77, the canonical
+  humanoid, and Jenny from several angles; then load the saved character `.res`
+  into Jenny in the editor and verify body, fingers, root motion, looping, and
+  track resolution.
+
+### Out of scope
+
+- Accepting or merging into an artist-selected existing `AnimationLibrary`,
+  conflict policy, UndoRedo, and Accept/Reject state (Goal 16).
+- Claiming support for arbitrary humanoid rigs or building the later Rig Wizard.
+- Runtime universal retargeting between unrelated skeletons.
+- A broad visual redesign of the dock.
+- Server job/progress/cancellation protocol changes.
+
+### Decision gates
+
+- If SOMA and Godot finger chains cannot be mapped without an ambiguous
+  twist/distribution policy, stop with the measured joint evidence and choose
+  that policy explicitly rather than hiding the mismatch.
+- If a lightweight library only works by mutating Jenny's imported scene,
+  renaming its skeleton, or changing its rest pose, stop and choose a stable
+  wrapper/root-node contract instead.
+- If full-skeleton validation exposes a body regression beyond the current
+  rest-direction model, fix the shared retarget mathematics before adding
+  per-bone exceptions.
+- If a second rig is required to distinguish Jenny-specific behavior from the
+  first reusable profile abstraction, discuss and license that fixture before
+  making a general compatibility claim.
+
+### Completion test
+
+1. A finger-rich SOMA-77 fixture produces non-rest, finite, directionally
+   correct motion on every supported humanoid and Jenny finger chain, with all
+   77 source joints accounted for by the audit.
+2. Existing body/root retarget fixtures and multi-take preview behavior remain
+   numerically stable and non-destructive.
+3. Saving **Character animation** creates a lightweight `.res` with no embedded
+   Jenny mesh, texture, material, or skin payload and no unintended companion
+   character scene.
+4. Loading that `.res` into the documented Jenny `AnimationPlayer` setup works
+   in the editor without unresolved-track warnings and reproduces the previewed
+   body, finger, root-motion, duration, and loop behavior.
+5. The session records the correct selected take, character-library artifact
+   kind, target signature, and existing/missing status; legacy artifacts remain
+   truthful and readable.
+6. All automated Godot/backend checks, rendered checks, and the manual multi-
+   angle/library-load gate pass without leaks, partial files, or source changes.
+
+Stop condition: after the user approves this proposal, implement only this
+scope. When all gates pass, mark Goal 15 complete, commit and push the affected
+repositories, propose detailed Goal 16 for approval, and stop before accepting
+or merging animation into production libraries.
+
+## Planned goals after Goal 15
+
+### Goal 16 — Accept one take into native Godot animation data
+
+Choose an existing or new character-compatible `AnimationLibrary`, explicitly
+accept the selected take under an artist-chosen animation name in one undoable
+editor operation, and preserve existing animation unless the user chooses
+replacement. Reject/regenerate must restore the exact prior state. This goal
+completes the core six-step basic workflow.
 
 ### Goal 17 — Basic-workflow hardening and release gate
 
@@ -488,6 +649,13 @@ These are implementation findings and their current disposition.
    binding, or scale policy. Character root/hips travel is transferred without
    an explicit proportional scale. Jenny is valid evidence for Jenny, not for
    arbitrary humanoids. **Owner: Goal 15 and the later Rig Wizard.**
+6. **Character saves duplicate the entire target scene.** The Goal 12 baker
+   packs the instantiated character, embedded animation player, meshes,
+   materials, textures, and skin into each character-take `.tscn`. A Jenny take
+   can therefore exceed 15 MB while an animation library is roughly 100 KB.
+   Save the already rest-corrected, Jenny-path animation as a target-specific
+   standalone `AnimationLibrary`; keep preview scenes diagnostic. **Owner: Goal
+   15.**
 
 ### Priority 2 — structural risks to address while nearby code changes
 
@@ -592,9 +760,9 @@ No external blocker is active. Gated access to
   wall, 15.57 GiB peak server working set, and 1,411/1,483 MiB baseline/peak
   total GPU allocation. The simplified automatic-conversion and selected-take
   save path passed without leaks.
-- Rendered UI checks pass. Manual real-editor session creation, switching,
-  selected-take save, restart, and offline reopen remain required before Goal
-  14 is complete.
+- Rendered UI checks pass. The user subsequently passed the real-editor session
+  creation, two-take switching, selected-take save, collision, restart, and
+  offline-reopen walkthrough. Goal 14 is complete.
 
 ## Durable design decisions
 
@@ -646,5 +814,12 @@ No external blocker is active. Gated access to
   separation-of-concerns pass combined Preview & Save, removed redundant manual
   conversion actions and six path/name fields, added preview-local take
   switching, and delegated output naming/location to Godot's save dialog.
-  Automated, rendered, and live two-take gates pass; final real-editor
-  acceptance is pending.
+  Automated, rendered, live two-take, and final real-editor gates passed; Goal
+  14 is complete.
+- **2026-09-25:** Investigated oversized character takes and humanoid-library
+  track failures. Confirmed that packed character scenes duplicate Jenny's
+  heavy resources, while generic humanoid tracks target
+  `HumanoidSkeleton:<bone>` and cannot resolve on Jenny. Proposed Goal 15 to
+  combine the full-skeleton/finger audit with lightweight, target-specific
+  character `AnimationLibrary` export; acceptance into an existing production
+  library remains Goal 16.

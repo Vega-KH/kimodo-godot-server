@@ -5,14 +5,15 @@ Godot. Keep it independently versioned from the Godot editor extension.
 
 ## Current phase
 
-Goals 0–13 established the backend/extension vertical slice and persistent
-target-first authoring state. Goal 13 passed its manual editor acceptance check.
-Goal 14 implementation is complete and awaiting its final manual editor gate.
-It replaces the draft metaphor with a session-first workspace and validates
-two-take generation end to end. Unsaved take payloads remain transient until
-the user explicitly saves one. The project is finishing the basic workflow
-before advanced constraint authoring. Prefer small changes with tests
-and record consequential decisions in `docs/adr/`.
+Goals 0–14 established the backend/extension vertical slice, autosaved
+session-first authoring, and tested two-take generation end to end. Goal 14
+passed its final manual editor gate. Unsaved take payloads remain transient
+until the user explicitly saves one. Goal 15 is proposed and awaiting approval:
+it combines the full-skeleton/finger retarget audit with lightweight,
+target-specific character `AnimationLibrary` output. Do not begin it without
+explicit user approval. The project is finishing the basic workflow before
+advanced constraint authoring. Prefer small changes with tests and record
+consequential decisions in `docs/adr/`.
 
 ## Goal-oriented sessions
 
