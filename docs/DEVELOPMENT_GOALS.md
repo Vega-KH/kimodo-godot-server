@@ -35,7 +35,9 @@ intended basic workflow:
 2. select the character and autosave every meaningful session transition;
 3. generate and compare several takes on that character;
 4. validate full-skeleton retargeting, including fingers;
-5. explicitly accept one take into native animation data.
+5. retain every generated take in durable session history until the artist
+   explicitly deletes it;
+6. explicitly accept one take into native animation data.
 
 `MotionDraft` was the Goal 13 implementation name. The product concept is now
 **session**: a persistent, conversation-like workspace containing target and
@@ -44,8 +46,11 @@ references. A **take** is one motion variation returned by a generation. A
 session, generation, take, saved artifact, and accepted animation are distinct
 states and must remain distinct in code and UI.
 
-SOMA-77, the synthetic Godot humanoid, and their save buttons remain valuable
-diagnostic layers, but they must not define the artist-facing workflow.
+SOMA-77, the synthetic Godot humanoid, and their preview scenes remain valuable
+diagnostic layers, but they must not define the artist-facing workflow. Saving
+has two independent dimensions: the rig the artifact is **for** (SOMA-77,
+Humanoid, or Selected Character) and the form it is saved **as** (lightweight
+Animation Library or complete Preview Scene).
 
 ## Repository checkpoints
 
@@ -435,7 +440,7 @@ record evidence, commit and push the affected repositories, add a detailed Goal
 15 proposal for approval, and stop before full-skeleton repair or animation
 acceptance.
 
-## Goal 15 — Full-skeleton retarget fidelity and lightweight character libraries
+## Goal 15 — Full-skeleton retarget fidelity and rig-aware export
 
 Status: **Proposed; awaiting approval**
 
@@ -477,29 +482,45 @@ collapsed into another joint, or excluded for a measured reason. Finger motion
 visibly and numerically survives through SOMA-77, the canonical humanoid, and
 Jenny.
 
-The default **Character animation** output is a lightweight target-specific
-`AnimationLibrary` that can be attached to the canonical Jenny
-`AnimationPlayer` in the editor and plays without unresolved-track warnings.
-It contains animation data, not another copy of the character. Diagnostic
-humanoid/SOMA preview scenes may remain available, but a packed character scene
-is no longer the primary saved character artifact.
+The save UI separates two choices:
 
-This goal validates and saves a standalone character library. Choosing an
-existing production `AnimationLibrary`, naming an accepted animation inside
-it, and replacing/merging with UndoRedo remain Goal 16.
+- **Save for:** Selected Character (default), Humanoid, or SOMA-77.
+- **Save as:** Animation Library (default) or Preview Scene.
+
+An Animation Library is the lightweight reusable `.res`. A Preview Scene is a
+complete playable `.tscn` for the selected rig; for Selected Character this
+intentionally includes the character, meshes, materials, textures, skin, and
+animation and may be around 15 MB. That large result is valid when explicitly
+requested, but is not the default storage form. The working preview-scene
+bakers are retained and brought under this explicit two-dimensional contract.
+
+A Selected Character Animation Library can be attached to the canonical Jenny
+`AnimationPlayer` in the editor and plays without unresolved-track warnings.
+It contains animation data, not another copy of the character.
+
+This goal validates both artifact forms for all three rig layers. Automatically
+archiving every generated take into session history remains Goal 16. Choosing
+an existing production `AnimationLibrary`, naming an accepted animation inside
+it, and replacing/merging with UndoRedo remain Goal 17.
 
 ### Compatibility contract
 
 - A humanoid library is compatible with the canonical humanoid preview rig,
   not automatically with Jenny.
-- A character library is baked for one recorded target skeleton signature,
+- A selected-character library is baked for one recorded target skeleton signature,
   rest pose, hierarchy, and track namespace. Goal 15 proves this contract for
-  Jenny and must not claim arbitrary-humanoid portability.
+  Jenny and must not claim arbitrary-humanoid portability. The transfer core
+  must nevertheless consume explicit rig/profile data and target paths rather
+  than branch on Jenny names, so another imported character can use the same
+  machinery once it has a validated profile.
 - Track paths are resolved from a documented `AnimationPlayer.root_node`.
   Saving and reload tests must use the same contract an artist uses in the
   editor, not a test-only path rewrite.
 - Existing imported character resources, scenes, skins, materials, and prior
   animation libraries remain unmodified.
+- An explicitly saved Preview Scene is a durable user artifact and is never
+  treated as disposable cache. Automatically constructed preview nodes remain
+  ephemeral and are freed on take/session changes.
 - Old Goal 12–14 packed character scenes and session artifact records remain
   readable. No migration may relabel a packed scene as a lightweight library.
 
@@ -511,6 +532,9 @@ it, and replacing/merging with UndoRedo remain Goal 16.
 - [ ] Replace the body-only hardcoded map with declarative retarget-profile data
   that includes supported finger chains and keeps source/target names,
   hierarchy assumptions, root-motion ownership, and target signature explicit.
+  Transfer and sampling functions operate on profile/skeleton inputs rather
+  than Jenny-specific constants or branches; Jenny remains the acceptance
+  fixture, not the architecture.
 - [ ] Map the meaningful left/right thumb, index, middle, ring, and little-
   finger rotations into the canonical Godot humanoid and Jenny. Treat end/tip
   joints and any differing chain lengths deliberately rather than guessing or
@@ -522,27 +546,37 @@ it, and replacing/merging with UndoRedo remain Goal 16.
   supported chain. At representative frames, compare source intent,
   humanoid-local results, and Jenny model-space deltas with documented numeric
   tolerances; fail on missing, duplicate, non-finite, or unresolved tracks.
-- [ ] Change the default save type label from **Character take** to
-  **Character animation** and save a standalone `.res` `AnimationLibrary`
-  containing a deep copy of the selected character-baked animation. Do not pack
-  meshes, skins, materials, textures, or the character scene into that file.
-- [ ] Make the save dialog's extension and collision checks follow the selected
-  artifact type. Character animation defaults to `.res`; diagnostic preview
-  scenes, if retained, remain explicit rather than silently accompanying every
-  character save.
+- [ ] Replace the single output-type selector with orthogonal **Save for** and
+  **Save as** selectors. `Selected Character` and `Animation Library` are the
+  defaults; all valid combinations for SOMA-77, Humanoid, and Selected
+  Character are explicit and tested.
+- [ ] Save each Animation Library as a standalone `.res` containing a deep copy
+  of the selected rig's animation. A Selected Character library must not pack
+  meshes, skins, materials, textures, or the character scene.
+- [ ] Retain Preview Scene export for all three rig layers. SOMA-77 and Humanoid
+  scenes contain their diagnostic skeleton/player; Selected Character contains
+  the fully baked character. Do not silently create a preview scene when
+  Animation Library is selected.
+- [ ] Make the save dialog's extension, filename suggestion, size warning, and
+  collision checks follow **Save as**. `.res` is the default; `.tscn` is used
+  only for an explicitly selected Preview Scene. Clearly warn that a selected-
+  character preview scene embeds the complete character and can be large.
 - [ ] Prove the saved character library can be loaded onto a canonical Jenny
   scene/player in the Godot editor and plays every track without
   `couldn't resolve track` warnings. Verify that the generic humanoid library is
   still rejected or clearly described as incompatible rather than pretending
   it is character-ready.
-- [ ] Record the target skeleton signature and artifact kind with the saved
-  session artifact so later acceptance can diagnose incompatible targets.
+- [ ] Record the target skeleton signature, rig layer, artifact form, and path
+  with the saved session artifact so later history/acceptance can diagnose
+  incompatible targets without guessing from extensions.
 - [ ] Add save/reload, dependency, size, path-resolution, target-signature,
   finger-transfer, whole-skeleton numeric, legacy-artifact, source-immutability,
   and node-lifecycle regression coverage.
 - [ ] Measure representative output size. The character `.res` must contain no
   dependency on Jenny's mesh/texture payload and should remain in the animation-
-  data scale (expected hundreds of KB, not tens of MB).
+  data scale (expected hundreds of KB, not tens of MB). Record the intentionally
+  large Selected Character Preview Scene separately rather than treating its
+  size as a failure.
 - [ ] Update README, plan, repair ledger, and artifact terminology with the
   exact compatibility boundary and editor instructions.
 - [ ] Manually inspect a generated finger-rich take on SOMA-77, the canonical
@@ -552,8 +586,10 @@ it, and replacing/merging with UndoRedo remain Goal 16.
 
 ### Out of scope
 
+- Automatically retaining every generated take and presenting chronological
+  session history (Goal 16).
 - Accepting or merging into an artist-selected existing `AnimationLibrary`,
-  conflict policy, UndoRedo, and Accept/Reject state (Goal 16).
+  conflict policy, UndoRedo, and Accept/Reject state (Goal 17).
 - Claiming support for arbitrary humanoid rigs or building the later Rig Wizard.
 - Runtime universal retargeting between unrelated skeletons.
 - A broad visual redesign of the dock.
@@ -581,10 +617,13 @@ it, and replacing/merging with UndoRedo remain Goal 16.
    77 source joints accounted for by the audit.
 2. Existing body/root retarget fixtures and multi-take preview behavior remain
    numerically stable and non-destructive.
-3. Saving **Character animation** creates a lightweight `.res` with no embedded
-   Jenny mesh, texture, material, or skin payload and no unintended companion
-   character scene.
-4. Loading that `.res` into the documented Jenny `AnimationPlayer` setup works
+3. Every valid **Save for** × **Save as** combination produces the requested
+   rig/form without an unintended companion artifact. Selected Character +
+   Animation Library creates a lightweight `.res` with no embedded Jenny mesh,
+   texture, material, or skin; Selected Character + Preview Scene deliberately
+   creates the complete self-contained character scene.
+4. Loading the selected-character `.res` into the documented Jenny
+   `AnimationPlayer` setup works
    in the editor without unresolved-track warnings and reproduces the previewed
    body, finger, root-motion, duration, and loop behavior.
 5. The session records the correct selected take, character-library artifact
@@ -600,15 +639,37 @@ or merging animation into production libraries.
 
 ## Planned goals after Goal 15
 
-### Goal 16 — Accept one take into native Godot animation data
+### Goal 16 — Durable generated-take history and preview-cache lifecycle
+
+Atomically save every validated generated take as an authoritative SOMA-77
+Animation Library under project-owned session storage before recording the
+generation as complete. SOMA-77 is retained because it preserves all source
+joints and can be reprocessed by improved future retargeters; the humanoid and
+selected-character forms are derived views, not the archival source.
+
+Extend the session schema with each take's durable path, content hash, size,
+skeleton/contract identity, and availability. Add a chronological **History**
+workspace grouped by generation, using the prompt as the primary title with
+time/take disambiguation. Selecting a historical take lazily loads its source,
+rebuilds humanoid/character previews, and never creates a persistent preview
+scene unless the artist explicitly saves one.
+
+Generated source takes remain until explicit confirmed deletion. Automatic
+preview nodes and derived temporary data are disposable and must be freed on
+selection/session changes. Use atomic batch persistence and rollback: a session
+must never claim a durable generation whose take files were only partly saved.
+Define deletion behavior for saved/accepted descendants and preserve legacy
+Goal 14 sessions whose payloads were honestly transient.
+
+### Goal 17 — Accept one take into native Godot animation data
 
 Choose an existing or new character-compatible `AnimationLibrary`, explicitly
 accept the selected take under an artist-chosen animation name in one undoable
 editor operation, and preserve existing animation unless the user chooses
 replacement. Reject/regenerate must restore the exact prior state. This goal
-completes the core six-step basic workflow.
+completes the core basic workflow.
 
-### Goal 17 — Basic-workflow hardening and release gate
+### Goal 18 — Basic-workflow hardening and release gate
 
 Exercise at least one additional redistributable humanoid with different
 proportions/hierarchy, finish setup and recovery diagnostics, measure defaults,
@@ -630,7 +691,7 @@ These are implementation findings and their current disposition.
    backend may still be finishing inference. Actual CUDA cancellation still
    requires a server job/cancel mechanism. The measured two-take path remained
    responsive enough for the tested limit, so this is not a Goal 14 blocker.
-   **Owner: Goal 17.**
+   **Owner: Goal 18.**
 3. **Resolved in Goal 14 — two-take protocol path.** Backend and Godot contract
    tests plus a live generation prove two ordered animations and metadata
    entries, distinct decoded hashes, selected-character retargeting, switching,
@@ -822,4 +883,11 @@ No external blocker is active. Gated access to
   `HumanoidSkeleton:<bone>` and cannot resolve on Jenny. Proposed Goal 15 to
   combine the full-skeleton/finger audit with lightweight, target-specific
   character `AnimationLibrary` export; acceptance into an existing production
-  library remains Goal 16.
+  library remains Goal 17.
+- **2026-09-26:** Clarified Goal 15's export model as two independent choices:
+  Save for SOMA-77/Humanoid/Selected Character and save as lightweight
+  Animation Library/complete Preview Scene. Retained the working preview-scene
+  paths, required profile-driven transfer code that is reusable beyond Jenny,
+  and added proposed Goal 16 for durable chronological session take history.
+  Goal 16 will archive authoritative SOMA-77 libraries and regenerate bulky
+  previews on demand; explicit preview-scene saves remain durable artifacts.
