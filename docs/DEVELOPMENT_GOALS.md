@@ -849,6 +849,13 @@ No external blocker is active. Gated access to
   forward and index-to-little lateral axes, validates degeneracy, and transfers
   both flexion and palm roll. On the real saved fixture, worst directional error
   fell from about 59° to 1.8°, while humanoid and Jenny agree within 0.0001°.
+- Applying that correction only at the wrist exposed a thumb-roll regression:
+  independently aligning each phalanx constrained its direction but left its
+  roll ambiguous, producing roughly 84–86° distal compensation on Jenny. All
+  30 mapped digit joints now share their hand's complete anatomical frame. A
+  31-sample pass over the saved `Soma77_Fistpump2_animation.res` measured a
+  worst local thumb-bend difference of 0.009° through both conversion stages;
+  focused digit-compensation guards and the complete suite pass.
 - A synthetic 62-bone Jenny fixture confirms an unmapped ponytail branch is
   accepted, receives no authored track, and inherits animated Head motion.
 - `KimodoHumanoidRigProfile` separates canonical semantics from target bone
@@ -931,3 +938,10 @@ No external blocker is active. Gated access to
   full-frame and extra-bone regressions, and reduced the measured visual-axis
   error from roughly 59° to 1.8°. The complete suite and GPU render pass;
   corrected manual acceptance remains pending.
+- **2026-09-26:** Reproduced the follow-up backward-thumb regression and found
+  that the digit bones still used independent one-vector alignments after the
+  wrist adopted the full palm frame. Assigned the shared palm frame to every
+  mapped finger and thumb joint, added bounded local-compensation regressions,
+  and measured only 0.009° worst thumb-bend drift across 31 samples of the real
+  `Fistpump2` fixture. The complete Godot suite passes; regenerated-preview
+  manual acceptance remains pending.
