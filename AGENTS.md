@@ -7,11 +7,11 @@ Godot. Keep it independently versioned from the Godot editor extension.
 
 Goals 0–14 established the backend/extension vertical slice, autosaved
 session-first authoring, and tested two-take generation end to end. Goal 14
-passed its final manual editor gate. Goal 15 is proposed and awaiting approval:
-it combines the profile-driven full-skeleton/finger retarget audit with
-orthogonal Save-for (SOMA-77/Humanoid/Selected Character) and Save-as
-(Animation Library/Preview Scene) choices. Do not begin it without explicit
-user approval. Goal 16 is reserved for durable archival of every generated
+passed its final manual editor gate. Goal 15 is implemented with automated and
+rendered gates passing; final manual acceptance remains pending. It
+combines the profile-driven full-skeleton/finger retarget audit with one save
+dropdown for Character/Humanoid/SOMA-77 animation libraries or a complete
+Character Preview. Goal 16 is reserved for durable archival of every generated
 SOMA-77 take and chronological session history, superseding Goal 14's transient
 payload policy when implemented. The project is finishing the basic workflow
 before advanced constraint authoring. Prefer small changes with tests and
