@@ -839,6 +839,10 @@ No external blocker is active. Gated access to
 - A deterministic finger-rich regression inserts non-rest motion into all 30
   mapped finger joints and verifies model-space transfer numerically. Existing
   body, root-motion, multi-take, ownership, reload, and smoke tests remain green.
+- A read-only acceptance pass over the user's original untracked
+  `closed_fists.tscn` confirmed 30 non-rest source finger rotations, 30 in the
+  converted humanoid animation, and 30 in the Jenny animation. This directly
+  reproduces and repairs the motion that originally exposed the omission.
 - `KimodoHumanoidRigProfile` separates canonical semantics from target bone
   names. A renamed-bone fixture proves character retargeting consumes the
   profile instead of branching on Jenny.
