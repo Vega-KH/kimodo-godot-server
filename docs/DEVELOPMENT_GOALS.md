@@ -284,9 +284,10 @@ shutdown, or session switch.
 - [x] Require a validated project-owned character before Generate is enabled.
   Keep diagnostic SOMA/humanoid layers available inside the session but
   secondary to the selected-character workflow.
-- [x] Break the 1,400-line dock into focused session shell, generation/take,
-  preview, and output components with one explicit session controller. Avoid a
-  visual-only rearrangement that leaves state transitions in the widget class.
+- [x] Break the 1,400-line dock into a focused session shell, generation/take
+  component, combined Preview & Save component, and explicit session
+  controller. Avoid a visual-only rearrangement that leaves state transitions
+  in the widget class.
 - [x] Replace manual draft Save/Save As with atomic autosave and a visible
   `Saving…` / `Saved` / actionable-error indicator. Mark state dirty on edits,
   debounce ordinary field changes, and force a save at session creation,
@@ -314,6 +315,13 @@ shutdown, or session switch.
   takes on the selected character while preserving playback time, loop state,
   camera, and root-follow state. Use the term **take**, not candidate or sample,
   in artist-facing UI.
+- [x] Keep take selection beside the preview and make that selected take the
+  save source. Convert SOMA-77 to humanoid and character previews automatically
+  after generation instead of exposing redundant retarget/preview actions.
+- [x] Replace output directory/name fields and three save buttons with one
+  output-type selector (default Character), one Save action, and Godot's native
+  project save dialog. Reject existing scene or companion-resource paths rather
+  than silently overwriting or renaming the artist's requested output.
 - [x] Keep every take non-destructive. Switching, regenerating, changing the
   target, closing the editor, and reopening offline must not alter the source
   character or existing project animation. Unsaved take previews need not
@@ -340,8 +348,15 @@ shutdown, or session switch.
   is hash-checked and remains byte-identical; autosave covers debounced edits
   plus every forced workflow boundary.
 - The dock now launches to a quiet chooser and constructs an active workspace
-  around focused session, generation/take, preview, and output components.
-  Generate requires both an active session and a validated character target.
+  around focused session, generation/take, and combined Preview & Save
+  components. Generate requires both an active session and a validated
+  character target. Successful generation automatically creates all three
+  preview layers; the preview-local take selector controls both viewing and
+  saving.
+- The former directory/name matrix and three save buttons are replaced by an
+  output-type selector plus one Godot project save dialog. Character is the
+  default output, and explicit collision rejection prevents accidental
+  overwrites. The orchestration shell fell from 1,643 to about 1,036 lines.
 - The typed request permits the tested one- or two-take range. The response
   parser enforces exact ordered animation/metadata correspondence, isolates
   each animation into an independent scene, hashes decoded motion content,
@@ -364,12 +379,17 @@ shutdown, or session switch.
   total GPU allocation were effectively unchanged. This latency did not make
   the editor materially unresponsive, so server job cancellation remains a
   later hardening item rather than a Goal 14 blocker.
-- Final automated verification: all 23 Godot checks pass under Godot 4.7.2;
+- The post-refactor live two-take regression also passed: 7.23 seconds reported
+  generation / 7.41 seconds wall, the same 147,763-byte response, 15.57 GiB
+  peak server working set, and 1,411/1,483 MiB baseline/peak total GPU
+  allocation. Both automatic retarget stages, preview selection, and typed save
+  path completed through the simplified UI orchestration.
+- Final automated verification: all 24 Godot checks pass under Godot 4.7.2;
   the backend reports 24 passed and 7 device-gated skips; Ruff passes. The only
   warnings are 18 known `torch.jit` deprecations in pinned dependencies.
 - GPU-rendered dock captures verified the quiet landing state and the active
-  Generate/Preview/Output workspace. Final real-editor acceptance remains the
-  sole open gate.
+  Generate and Preview & Save workspace. Final real-editor acceptance remains
+  the sole open gate.
 
 ### Decision gates
 
@@ -393,7 +413,9 @@ shutdown, or session switch.
 3. Generate, target change, artifact save, and session switch each leave an
    atomically saved session with no manual Save action or stale dirty state.
 4. Take switching previews the selected variation on Jenny at the same
-   playback/camera state and does not mutate Jenny or existing animation.
+   playback/camera state, controls which take is saved, and does not mutate
+   Jenny or existing animation. The Save action uses Godot's project file dialog
+   and never silently overwrites an existing scene or companion resource.
 5. After a clean restart with the backend stopped, reopening the session
    restores target, intent, provenance/take summaries, selection metadata, and
    artifact status. Saved artifacts remain usable; unsaved take payloads are
@@ -471,11 +493,11 @@ These are implementation findings and their current disposition.
 
 1. **Materially addressed in Goal 14 — dock responsibilities extracted.**
    Session persistence/state transitions and transient take ownership now live
-   in domain controllers; the landing shell and generation, preview, and output
-   tabs are focused components. `ai_motion_dock.gd` still coordinates the
-   editor workflow and remains about 1,600 lines, so further UI decomposition
-   should happen alongside the future visual redesign, not as an unrelated
-   rewrite. **Owner: future UI overhaul.**
+   in domain controllers; generation and combined Preview & Save UI are real
+   components rather than empty containers. `ai_motion_dock.gd` still
+   coordinates the cross-component editor workflow but fell from 1,643 to about
+   1,036 lines. Further visual redesign can now proceed without first untangling
+   local widget construction and state. **Owner: future UI overhaul.**
 2. **Retarget/save logic is duplicated.** The SOMA→humanoid and
    humanoid→character bakers duplicate global-rest sampling, direction
    correction, track indexing, unique naming, and save behavior. Their baseline
@@ -556,16 +578,20 @@ No external blocker is active. Gated access to
 
 ## Verification snapshot — 2026-09-25 Goal 14 implementation
 
-- Godot: the complete 23-check suite passes under Godot 4.7.2, covering session
+- Godot: the complete 24-check suite passes under Godot 4.7.2, covering session
   migration/autosave, atomic failure behavior, chooser gating, two-take parsing,
-  take switching, offline reopen, source immutability, retargeting, saving, and
-  all four playback smoke scenes.
+  direct component ownership, take switching, offline reopen, source
+  immutability, retargeting, saving, and all four playback smoke scenes.
 - Backend: `24 passed, 7 skipped`; skips are device-specific. Ruff passes. The
   18 warnings are known `torch.jit` deprecations from pinned dependencies.
 - Live: a final two-take run returned 147,763 bytes, completed inference in
   5.85 seconds (6.59 seconds wall), peaked at 13.23 GiB server working set, and
   did not increase the 1,708 MiB reported total GPU allocation. Both takes were
   distinct, retargeted, switchable, and cleaned up without ObjectDB leaks.
+- Live refactor regression: 7.23 seconds reported generation / 7.41 seconds
+  wall, 15.57 GiB peak server working set, and 1,411/1,483 MiB baseline/peak
+  total GPU allocation. The simplified automatic-conversion and selected-take
+  save path passed without leaks.
 - Rendered UI checks pass. Manual real-editor session creation, switching,
   selected-take save, restart, and offline reopen remain required before Goal
   14 is complete.
@@ -616,5 +642,9 @@ No external blocker is active. Gated access to
 - **2026-09-25:** Implemented Goal 14's session-first chooser and workspace,
   atomic autosave, lossless draft migration, focused UI/domain controllers,
   typed two-take request/response path, transient payload ownership, take
-  switching on Jenny, and durable selected-take artifacts. Automated, rendered,
-  and live two-take gates pass; final real-editor acceptance is pending.
+  switching on Jenny, and durable selected-take artifacts. A follow-up
+  separation-of-concerns pass combined Preview & Save, removed redundant manual
+  conversion actions and six path/name fields, added preview-local take
+  switching, and delegated output naming/location to Godot's save dialog.
+  Automated, rendered, and live two-take gates pass; final real-editor
+  acceptance is pending.
