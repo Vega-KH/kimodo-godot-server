@@ -4,7 +4,7 @@ Last reviewed: **2026-09-26**
 
 Current product stage: **basic workflow**
 
-Current goal: **Goal 16 — Proposed; awaiting approval**
+Current goal: **Goal 17 — Proposed; awaiting approval**
 
 ## How to use this document
 
@@ -56,11 +56,11 @@ Animation Library or complete Preview Scene).
 
 | Repository | Current reviewed checkpoint | Notes |
 | --- | --- | --- |
-| `kimodo-godot-server` | `c5f2d70` | Goal 15 implementation evidence on `codex/milestone-0-bootstrap` |
-| `godot-kimodo` | `ad5d23b` | Goal 15 implementation and final digit-roll repair on `main` |
+| `kimodo-godot-server` | `fd1b2b9` | Goal 15 completion record on `codex/milestone-0-bootstrap` |
+| `godot-kimodo` | `6860e9b` | Goal 16 durable take history on `main` |
 
-The user authorized pushes after each completed and tested goal. Goal 15's
-implementation and completion record are pushed before Goal 16 begins.
+The user authorized pushes after each completed and tested goal. Goal 16's
+implementation and completion record are pushed before Goal 17 begins.
 
 The repositories remain independently versioned. The server keeps the
 `motionmcp_kimodo` namespace and MMCP surface until a deliberate migration.
@@ -84,6 +84,8 @@ The repositories remain independently versioned. The server keeps the
 | 12 | 2026-09-24 | Added a `PackedScene` target picker, validated exact-name compatible rigs, synchronized skinned preview, and unique self-contained character-scene saving. | Godot `d985782`; server ledger `8e379dd` |
 | 13 | 2026-09-25 | Added target-first persistent authoring state, exact generation provenance, atomic project-contained save/load, and successful-save-only artifact tracking. | Godot `3e415b2`; server ledger `bb5b57f` |
 | 14 | 2026-09-25 | Replaced drafts with autosaved sessions, added strict two-take generation and transient payload ownership, split the dock into focused components, and simplified preview/save into a selected-take workflow. | Godot `0898724`–`fb16d7b`; server `f5cb0a5`, `c79c9df` |
+| 15 | 2026-09-26 | Completed 77-joint transfer, anatomical hand-frame correction, profile-driven character retargeting, and four compact rig/form export choices. | Godot `ad5d23b`; server `fd1b2b9` |
+| 16 | 2026-09-27 | Archived every generated take with its versioned source rig, added recoverable batch persistence, chronological offline History, lazy previews, and confirmed source deletion. | Godot `6860e9b`; server completion record commit |
 
 ### Corrections that remain architecturally binding
 
@@ -634,7 +636,9 @@ pushed before Goal 16 work begins.
 
 ## Goal 16 — Durable generated-take history and preview-cache lifecycle
 
-Status: **Proposed — awaiting user approval**
+Status: **Complete**
+
+Completed: **2026-09-27**
 
 ### Why this goal
 
@@ -705,57 +709,56 @@ artifacts.
   animations. The session retains a small tombstone and truthful descendant
   references so provenance is not rewritten.
 
-### Session migration and compatibility
+### Session schema boundary and compatibility
 
-- Advance `KimodoSession` to a new schema version with an explicit v1→v2
-  migration. The original v1 resource remains untouched until the migrated
-  session is successfully saved.
-- Legacy Goal 14/15 records with `payload_status == "transient"` remain visible
-  as unavailable historical entries. Migration must not invent an archive path
-  or claim that a separately saved artifact is the original generated payload.
-- Existing saved artifact records, target signatures, active generation, and
-  selected take survive migration unchanged. If an archived file is later
-  moved, corrupted, or deleted outside the add-on, the UI reports missing or
-  hash-mismatched state without crashing, regenerating, or rewriting history.
+- `KimodoSession` advances to schema v2. The user explicitly classified every
+  pre-Goal-16 session and animation as disposable test data, so v1 sessions and
+  Goal 13 drafts are rejected unchanged instead of migrated.
+- No archive is invented for a legacy transient record and no separately saved
+  artifact is relabeled as its generated source. Goal 16 begins durable history
+  with the first generation made by a v2 session.
+- If an archived file is later moved, corrupted, or deleted outside the add-on,
+  the UI reports missing or hash-mismatched state without crashing,
+  regenerating, or rewriting history.
 - A rig snapshot is keyed by the full rest/hierarchy signature, not merely the
   name SOMA-77. Future compatible contracts may coexist without silently
   interpreting old animation against a new rest pose.
 
 ### Scope
 
-- [ ] Define the versioned source-rig snapshot and prove that snapshot plus a
+- [x] Define the versioned source-rig snapshot and prove that snapshot plus a
   SOMA-77 `.res` library reconstructs source transforms exactly at sampled
   frames. Keep one snapshot per distinct rig signature within session storage.
-- [ ] Add a dedicated take-archive service responsible for deterministic paths,
+- [x] Add a dedicated take-archive service responsible for deterministic paths,
   staging, deep-copy library creation, reload validation, hashing, promotion,
   rollback, orphan recovery, and explicit deletion. Keep filesystem transaction
   logic out of the dock UI.
-- [ ] Change generation completion order so every returned take is archived and
+- [x] Change generation completion order so every returned take is archived and
   verified before its generation record becomes durable or the UI reports the
   batch ready. If any take fails, preserve all returned motions in memory when
   safe, report the failure, and commit none of the batch.
-- [ ] Extend take summaries and session validation with durable archive metadata
-  and clear `available`, `missing`, `corrupt`, `legacy_transient`, and `deleted`
+- [x] Extend take summaries and session validation with durable archive metadata
+  and clear `available`, `missing`, `corrupt`, and `deleted`
   states. Validate paths remain under the owning session data directory.
-- [ ] Implement lossless v1→v2 session migration and offline loading of both
-  migrated legacy history and new durable history.
-- [ ] Add a focused History workspace without broad dock redesign. Group entries
+- [x] Enforce the v2 schema boundary, reject disposable v1/draft resources
+  unchanged, and load new durable history offline.
+- [x] Add a focused History workspace without broad dock redesign. Group entries
   by generation, title each group with its prompt, show timestamp/take order and
   concise availability, and keep the selected historical take synchronized with
   Preview & Save.
-- [ ] Lazily rehydrate a selected source take from its rig snapshot and library,
+- [x] Lazily rehydrate a selected source take from its rig snapshot and library,
   then run the existing humanoid and selected-character bakers. Preserve play,
   pause, scrub, loop, camera, take switching, and the four Goal 15 save choices.
-- [ ] Rebuild only derived previews when the selected character changes. Never
+- [x] Rebuild only derived previews when the selected character changes. Never
   modify the archived source or require the backend for history playback.
-- [ ] Add confirmed per-take deletion with safe active-selection fallback,
+- [x] Add confirmed per-take deletion with safe active-selection fallback,
   tombstone metadata, descendant warnings, and a guarantee that explicit saved
   artifacts are untouched. Do not add automatic age, quota, or session-close
   deletion of source takes.
-- [ ] Release all preview/cache nodes and resources during repeated history,
+- [x] Release all preview/cache nodes and resources during repeated history,
   target, and session switching. Keep explicit preview scenes outside cache
   ownership.
-- [ ] Update README, development plan, session details, status language, and
+- [x] Update README, development plan, session details, status language, and
   recovery messages so no generated take is described as transient after a
   successful Goal 16 generation.
 
@@ -802,39 +805,211 @@ artifacts.
    promotion, and session save. No session claims a partial generation, prior
    history remains byte-identical, and staged/orphan data is either safely
    rolled back or deterministically recovered.
-4. Open a v1 session containing transient history and saved Goal 15 artifacts.
-   Migration preserves every field and labels unavailable source payloads
-   honestly; it does not alter the original file or relabel saved exports.
+4. Open a v1 session and a Goal 13 draft. Both are rejected unchanged; no
+   archive, generation record, or migrated session is invented.
 5. Corrupt or externally remove one archived take. Other history remains usable,
    and the affected entry reports its exact state without regeneration or data
    loss. Repeated switching does not leak nodes or retain stale character data.
 6. Delete one archived take with explicit confirmation. Its source file is gone,
    its tombstone remains, sibling takes and explicit exports remain byte-identical,
    and reopening the session produces the same truthful history.
-7. The complete Godot/backend suites, rendered History layout, and a manual
-   generate→restart→offline-history→retarget→save→delete walkthrough pass.
+7. The complete Godot/backend suites and rendered History layout pass. The
+   user completed the real-editor workflow and reported that all tests passed,
+   everything looked good, and Jenny celebrated with a successful dance.
 
-Stop condition: after the user approves this proposal, implement only this
-scope. When all gates pass, mark Goal 16 complete, record and push the affected
-repositories, propose detailed Goal 17 for approval, and stop before accepting
-or merging animation into a production library.
+Stop condition passed: the user completed the manual
+generate→restart→offline-History→retarget→save→delete gate on 2026-09-27. Goal
+16 is complete. Its implementation and completion record are committed and
+pushed before Goal 17 begins.
 
-## Planned goals after Goal 16
+## Goal 17 — Accept one take into native Godot animation data
 
-### Goal 17 — Accept one take into native Godot animation data
+Status: **Proposed — awaiting user approval**
 
-Choose an existing or new character-compatible `AnimationLibrary`, explicitly
-accept the selected take under an artist-chosen animation name in one undoable
-editor operation, and preserve existing animation unless the user chooses
-replacement. Reject/regenerate must restore the exact prior state. This goal
-completes the core basic workflow.
+### Why this goal
 
-### Goal 18 — Basic-workflow hardening and release gate
+Goal 15 can export a lightweight character animation, but export still creates
+a standalone file and does not place the selected take into an artist's chosen
+production library. The governing basic workflow ends with an explicit,
+non-destructive **Accept** operation. Previewing, automatic archival, and Save
+exports must remain distinct from acceptance.
 
-Exercise at least one additional redistributable humanoid with different
-proportions/hierarchy, finish setup and recovery diagnostics, measure defaults,
-and resolve remaining basic-workflow repair items before advanced pose,
-effector, waypoint, path, and timeline authoring begins.
+Godot's `AnimationLibrary` stores named `Animation` resources, while editor
+plugins integrate mutations with `EditorUndoRedoManager`. Goal 17 combines
+those APIs behind one transaction boundary so adding or deliberately replacing
+an animation is undoable from Godot's normal editor history.
+
+### Outcome sought
+
+From the active Preview & Save take, the artist chooses an existing project
+`.res` `AnimationLibrary` or creates a new one, enters a valid animation name,
+and presses **Accept**. The add-on bakes the current target-character animation
+into that target's track namespace, validates it against the selected character,
+and performs one editor undo action. The accepted animation is immediately
+editable/playable in Godot and remains usable without the add-on, backend,
+model, source glTF, archived take, or Jenny fixture.
+
+An existing animation is never replaced implicitly. A name collision presents
+an explicit Replace choice and summarizes what will change. Undo restores the
+previous library and session acceptance state; redo reapplies the same accepted
+animation without regenerating or retargeting it again.
+
+### Acceptance and destination contract
+
+- **Accept** uses only a character-compatible derived animation from an
+  available archived take. SOMA-77 and generic humanoid diagnostic layers stay
+  Save/export choices, not production acceptance targets.
+- The destination is a project-contained `.res` `AnimationLibrary`. It may
+  already exist or be created by the acceptance operation. Imported model-owned
+  or otherwise non-editable library resources are rejected with guidance to
+  create a project-owned library.
+- The artist supplies the animation key. Normalize only characters Godot cannot
+  store safely; do not silently rename a collision.
+- Preflight validates the current target signature, `AnimationPlayer.root_node`
+  basis, every track path, finite values, duration, and reload behavior before
+  registering the undo action.
+- A new animation is a deep copy of the preview result; neither the automatic
+  SOMA archive nor the disposable preview is moved or mutated.
+- No-collision Add and explicit Replace are separate transaction modes. Replace
+  captures the previous animation so Undo restores it exactly in memory and on
+  disk. Undo of a newly created destination restores the prior absence of that
+  file; undo of an Add removes only the new key.
+- The do/undo helpers atomically persist the library through same-directory
+  staging and update the session's acceptance record in the same editor action.
+  Redo reuses the captured animation and destination identity; it never calls
+  the backend or reruns retargeting.
+- An acceptance record stores take/generation IDs, target signature, destination
+  path, animation key, add/replace mode, prior/replacement hashes, timestamp,
+  and current `accepted` or `undone` state. It is provenance, not ownership of
+  the production library.
+- Current Save choices remain available and unchanged. Delete source continues
+  to affect only the automatic archive and cannot remove accepted animation.
+
+### Scope
+
+- [ ] Add a focused acceptance service that owns destination validation, deep
+  copying, collision policy, atomic library persistence, rollback, and semantic
+  hashing. Keep filesystem and undo details out of the dock.
+- [ ] Inject the editor's `EditorUndoRedoManager` into the workflow and register
+  exactly one named action for Add or Replace, with tested do/undo/redo helpers
+  and an explicit external-resource history context.
+- [ ] Extend Preview & Save with a visually separate **Accept** section:
+  destination library, animation name, one Accept button, and concise current
+  accepted/undone state. Reuse Godot file dialogs; do not restore path text
+  boxes or overload the four-choice Save control.
+- [ ] Support choosing an existing project-owned `.res` library and creating a
+  new one. Reject directories outside `res://`, wrong resource types, imported
+  read-only resources, invalid names, stale target signatures, unresolved
+  tracks, and corrupt destinations before mutation.
+- [ ] Block collisions by default. Require an explicit Replace confirmation
+  that names the destination and existing animation; capture the replaced
+  animation before committing.
+- [ ] Validate the accepted character animation on a clean instance of the
+  selected target, reload the destination from disk, and prove it matches the
+  preview at sampled frames before reporting success.
+- [ ] Record acceptance separately from Save artifacts and automatic source
+  archives. Update that record through undo/redo without rewriting generation
+  provenance.
+- [ ] Keep preview, History selection, generation, session switching, and source
+  deletion non-mutating with respect to the production library.
+- [ ] Add failure injection for preflight, staging, promotion, session update,
+  undo, and redo. A failed operation must restore the prior library and session
+  state and leave no staging/backup debris.
+- [ ] Update README, architecture notes, workflow plan, recovery language, and
+  the repair ledger with the acceptance boundary and observed limitations.
+
+### Out of scope
+
+- Automatic rig discovery or a general mapping UI; that is Goal 18.
+- Editing animation curves, blending clips, trimming, transitions,
+  `AnimationTree` state machines, timeline placement, or advanced constraint
+  authoring.
+- Accepting SOMA-77 or generic humanoid tracks into a character library.
+- Silently resolving name collisions, modifying imported model source files,
+  attaching a library to every scene instance, or accepting several takes in
+  one action.
+- Changing archive retention, History deletion, backend generation, or the four
+  Goal 15 Save formats.
+
+### Decision gates
+
+- If `EditorUndoRedoManager` cannot safely coordinate an external resource and
+  session update, stop and choose a smaller explicit transaction boundary with
+  the user; do not present two independent mutations as one undoable action.
+- If new-file creation cannot be undone without cache/resource divergence,
+  limit the first implementation to a pre-created empty library only after
+  discussion; do not leave a falsely undoable file operation.
+- If an existing library is embedded in an imported or scene-owned resource,
+  reject it and explain how to create a project-owned `.res`; do not mutate an
+  import artifact that Godot may overwrite.
+- If reloaded accepted tracks do not resolve against a clean target instance,
+  stop before committing and repair path/root-node ownership.
+- If replace Undo cannot restore the prior animation numerically and preserve
+  unrelated entries, Replace does not ship in this goal.
+
+### Completion test
+
+1. Generate or reopen an archived take, create a new production library, accept
+   it under an artist-chosen name, reload it, attach it to a clean Jenny player,
+   and match the Preview & Save animation at sampled frames.
+2. Undo once: the newly created destination and session acceptance state return
+   to their exact prior absence. Redo once: the same animation, hashes, name,
+   target identity, and provenance return without backend or retarget work.
+3. Accept a second take into an existing library. Undo removes only that key;
+   unrelated animations remain numerically and structurally unchanged. Redo
+   restores it.
+4. Attempt a collision and verify the default operation changes nothing. Then
+   explicitly Replace, verify the chosen take, Undo to recover the previous
+   animation, and Redo to restore the replacement.
+5. Inject failure at every persistence and session-update boundary. Library and
+   session remain mutually truthful, prior bytes/semantic hashes are restored,
+   and no temporary files remain.
+6. Stop the backend, delete the accepted take's automatic source archive, and
+   restart Godot. The accepted animation remains editable and playable; History
+   truthfully shows the deleted source and retains its descendant provenance.
+7. The complete Godot/backend suites, a rendered narrow-dock acceptance layout,
+   and a manual create/add/collision/replace/undo/redo/restart walkthrough pass.
+
+Stop condition: implement only after user approval. When all gates pass, mark
+Goal 17 complete, record and push both affected repositories, propose Goal 18
+in detail, and stop before building general rig discovery.
+
+## Planned goals after Goal 17
+
+### Goal 18 — General rig profiles and retarget setup
+
+Make target setup useful beyond Jenny before Stage 1 closes. Validate three
+meaningfully different rigs: Jenny, one Mixamo-rigged humanoid, and one
+redistributable non-Mixamo humanoid (a suitable CC0 Kenney asset is a candidate).
+Do not commit a fixture until its redistribution and attribution terms are
+recorded.
+
+Build a reviewable mapping workflow that combines exact and normalized names,
+curated aliases, left/right semantics, hierarchy, rest-pose axes, and chain
+evidence into confidence-ranked suggestions. Ambiguous or structurally invalid
+matches require the artist to resolve them; the tool must never call a weak
+name guess certified compatibility. Save a versioned `KimodoRigProfile` keyed
+to the target skeleton signature and reuse it automatically.
+
+The `Kimodo_Blender_Bridge` provides useful UX precedent: its current matcher
+tries exact names, normalized names, then curated aliases (including Mixamo),
+lets users review/enable mappings, choose transfer modes, and save presets. It
+is not a general fuzzy/anatomical solver, so Goal 18 may take inspiration from
+the transparent mapping-and-preset workflow without copying Blender constraint
+mechanics or treating alias matches as proof.
+
+Acceptance requires full basic-workflow generation, History reload, retarget,
+preview, Save, and Goal 17 Accept on all three rigs; quantified body/hand/root
+checks; useful diagnostics for missing/twist/extra bones; and regression proof
+that unmapped branches such as hair remain intact.
+
+### Goal 19 — Basic-workflow hardening and release gate
+
+Complete the deferred UI overhaul, installation/setup and recovery diagnostics,
+server cancellation decision, performance/quality defaults, packaging,
+documentation, and remaining repair-ledger items. Run the full workflow and
+clean-project install matrix before declaring Stage 1 complete and beginning
+advanced pose, effector, waypoint, path, and timeline authoring.
 
 ## Code-review repair ledger
 
@@ -851,7 +1026,7 @@ These are implementation findings and their current disposition.
    backend may still be finishing inference. Actual CUDA cancellation still
    requires a server job/cancel mechanism. The measured two-take path remained
    responsive enough for the tested limit, so this is not a Goal 14 blocker.
-   **Owner: Goal 18.**
+   **Owner: Goal 19.**
 3. **Resolved in Goal 14 — two-take protocol path.** Backend and Godot contract
    tests plus a live generation prove two ordered animations and metadata
    entries, distinct decoded hashes, selected-character retargeting, switching,
@@ -867,7 +1042,7 @@ These are implementation findings and their current disposition.
    and a renamed-bone regression proves the mathematics is not Jenny-specific.
    Automatic profile discovery remains deliberately limited to exact Godot
    humanoid names; hierarchy/reference-pose certification, scale policy, and a
-   Rig Wizard remain later work. **Owner: Goal 18 and the later Rig Wizard.**
+   rig-profile setup remain later work. **Owner: Goal 18.**
 6. **Resolved in Goal 15 — character saves duplicated the target scene.** The
    default Character animation output is now a dependency-free target-specific
    `AnimationLibrary`; the large self-contained character scene remains only
@@ -888,7 +1063,8 @@ These are implementation findings and their current disposition.
    assumptions already differ. Consolidate only with regression fixtures in
    place and where the full-skeleton audit makes the shared behavior explicit.
    Profile-driven semantics now remove character-name assumptions, but shared
-   sampling/save helpers are still a safe future cleanup. **Owner: Goal 18.**
+   sampling/save helpers are still a safe future cleanup. **Owner: Goal 18 or
+   Goal 19 when nearby regression fixtures make consolidation safe.**
 3. **Backend origin normalization mutates the validated request.** That is
    currently hidden from the client, but it complicates retries, hashes, and
    server-side provenance. Preserve the original request and normalize a copy
@@ -993,6 +1169,29 @@ No external blocker is active. Gated access to
   4.0 attribution; add other rigs before general compatibility claims.
 - Evaluate a smaller or quantized text encoder only with a fixed prompt suite
   and measurements of download, RAM, VRAM, latency, and motion quality.
+
+## Verification snapshot — 2026-09-26 Goal 16 implementation
+
+- A versioned SOMA-77 rig snapshot plus each archived `.res` animation library
+  reconstructs all 77 bone names, hierarchy/rest transforms, animation tracks,
+  and sampled values exactly. Two takes share one deduplicated rig snapshot;
+  their libraries have no external resource dependencies.
+- Failure injection after rig persistence, either take, manifest staging, and
+  session save leaves the prior session byte-identical and no partial final
+  generation. A simulated interruption after directory promotion is recovered
+  from its verified manifest on the next session open.
+- External file corruption is reported and a restored file becomes available
+  again. An interrupted delete is repaired on open; a confirmed delete removes
+  only its source archive, retains a tombstone, and leaves its sibling and
+  explicit exports intact.
+- The complete 25-check Godot suite passes under Godot 4.7.2. A GPU-backed
+  480×1000 Windows OpenGL capture verifies the narrow three-tab dock and grouped
+  History layout.
+- The unchanged backend passes `24 passed, 7 skipped`; Ruff passes. Its 18
+  warnings remain known pinned-dependency `torch.jit` deprecations.
+- The user completed the real-editor
+  generate→restart→offline-History→retarget→save→delete acceptance on
+  2026-09-27 and reported that all tests passed and everything looked good.
 
 ## Verification snapshot — 2026-09-26 Goal 15 implementation
 
@@ -1114,3 +1313,16 @@ No external blocker is active. Gated access to
   Goal 15. Goal 16 is now proposed for approval with durable SOMA source
   archives, versioned rig snapshots, recoverable batch persistence, offline
   History, explicit deletion, and disposable derived previews.
+- **2026-09-26:** Implemented approved Goal 16 with session schema v2,
+  automatically archived SOMA-77 takes, versioned/deduplicated rest-rig
+  snapshots, recoverable generation manifests, offline chronological History,
+  lazy retargeting, explicit source deletion, and disposable derived previews.
+  At the user's direction, disposable pre-Goal-16 sessions are rejected rather
+  than migrated. Automated and rendered gates pass; manual acceptance remains.
+- **2026-09-27:** The user passed Goal 16's full real-editor acceptance and
+  reported successful durable History playback, retargeting, saving, deletion,
+  and restart behavior. Closed Goal 16 and proposed Goal 17 for an undoable
+  Accept operation into a project-owned production `AnimationLibrary`. Added a
+  dedicated pre-Stage-2 Goal 18 for reviewable general rig profiles validated
+  on Jenny, Mixamo, and a structurally different redistributable humanoid;
+  moved final hardening and release readiness to Goal 19.
