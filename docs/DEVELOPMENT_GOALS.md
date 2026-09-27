@@ -56,7 +56,7 @@ Animation Library or complete Preview Scene).
 
 | Repository | Current reviewed checkpoint | Notes |
 | --- | --- | --- |
-| `kimodo-godot-server` | `fd1b2b9` | Goal 15 completion record on `codex/milestone-0-bootstrap` |
+| `kimodo-godot-server` | `d53af66` | Goal 16 completion and Goal 17 proposal on `codex/milestone-0-bootstrap` |
 | `godot-kimodo` | `6860e9b` | Goal 16 durable take history on `main` |
 
 The user authorized pushes after each completed and tested goal. Goal 16's
@@ -85,7 +85,7 @@ The repositories remain independently versioned. The server keeps the
 | 13 | 2026-09-25 | Added target-first persistent authoring state, exact generation provenance, atomic project-contained save/load, and successful-save-only artifact tracking. | Godot `3e415b2`; server ledger `bb5b57f` |
 | 14 | 2026-09-25 | Replaced drafts with autosaved sessions, added strict two-take generation and transient payload ownership, split the dock into focused components, and simplified preview/save into a selected-take workflow. | Godot `0898724`–`fb16d7b`; server `f5cb0a5`, `c79c9df` |
 | 15 | 2026-09-26 | Completed 77-joint transfer, anatomical hand-frame correction, profile-driven character retargeting, and four compact rig/form export choices. | Godot `ad5d23b`; server `fd1b2b9` |
-| 16 | 2026-09-27 | Archived every generated take with its versioned source rig, added recoverable batch persistence, chronological offline History, lazy previews, and confirmed source deletion. | Godot `6860e9b`; server completion record commit |
+| 16 | 2026-09-27 | Archived every generated take with its versioned source rig, added recoverable batch persistence, chronological offline History, lazy previews, and confirmed source deletion. | Godot `6860e9b`; server `d53af66` |
 
 ### Corrections that remain architecturally binding
 
