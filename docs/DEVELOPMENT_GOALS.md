@@ -1,10 +1,10 @@
 # Development goals and project ledger
 
-Last reviewed: **2026-09-26**
+Last reviewed: **2026-09-29**
 
 Current product stage: **basic workflow**
 
-Current goal: **Goal 17 — Proposed; awaiting approval**
+Current goal: **Goal 18 — Proposed; awaiting approval**
 
 ## How to use this document
 
@@ -28,8 +28,8 @@ reviewable implementation goals.
 ## Current direction
 
 Goals 0–13 established a working transport, playback, retargeting, and
-persistent-authoring vertical slice. The next phase must turn it into the
-intended basic workflow:
+persistent-authoring vertical slice. Goals 14–17 completed the intended
+session/take/save/accept spine of the basic workflow:
 
 1. create or reopen a project-owned session before authoring controls appear;
 2. select the character and autosave every meaningful session transition;
@@ -38,6 +38,10 @@ intended basic workflow:
 5. retain every generated take in durable session history until the artist
    explicitly deletes it;
 6. explicitly accept one take into native animation data.
+
+Before Stage 2, Goals 18–20 generalize target setup from Jenny to reviewable,
+saved rig profiles across mainstream, incomplete, and complex humanoid rigs;
+Goal 21 then performs final basic-workflow hardening and release validation.
 
 `MotionDraft` was the Goal 13 implementation name. The product concept is now
 **session**: a persistent, conversation-like workspace containing target and
@@ -56,11 +60,12 @@ Animation Library or complete Preview Scene).
 
 | Repository | Current reviewed checkpoint | Notes |
 | --- | --- | --- |
-| `kimodo-godot-server` | `d53af66` | Goal 16 completion and Goal 17 proposal on `codex/milestone-0-bootstrap` |
-| `godot-kimodo` | `6860e9b` | Goal 16 durable take history on `main` |
+| `kimodo-godot-server` | `7db71c3` + current documentation | Goal 17 completion record and split Goal 18–21 roadmap on `codex/milestone-0-bootstrap` |
+| `godot-kimodo` | `aadd920` | Goal 17 undoable production-library acceptance on `main` |
 
-The user authorized pushes after each completed and tested goal. Goal 16's
-implementation and completion record are pushed before Goal 17 begins.
+The user authorized pushes after each completed and tested goal. Goal 17's
+tested implementation is committed in the extension; this completion record
+and the revised retargeting roadmap accompany its push.
 
 The repositories remain independently versioned. The server keeps the
 `motionmcp_kimodo` namespace and MMCP surface until a deliberate migration.
@@ -824,7 +829,7 @@ pushed before Goal 17 begins.
 
 ## Goal 17 — Accept one take into native Godot animation data
 
-Status: **Proposed — awaiting user approval**
+Status: **Complete — automated, rendered, and real-editor gates passed**
 
 ### Why this goal
 
@@ -872,50 +877,51 @@ animation without regenerating or retargeting it again.
   SOMA archive nor the disposable preview is moved or mutated.
 - No-collision Add and explicit Replace are separate transaction modes. Replace
   captures the previous animation so Undo restores it exactly in memory and on
-  disk. Undo of a newly created destination restores the prior absence of that
-  file; undo of an Add removes only the new key.
+  disk. Undo of a newly created destination removes the animation but retains a
+  valid empty artist-owned library; undo of an Add removes only the new key.
 - The do/undo helpers atomically persist the library through same-directory
   staging and update the session's acceptance record in the same editor action.
   Redo reuses the captured animation and destination identity; it never calls
   the backend or reruns retargeting.
 - An acceptance record stores take/generation IDs, target signature, destination
   path, animation key, add/replace mode, prior/replacement hashes, timestamp,
-  and current `accepted` or `undone` state. It is provenance, not ownership of
-  the production library.
+  and `accepted` state. Undo restores the exact prior acceptance dictionary—
+  normally absence—while Redo restores the same record identity. It is
+  provenance, not ownership of the production library.
 - Current Save choices remain available and unchanged. Delete source continues
   to affect only the automatic archive and cannot remove accepted animation.
 
 ### Scope
 
-- [ ] Add a focused acceptance service that owns destination validation, deep
+- [x] Add a focused acceptance service that owns destination validation, deep
   copying, collision policy, atomic library persistence, rollback, and semantic
   hashing. Keep filesystem and undo details out of the dock.
-- [ ] Inject the editor's `EditorUndoRedoManager` into the workflow and register
+- [x] Inject the editor's `EditorUndoRedoManager` into the workflow and register
   exactly one named action for Add or Replace, with tested do/undo/redo helpers
   and an explicit external-resource history context.
-- [ ] Extend Preview & Save with a visually separate **Accept** section:
+- [x] Extend Preview & Save with a visually separate **Accept** section:
   destination library, animation name, one Accept button, and concise current
   accepted/undone state. Reuse Godot file dialogs; do not restore path text
   boxes or overload the four-choice Save control.
-- [ ] Support choosing an existing project-owned `.res` library and creating a
+- [x] Support choosing an existing project-owned `.res` library and creating a
   new one. Reject directories outside `res://`, wrong resource types, imported
   read-only resources, invalid names, stale target signatures, unresolved
   tracks, and corrupt destinations before mutation.
-- [ ] Block collisions by default. Require an explicit Replace confirmation
+- [x] Block collisions by default. Require an explicit Replace confirmation
   that names the destination and existing animation; capture the replaced
   animation before committing.
-- [ ] Validate the accepted character animation on a clean instance of the
+- [x] Validate the accepted character animation on a clean instance of the
   selected target, reload the destination from disk, and prove it matches the
   preview at sampled frames before reporting success.
-- [ ] Record acceptance separately from Save artifacts and automatic source
+- [x] Record acceptance separately from Save artifacts and automatic source
   archives. Update that record through undo/redo without rewriting generation
   provenance.
-- [ ] Keep preview, History selection, generation, session switching, and source
+- [x] Keep preview, History selection, generation, session switching, and source
   deletion non-mutating with respect to the production library.
-- [ ] Add failure injection for preflight, staging, promotion, session update,
+- [x] Add failure injection for preflight, staging, promotion, session update,
   undo, and redo. A failed operation must restore the prior library and session
   state and leave no staging/backup debris.
-- [ ] Update README, architecture notes, workflow plan, recovery language, and
+- [x] Update README, architecture notes, workflow plan, recovery language, and
   the repair ledger with the acceptance boundary and observed limitations.
 
 ### Out of scope
@@ -952,9 +958,10 @@ animation without regenerating or retargeting it again.
 1. Generate or reopen an archived take, create a new production library, accept
    it under an artist-chosen name, reload it, attach it to a clean Jenny player,
    and match the Preview & Save animation at sampled frames.
-2. Undo once: the newly created destination and session acceptance state return
-   to their exact prior absence. Redo once: the same animation, hashes, name,
-   target identity, and provenance return without backend or retarget work.
+2. Undo once: the newly created destination remains as an empty reusable
+   library and the session acceptance state returns to its exact prior absence.
+   Redo once: the same animation, hashes, name, target identity, and provenance
+   return without backend or retarget work.
 3. Accept a second take into an existing library. Undo removes only that key;
    unrelated animations remain numerically and structurally unchanged. Redo
    restores it.
@@ -970,40 +977,190 @@ animation without regenerating or retargeting it again.
 7. The complete Godot/backend suites, a rendered narrow-dock acceptance layout,
    and a manual create/add/collision/replace/undo/redo/restart walkthrough pass.
 
-Stop condition: implement only after user approval. When all gates pass, mark
-Goal 17 complete, record and push both affected repositories, propose Goal 18
-in detail, and stop before building general rig discovery.
+### Completion evidence
+
+- `KimodoAcceptanceService` owns preflight, semantic hashing, staged reload,
+  exact before/after bytes, compensating rollback, and session provenance. The
+  dock coordinates the user gesture but contains no library persistence logic.
+- Initial Add/Replace is executed and verified before its single named action is
+  registered with `EditorUndoRedoManager`. This prevents a failed disk/session
+  update from leaving a dead entry in Godot's Undo history. Redo reuses captured
+  bytes and never invokes generation or retargeting.
+- Existing/new-library selection uses Godot file dialogs. The compact rendered
+  480×1000 Preview & Save tab contains no path or directory text boxes; Save and
+  Accept remain visibly separate operations.
+- A staged accepted library reloads without dependencies, attaches to a clean
+  Jenny instance, and matches preview bone poses at start/middle/end samples.
+  Add preserves an unrelated animation; Replace Undo restores its exact prior
+  bytes; new-file Undo retains a valid empty library container.
+- Collision, import-cache, read-only, invalid-name/type/path, stale target,
+  player-root, track, finite-value, and duration checks occur before production
+  mutation. Explicit Replace is the only overwrite route.
+- Controlled staging, promotion, post-library, session-save, undo, and redo
+  failures restore prior library/session state. Tests assert no staging or
+  backup debris remains. As ADR 0005 records, this is compensating rollback
+  across two files, not a claim of cross-file filesystem atomicity.
+- The user completed the real-editor
+  create→Add→collision→Replace→Undo→Redo→restart/source-deletion walkthrough on
+  2026-09-29 and reported that all tests passed. Godot retained an empty library
+  after undoing its first accepted animation; the user selected that as the
+  intended behavior, leaving deletion of the artist-owned container explicit.
+
+Stop condition passed: Goal 17 is complete. Record and push both affected
+repositories, propose Goal 18 in detail, and stop before building general rig
+discovery.
 
 ## Planned goals after Goal 17
 
-### Goal 18 — General rig profiles and retarget setup
+### Goal 18 — Rig-profile foundation and Mixamo onboarding (proposed)
 
-Make target setup useful beyond Jenny before Stage 1 closes. Validate three
-meaningfully different rigs: Jenny, one Mixamo-rigged humanoid, and one
-redistributable non-Mixamo humanoid (a suitable CC0 Kenney asset is a candidate).
-Do not commit a fixture until its redistribution and attribution terms are
-recorded.
+#### Why split the work here
 
-Build a reviewable mapping workflow that combines exact and normalized names,
-curated aliases, left/right semantics, hierarchy, rest-pose axes, and chain
-evidence into confidence-ranked suggestions. Ambiguous or structurally invalid
-matches require the artist to resolve them; the tool must never call a weak
-name guess certified compatibility. Save a versioned `KimodoRigProfile` keyed
-to the target skeleton signature and reuse it automatically.
+“General retargeting” combines three distinct risks: authoring and persisting a
+mapping, handling incomplete/variant anatomy, and separating a complex control
+rig from the deform skeleton that should receive motion. Shipping all three in
+one goal would make failures hard to diagnose. Goal 18 establishes the reusable
+profile and mapping workflow against a mainstream, regular Mixamo rig; Goals 19
+and 20 then widen structural difficulty without redesigning that foundation.
 
-The `Kimodo_Blender_Bridge` provides useful UX precedent: its current matcher
-tries exact names, normalized names, then curated aliases (including Mixamo),
-lets users review/enable mappings, choose transfer modes, and save presets. It
-is not a general fuzzy/anatomical solver, so Goal 18 may take inspiration from
-the transparent mapping-and-preset workflow without copying Blender constraint
-mechanics or treating alias matches as proof.
+The local-only `Models/Remy-with-taunt-animation.fbx` is a strong first target.
+A read-only binary audit found 68 `mixamorig:` names, including a conventional
+five-digit hand set, eyes, `Hips`, three spine levels, and a bundled `Take 001`.
+The model is for internal validation only and must not be committed. Goal 18
+will establish a gitignored project-local fixture location so Godot can import
+private test models under `res://`; bundled target animations are ignored and
+must remain unmodified.
 
-Acceptance requires full basic-workflow generation, History reload, retarget,
-preview, Save, and Goal 17 Accept on all three rigs; quantified body/hand/root
-checks; useful diagnostics for missing/twist/extra bones; and regression proof
-that unmapped branches such as hair remain intact.
+#### Outcome sought
 
-### Goal 19 — Basic-workflow hardening and release gate
+Selecting an unsupported character opens a focused **Rig Setup** workspace.
+The add-on suggests a Godot-humanoid-to-target mapping, shows why and how
+confidently each suggestion was made, lets the artist correct every row, and
+saves a versioned project-owned `KimodoRigProfile`. Reopening the session reuses
+the profile only when its exact target skeleton signature still matches.
+
+The first certified non-Jenny profile is Remy/Mixamo. Once mapped, an archived
+take must preview, Save, and Goal 17 Accept on Remy without changing or playing
+the bundled taunt animation.
+
+#### Mapping and profile contract
+
+- Store schema version, target scene/skeleton signatures, skeleton node path,
+  canonical semantic role → target bone map, root-motion policy, reference/rest
+  measurements, ignored/optional roles, and certification results. Store no
+  absolute machine path or private model data.
+- Generate transparent suggestions in deterministic tiers: exact names,
+  normalized names and namespace/prefix stripping (including `mixamorig:`),
+  curated aliases, then side/hierarchy/chain/rest-axis evidence. Do not call a
+  low-confidence suggestion “matched.”
+- Present one reviewable row per canonical role with target choice, confidence,
+  evidence, required/optional state, conflict indicator, and explicit unmapped
+  choice. Manual selection always wins over a suggestion.
+- Detect duplicate targets, wrong-side assignments, broken parent/child order,
+  implausible chain geometry, degenerate hand frames, stale signatures, and
+  missing required body roles before certification.
+- Treat root motion separately from skeletal rotation mapping. Mixamo's `Hips`
+  without a distinct deform `Root` requires an explicit, tested policy rather
+  than an invented bone.
+- Map only the target skeleton used for deformation. Existing target
+  `AnimationPlayer` libraries and bundled clips are not profile inputs and are
+  never deleted, renamed, played, or rewritten.
+- Keep Jenny's exact-name profile working through the same public profile
+  contract; no Mixamo branch may enter the transfer mathematics.
+
+#### Scope
+
+- [ ] Define and validate the versioned `KimodoRigProfile` resource and atomic
+  project-owned save/load service.
+- [ ] Add deterministic candidate generation with normalized Mixamo prefixes,
+  curated aliases, side semantics, hierarchy, and geometric evidence.
+- [ ] Add the focused Rig Setup table, confidence/evidence display, editable
+  target selection, conflict/missing diagnostics, Reset Suggestions, and Save
+  Profile action without broad dock redesign.
+- [ ] Gate generation/preview on a certified current-signature profile and give
+  a useful route back to setup when the target changes.
+- [ ] Route Jenny and Remy through the same profile-driven transfer API,
+  including body, five-digit hands, rest-aware wrist frames, scale, and root
+  travel.
+- [ ] Establish a documented gitignored private-fixture staging location; keep
+  Remy and every other licensed test model out of commits and release packages.
+- [ ] Ignore and preserve the target's bundled taunt animation while adding the
+  disposable Kimodo preview player.
+- [ ] Add deterministic mapping/profile round-trip, stale-signature,
+  ambiguity/conflict, body/hand/root numeric, extra-branch, History, Save, and
+  Goal 17 Accept regressions.
+- [ ] Render the narrow Rig Setup workspace and run a manual Remy walkthrough
+  from target selection through profile reuse, offline History, Save, and
+  Accept.
+
+#### Out of scope
+
+- Missing canonical digits or anatomy, four-finger policy, and substantially
+  different hierarchy semantics (Goal 19).
+- Face, IK/control-rig interpretation, twist distribution authoring, or
+  advanced deform/control separation (Goal 20).
+- Runtime universal retargeting, constraint baking, animation editing, or
+  copying private model files into either repository.
+- Broad UI overhaul and release packaging (Goal 21).
+
+#### Decision gates
+
+- If Remy does not import through Godot's supported FBX path without an external
+  conversion step, stop and choose a reproducible local conversion/import
+  contract before building profile UI around an unstable asset representation.
+- If the target contains multiple plausible skeletons, require explicit
+  skeleton selection; do not silently use the first `Skeleton3D`.
+- If a Mixamo rest/root convention cannot preserve both grounded feet and
+  intended root travel with one explicit policy, stop for a root-motion design
+  decision rather than hiding offsets in per-model corrections.
+- If a saved profile cannot be invalidated reliably after rig changes, do not
+  auto-reuse it.
+
+#### Completion test
+
+1. Stage Remy locally under the ignored private-fixture directory, import it in
+   Godot, and prove its bundled taunt remains intact and uninvolved.
+2. Review deterministic suggestions, manually change at least one mapping,
+   resolve/reset it, certify, save, reopen, and reproduce the exact mapping.
+3. Change or simulate one target signature and prove the stale profile is
+   rejected with a direct route back to Rig Setup.
+4. Retarget a deterministic body/hand/root fixture to Jenny and Remy; quantify
+   mapped chain/orientation/root agreement and confirm unmapped extras receive
+   no Kimodo tracks.
+5. Generate or reopen a real archived take, preview it on Remy, switch History
+   takes offline, Save a character animation, and Accept it into a production
+   library with Undo/Redo.
+6. Restart Godot and reuse the profile/session without the backend. Jenny's
+   complete existing workflow and all Goal 17 behavior remain green.
+7. Complete Godot/backend suites, rendered narrow-dock setup review, and manual
+   Remy acceptance pass.
+
+Stop condition: implement only after user approval. When every gate passes,
+mark Goal 18 complete, push both affected repositories, propose Goal 19 in
+detail, and stop.
+
+### Goal 19 — Variant anatomy and hierarchy
+
+Use local-only `mannequiny-0.3.0.glb` plus an updated Jenny with an unmapped hair
+branch to make profiles honest about optional and missing anatomy. The current
+Mannequiny audit finds 45 skin joints, four fingers per hand (no little finger),
+custom lowercase/dotted names, and ten bundled animations. Define required body
+roles versus optional digits/eyes/jaw, preserve existing clips and extra
+branches, support deliberate partial mappings, and validate root/scale/rest
+differences without weakening Goal 18 certification.
+
+### Goal 20 — Complex deform/control rigs
+
+Use local-only `godette_rigged.glb` as the advanced validation target. Its glTF
+declares 227 skin joints, with name-based audit candidates including roughly
+121 face-related and 36 IK/control/handle bones. Add explicit deform/control
+classification, ambiguity resolution, ignored-role presentation, and robust
+preservation of face, IK, backpack, twist, and other non-humanoid branches.
+The 100-name Character Creator-style Skeleton FBX is an exploratory stress case,
+not a completion gate unless its import and rotation conventions fit the same
+architecture without asset-specific hacks.
+
+### Goal 21 — Basic-workflow hardening and release gate
 
 Complete the deferred UI overhaul, installation/setup and recovery diagnostics,
 server cancellation decision, performance/quality defaults, packaging,
@@ -1026,7 +1183,7 @@ These are implementation findings and their current disposition.
    backend may still be finishing inference. Actual CUDA cancellation still
    requires a server job/cancel mechanism. The measured two-take path remained
    responsive enough for the tested limit, so this is not a Goal 14 blocker.
-   **Owner: Goal 19.**
+   **Owner: Goal 21.**
 3. **Resolved in Goal 14 — two-take protocol path.** Backend and Godot contract
    tests plus a live generation prove two ordered animations and metadata
    entries, distinct decoded hashes, selected-character retargeting, switching,
@@ -1047,6 +1204,13 @@ These are implementation findings and their current disposition.
    default Character animation output is now a dependency-free target-specific
    `AnimationLibrary`; the large self-contained character scene remains only
    as the explicit Character Preview choice.
+7. **Resolved in Goal 17 — production acceptance could not safely accumulate
+   named animation.** Accept now adds to a new or existing project-owned
+   `AnimationLibrary`, blocks collisions until explicit Replace, and captures
+   exact before/after library bytes plus session provenance in one Godot editor
+   action. Controlled persistence, Undo, and Redo failures compensate back to
+   the prior state without transaction debris. Cross-file filesystem atomicity
+   is not claimed; see ADR 0005.
 
 ### Priority 2 — structural risks to address while nearby code changes
 
@@ -1193,6 +1357,25 @@ No external blocker is active. Gated access to
   generate→restart→offline-History→retarget→save→delete acceptance on
   2026-09-27 and reported that all tests passed and everything looked good.
 
+## Verification snapshot — 2026-09-28 Goal 17 implementation
+
+- The complete 26-check Godot suite passes under Godot 4.7.2, including editor
+  startup/restart, focused acceptance transactions, full dock Undo/Redo,
+  archive deletion independence, all retarget/save regressions, and four
+  playback smoke scenes.
+- New/existing Add, collision, explicit Replace, exact library-byte Undo/Redo,
+  stable acceptance identity, clean Jenny sampled playback, dependency
+  independence, offline restart, and post-acceptance source deletion pass.
+- Injected staging, promotion, post-library, session-save, Undo, and Redo
+  failures restore prior production/session state and leave no temporary files.
+- A GPU-backed 480×1000 Windows OpenGL capture verifies the distinct compact
+  Save and Accept controls in Preview & Save.
+- The unchanged backend passes `24 passed, 7 skipped`; Ruff passes. Its 18
+  warnings remain known pinned-dependency `torch.jit` deprecations.
+- The user passed the real-editor create/add/collision/replace/undo/redo/restart
+  walkthrough on 2026-09-29. The observed empty-library result after first-add
+  Undo was accepted and made the explicit, tested contract.
+
 ## Verification snapshot — 2026-09-26 Goal 15 implementation
 
 - The SOMA-77 audit accounts for all 77 joints: 55 mapped rotations, nine
@@ -1326,3 +1509,16 @@ No external blocker is active. Gated access to
   dedicated pre-Stage-2 Goal 18 for reviewable general rig profiles validated
   on Jenny, Mixamo, and a structurally different redistributable humanoid;
   moved final hardening and release readiness to Goal 19.
+- **2026-09-28:** Implemented Goal 17's explicit production-library acceptance:
+  compact new/existing destination controls, artist naming, collision-safe Add
+  and confirmed Replace, exact Undo/Redo, clean-target staged reload, durable
+  acceptance provenance, source-deletion independence, and injected rollback
+  coverage. The complete Godot suite and GPU-rendered narrow dock pass. Manual
+  real-editor acceptance remains before completion and push.
+- **2026-09-29:** The user passed Goal 17's complete real-editor walkthrough and
+  approved push. Made the observed first-add Undo behavior intentional: remove
+  the animation and provenance while retaining an empty reusable library.
+  Audited the private local test models and split general retargeting into
+  Goal 18 (profile/mapping foundation plus Mixamo Remy), Goal 19 (variant or
+  missing anatomy with Mannequiny and hair-bone Jenny), and Goal 20 (Godette's
+  complex face/control/IK rig); moved Stage 1 hardening to Goal 21.
