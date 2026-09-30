@@ -1,10 +1,10 @@
 # Development goals and project ledger
 
-Last reviewed: **2026-09-29**
+Last reviewed: **2026-09-30**
 
 Current product stage: **basic workflow**
 
-Current goal: **Goal 18 — Proposed; awaiting approval**
+Current goal: **Goal 19 — Proposed; awaiting approval**
 
 ## How to use this document
 
@@ -60,12 +60,12 @@ Animation Library or complete Preview Scene).
 
 | Repository | Current reviewed checkpoint | Notes |
 | --- | --- | --- |
-| `kimodo-godot-server` | `7db71c3` + current documentation | Goal 17 completion record and split Goal 18–21 roadmap on `codex/milestone-0-bootstrap` |
-| `godot-kimodo` | `aadd920` | Goal 17 undoable production-library acceptance on `main` |
+| `kimodo-godot-server` | This documentation checkpoint (parent `35d1bba`) | Goal 18 completion and detailed Goal 19 proposal on `codex/milestone-0-bootstrap` |
+| `godot-kimodo` | `ded4aef` | Goal 18 reviewed rig profiles, Mixamo onboarding, and final integration repairs on `main` |
 
-The user authorized pushes after each completed and tested goal. Goal 17's
-tested implementation is committed in the extension; this completion record
-and the revised retargeting roadmap accompany its push.
+The user authorized pushes after each completed and tested goal. Goal 18 passed
+its final manual gate on 2026-09-30; this completion record and the proposed next
+goal accompany the verified extension checkpoint.
 
 The repositories remain independently versioned. The server keeps the
 `motionmcp_kimodo` namespace and MMCP surface until a deliberate migration.
@@ -1012,7 +1012,7 @@ discovery.
 
 ## Planned goals after Goal 17
 
-### Goal 18 — Rig-profile foundation and Mixamo onboarding (proposed)
+### Goal 18 — Rig-profile foundation and Mixamo onboarding (complete)
 
 #### Why split the work here
 
@@ -1024,7 +1024,8 @@ profile and mapping workflow against a mainstream, regular Mixamo rig; Goals 19
 and 20 then widen structural difficulty without redesigning that foundation.
 
 The local-only `Models/Remy-with-taunt-animation.fbx` is a strong first target.
-A read-only binary audit found 68 `mixamorig:` names, including a conventional
+A read-only binary audit found 68 raw `mixamorig` names. Godot's supported FBX
+import produces one 67-bone `Skeleton3D` using `mixamorig_` names, including a conventional
 five-digit hand set, eyes, `Hips`, three spine levels, and a bundled `Take 001`.
 The model is for internal validation only and must not be committed. Goal 18
 will establish a gitignored project-local fixture location so Godot can import
@@ -1070,26 +1071,26 @@ the bundled taunt animation.
 
 #### Scope
 
-- [ ] Define and validate the versioned `KimodoRigProfile` resource and atomic
+- [x] Define and validate the versioned `KimodoRigProfile` resource and atomic
   project-owned save/load service.
-- [ ] Add deterministic candidate generation with normalized Mixamo prefixes,
+- [x] Add deterministic candidate generation with normalized Mixamo prefixes,
   curated aliases, side semantics, hierarchy, and geometric evidence.
-- [ ] Add the focused Rig Setup table, confidence/evidence display, editable
+- [x] Add the focused Rig Setup table, confidence/evidence display, editable
   target selection, conflict/missing diagnostics, Reset Suggestions, and Save
   Profile action without broad dock redesign.
-- [ ] Gate generation/preview on a certified current-signature profile and give
+- [x] Gate generation/preview on a certified current-signature profile and give
   a useful route back to setup when the target changes.
-- [ ] Route Jenny and Remy through the same profile-driven transfer API,
+- [x] Route Jenny and Remy through the same profile-driven transfer API,
   including body, five-digit hands, rest-aware wrist frames, scale, and root
   travel.
-- [ ] Establish a documented gitignored private-fixture staging location; keep
+- [x] Establish a documented gitignored private-fixture staging location; keep
   Remy and every other licensed test model out of commits and release packages.
-- [ ] Ignore and preserve the target's bundled taunt animation while adding the
+- [x] Ignore and preserve the target's bundled taunt animation while adding the
   disposable Kimodo preview player.
-- [ ] Add deterministic mapping/profile round-trip, stale-signature,
+- [x] Add deterministic mapping/profile round-trip, stale-signature,
   ambiguity/conflict, body/hand/root numeric, extra-branch, History, Save, and
   Goal 17 Accept regressions.
-- [ ] Render the narrow Rig Setup workspace and run a manual Remy walkthrough
+- [x] Render the narrow Rig Setup workspace and run a manual Remy walkthrough
   from target selection through profile reuse, offline History, Save, and
   Accept.
 
@@ -1139,15 +1140,169 @@ Stop condition: implement only after user approval. When every gate passes,
 mark Goal 18 complete, push both affected repositories, propose Goal 19 in
 detail, and stop.
 
-### Goal 19 — Variant anatomy and hierarchy
+#### Implementation evidence — 2026-09-29
 
-Use local-only `mannequiny-0.3.0.glb` plus an updated Jenny with an unmapped hair
-branch to make profiles honest about optional and missing anatomy. The current
-Mannequiny audit finds 45 skin joints, four fingers per hand (no little finger),
-custom lowercase/dotted names, and ten bundled animations. Define required body
-roles versus optional digits/eyes/jaw, preserve existing clips and extra
-branches, support deliberate partial mappings, and validate root/scale/rest
-differences without weakening Goal 18 certification.
+- `KimodoRigProfile` schema 1 records exact target identity, skeleton path,
+  reviewed semantic mapping, root/scale policy, rest measurements, optional
+  roles, and certification. `KimodoRigProfileStore` atomically saves a stable
+  project-owned profile and rejects stale skeleton signatures on load.
+- Deterministic candidate rows distinguish exact, normalized-prefix, curated
+  Mixamo, manual, and unmatched states. Certification rejects duplicate target
+  use, wrong sides, broken body hierarchy, degenerate chains/hand frames, and
+  missing required anatomy. The narrow Rig Setup UI exposes Unmapped, visible
+  confidence/evidence, Reset Suggestions, and Save Profile.
+- Jenny continues through the same public profile API. Remy's 67-bone Godot
+  import certifies without a model-specific transfer branch. Its Hips-only root
+  convention emits one scaled position track and no invented Root. Numeric
+  regression checks cover root/pelvis displacement, floor penetration, limb
+  directions, wrist frames, and digit compensation.
+- The real private Remy fixture completes target selection, artist override and
+  reset, certification/save, exact-signature reuse, preview, character-library
+  Save, production-library Accept, Undo, and Redo. Both bundled imported clips
+  remain present, unchanged, and unplayed; preview explicitly selects Kimodo's
+  separate disposable player.
+- The first manual Remy pass exposed and repaired three integration gaps:
+  Follow Root now tracks mapped Hips on Hips-as-root rigs; certified profiles
+  reconstruct the complete editable Rig Setup after session reopen; and a saved
+  Character Preview contains only Kimodo's selected motion player. Regression
+  coverage proves the detached preview cleanup does not mutate Remy's imported
+  clips, the live preview, or the source FBX.
+- `tests/private_models/` is documented and gitignored except for its guide.
+  Clean checkouts skip private-fixture checks while deterministic synthetic
+  mapping/profile tests remain mandatory.
+- The complete 28-check Godot 4.7.2 suite passes, including both staged Remy
+  checks. A GPU-backed 480×1000 render exposed and then verified the repaired
+  stacked Rig Setup rows. The unchanged backend passes `24 passed, 7 skipped`;
+  Ruff passes, with the same 18 pinned-dependency deprecation warnings. Final
+  manual real-editor Remy acceptance passed on 2026-09-30, including all three
+  final repairs: mapped-Hips camera follow, complete reopened Rig Setup, and
+  saved-preview animation cleanup. Goal 18 is complete at extension checkpoint
+  `ded4aef`.
+
+### Goal 19 — Variant anatomy and hierarchy (proposed)
+
+Make reviewed profiles support regular humanoids with fewer torso segments or
+digits while preserving the fidelity and workflow established for Jenny and
+Remy. Primary acceptance target: the local-only `mannequiny-0.3.0.glb`.
+
+#### Fixture evidence and boundaries
+
+The read-only glTF audit confirms one skin, 45 skin joints, and ten bundled
+animations. Mannequiny uses `pelvis`, `spine_01`, `spine_02`, `neck_01`, sided
+names such as `upperarm.l`, and four three-joint digits per hand: thumb, index,
+middle, and ring. It has no little-finger, eye, jaw, or third spine skin joint.
+Godot's imported hierarchy and rest transforms must still be audited before
+choosing the final profile; glTF skin membership alone is not that proof.
+
+Jenny's planned hair update is not yet available. Local Jenny03 variants have
+61/60 skin joints, including limb twist branches and respectively with/without
+Root, but no hair joints. Use a repository-owned synthetic hair branch as the
+mandatory extra-branch regression. Test an updated Jenny additionally if the
+user supplies it; its availability must not block completion. Stage private
+models only in the existing ignored project-local directory.
+
+#### Intended mapping policy
+
+- Keep pelvis, head, hands, feet, and the major arm/leg chains mandatory.
+  Require a usable torso path, with at least one mapped spine/chest role;
+  evaluate neck, shoulder, toes, and additional torso segments explicitly
+  rather than treating every canonical role as mandatory.
+- Make digit chains, eyes, and jaw optional. Distinguish an intentionally
+  omitted role from a required unresolved role in the UI and certification.
+  Validate the order of every mapped subset; missing anatomy must not excuse
+  duplicate targets, wrong sides, stale signatures, or invalid geometry.
+- Do not assign several canonical roles to one target bone. For an omitted
+  intermediate source role, transfer the mapped descendant's complete motion
+  relative to its actual target parent so torso motion is not silently lost.
+- Four-finger hands must use one shared anatomical palm frame for wrist and
+  all digits. Choose explicit, recorded frame landmarks from available digits
+  (for Mannequiny, middle-forward and index-to-ring lateral); never invent a
+  little-finger bone or independently align thumb phalanges. If no trustworthy
+  non-degenerate hand frame exists, stop and discuss the supported fallback.
+- Extra target branches receive no Kimodo tracks and retain their local rest
+  transforms while inheriting the mapped parent's animation. This preserves
+  hierarchy; it does not add hair physics or active twist distribution.
+
+#### Ordered task list
+
+- [ ] **19.1 — Audit the imported fixture.** Stage Mannequiny, record imported
+  skeleton path, full hierarchy, rest bases, units, root convention, skin
+  bindings, and bundled clips. Create an explicit reviewed semantic mapping;
+  record missing roles and likely hand landmarks before changing transfer.
+- [ ] **19.2 — Define partial-profile certification.** Separate required body
+  roles, required chain structure, optional anatomy, and intentional omissions.
+  Record effective torso/hand landmarks and unsupported cases in profile data.
+  Version the schema if the persisted contract changes; preserve or explicitly
+  recertify Goal 18 profiles without losing sessions or archived takes.
+- [ ] **19.3 — Extend transparent suggestions and Rig Setup.** Recognize sided
+  `.l`/`.r` names and curated regular chain aliases with visible evidence.
+  Keep manual overrides authoritative. Show missing optional chains, required
+  unresolved roles, and the recorded hand-frame choice clearly. Reopen/reset
+  behavior must preserve the reviewed profile and remain usable in a narrow
+  dock; do not infer control/deform classification here.
+- [ ] **19.4 — Transfer supported partial anatomy.** Handle omitted torso roles
+  and mapped descendants through the existing rest-aware transfer path. Build
+  a shared frame from recorded available hand landmarks and apply it through
+  each mapped digit. Emit tracks only for mapped bones, preserving root travel,
+  scale, thumb roll, and unmapped branches without fixture-specific math.
+- [ ] **19.5 — Verify root, scale, and branches.** Test Mannequiny's imported
+  root convention and effective camera-follow bone. Exercise changed scale,
+  rest orientation, omitted intermediate roles, four-finger hands, and hair
+  branches with deterministic synthetic rigs. Verify parent inheritance and
+  unchanged local transforms for extras; test local Jenny03 variants if useful.
+- [ ] **19.6 — Exercise the complete session workflow.** Certify/save/reopen a
+  Mannequiny profile, reload History offline, preview/switch takes, Save a
+  lightweight character library and clean Character Preview, and Accept into
+  a production library with exact Undo/Redo and restart. Preserve all ten
+  bundled clips and the original model bytes.
+- [ ] **19.7 — Document and accept.** Record supported anatomy limits, profile
+  compatibility rules, chosen hand landmarks, and numeric evidence. Run the
+  complete extension suite, inspect the narrow UI, and perform the manual
+  multi-angle Mannequiny gate before marking complete or pushing.
+
+#### Numeric and workflow acceptance
+
+1. Deterministic profile fixtures prove missing optional roles certify while
+   missing required body roles, duplicates, reversed sides, invalid mapped
+   chain order, degenerate frames, and stale signatures fail clearly.
+2. Synthetic motion exercises all mapped body and digit rotations, including
+   non-rest omitted torso segments. Compared with an independent expected pose,
+   corresponding anatomical directions/frame axes agree within 0.1 degrees,
+   and scaled root/pelvis positions agree within 0.0001 target units. Unmapped
+   branches retain their local rest transforms and receive zero tracks.
+3. Jenny and Remy's existing numerical gates continue to pass. For imported
+   Mannequiny, record measured frame/chain/root errors and ground contact across
+   sampled poses; anatomical/proportion differences must not be hidden by
+   relaxing the synthetic transfer tests. Discuss material discrepancies.
+4. Profile save/reopen reproduces omissions, landmark choices, and mapping.
+   Preview and saved-library reload contain no unresolved tracks or invalid
+   transforms; lightweight libraries carry no character meshes/textures.
+5. The imported source hash and all bundled animation names/data remain
+   unchanged. Saved Character Preview contains only Kimodo's selected player.
+   Accept/Undo/Redo and source-archive deletion retain Goal 17 guarantees.
+6. Clean checkouts without private fixtures pass the deterministic suite and
+   skip only model-dependent checks. The staged private workflow passes too.
+7. Manual gate: restart Godot, reopen the profile/session offline, inspect a
+   walking/body take plus a synthetic wrist/digit stress take from several
+   angles, confirm root-follow and optional-role UI, Save/load on a fresh
+   character instance, and Accept/Undo/Redo. Kimodo's subtle generated finger
+   motion is not the sole test of digit fidelity.
+
+#### Decision gates and exclusions
+
+Stop for discussion if import produces multiple plausible skeletons, a usable
+torso/hand frame requires invented anatomy, or the rest/root convention needs a
+per-model offset or substantially different solver. Fix nearby code concerns
+only when necessary for these tasks and record them in the repair ledger.
+
+Goal 20 retains face/control/IK interpretation, active twist distribution,
+multiple-skeleton selection, and Godette's complex rig. Goal 21 retains broad
+UI overhaul, performance/release work, and server cancellation. Goal 19 changes
+neither generation nor the authoritative SOMA-77 archive format; no private
+fixture is committed or packaged.
+
+Stop condition: obtain user approval before implementation. After all automated
+and manual gates pass, mark complete, commit/push, propose Goal 20, and stop.
 
 ### Goal 20 — Complex deform/control rigs
 
@@ -1194,12 +1349,14 @@ These are implementation findings and their current disposition.
    nine deliberately collapsed intermediate joints, and 13 terminal joints.
    A synthetic non-rest fixture numerically exercises all 30 mapped humanoid
    finger rotations.
-5. **Materially addressed in Goal 15 — rig compatibility was overclaimed.**
+5. **Resolved for regular complete humanoids in Goal 18 — rig compatibility
+   was overclaimed.**
    Character transfer now consumes an explicit canonical-to-target rig profile
    and a renamed-bone regression proves the mathematics is not Jenny-specific.
-   Automatic profile discovery remains deliberately limited to exact Godot
-   humanoid names; hierarchy/reference-pose certification, scale policy, and a
-   rig-profile setup remain later work. **Owner: Goal 18.**
+   Goal 18 adds reviewed exact/normalized/alias matching, hierarchy/rest
+   certification, signature invalidation, scale/root policy, and persistent
+   Rig Setup for Jenny and Mixamo. Partial anatomy remains Goal 19; complex
+   deform/control rigs remain Goal 20.
 6. **Resolved in Goal 15 — character saves duplicated the target scene.** The
    default Character animation output is now a dependency-free target-specific
    `AnimationLibrary`; the large self-contained character scene remains only
@@ -1522,3 +1679,12 @@ No external blocker is active. Gated access to
   Goal 18 (profile/mapping foundation plus Mixamo Remy), Goal 19 (variant or
   missing anatomy with Mannequiny and hair-bone Jenny), and Goal 20 (Godette's
   complex face/control/IK rig); moved Stage 1 hardening to Goal 21.
+- **2026-09-30:** Closed Goal 18 after the user passed the final mapped-Hips
+  camera, reopened Rig Setup, and clean saved-preview tests. All 28 Godot checks
+  and the rendered certified-profile UI passed; backend code is unchanged and
+  its previously recorded checks passed. Extension checkpoint `ded4aef`.
+  Prepared Goal 19's seven ordered tasks for optional anatomy, omitted torso
+  roles, four-finger shared hand frames, profile compatibility, extra-branch
+  preservation, and full offline Save/Accept acceptance. Confirmed Jenny03 has
+  twist branches but no hair joints, so synthetic hair coverage is mandatory
+  and an updated private Jenny is optional. Goal 19 awaits approval.
