@@ -1,21 +1,26 @@
-# Documentation
+# Backend documentation
 
-| Guide | Who it's for |
-|---|---|
-| **[Development goals](DEVELOPMENT_GOALS.md)** | Current goal, completed work, upcoming goals, blockers, and session history |
-| **[Development baseline](DEVELOPMENT_BASELINE.md)** | Fork point, verified workstation, dependencies, and initial validation |
-| **[Installation](INSTALL.md)** | Blender artists and anyone setting up the server + [Proscenium](https://github.com/animatica-ai/proscenium-blender) for the first time |
-| **[MotionCorrection](MOTION_CORRECTION.md)** | C++ compile step when installing Kimodo — CMake, compilers, platform fixes (**read before `pip install` if builds fail**) |
-| **[Usage](USAGE.md)** | Running the server — CLI flags, environment variables, models |
-| **[Development](DEVELOPMENT.md)** | How the package fits together and embedding Kimodo in your own app |
+Stage 1 basic workflow is complete and user-tested (2026-10-01).
+This folder covers the independently versioned **server**, not the shared roadmap.
 
-**Community**
+| Guide | Purpose |
+| --- | --- |
+| [Installation](INSTALL.md) | Windows reference setup, prerequisites and troubleshooting |
+| [Usage](USAGE.md) | Launcher, CLI flags, environment and SOMA constraint boundary |
+| [MotionCorrection](MOTION_CORRECTION.md) | Retained C++ build/platform troubleshooting |
+| [Server architecture](SERVER_ARCHITECTURE.md) | Adapter modules, embedding and tests |
+| [Architecture decisions](adr/README.md) | Durable dependency/protocol/rig/ownership decisions |
 
-- **[Animatica AI Discord](https://discord.com/invite/A8CrURBewz)** — install help, Proscenium, and MMCP/Kimodo questions
+Shared planning and fresh-session context live in
+[godot-kimodo/docs](https://github.com/Vega-KH/godot-kimodo/tree/main/docs).
+In the combined workspace, read `../../godot-kimodo/docs/README.md`;
+then its product plan, DEVELOPMENT_GOALS, AGENT_HANDOFF and STAGE1_COMPLETION.
 
-**External links**
+The obsolete bootstrap baseline, long duplicated ledger and Goal 21 walkthrough
+were distilled into that handoff/completion record. Their complete historical
+text remains in server Git checkpoint `0f1d347`.
+DEVELOPMENT.md was replaced by SERVER_ARCHITECTURE.md; no runtime code changed.
 
-- [MMCP protocol](https://animatica.ai/mmcp)
-- [Kimodo](https://github.com/animatica-ai/kimodo) · [Kimodo install docs](https://research.nvidia.com/labs/sil/projects/kimodo/docs/getting_started/installation.html)
-- [Proscenium for Blender](https://github.com/animatica-ai/proscenium-blender) · [releases](https://github.com/animatica-ai/proscenium-blender/releases/latest)
-- [Official MMCP implementations](https://animatica.ai/mmcp/docs/get-started/implementations)
+Artist steps: [add-on guide](https://github.com/Vega-KH/godot-kimodo/blob/main/addons/kimodo_motion/README.md).
+Upstream protocol/model references: [MMCP](https://animatica.ai/mmcp),
+[official Kimodo](https://github.com/nv-tlabs/kimodo).

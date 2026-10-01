@@ -6,6 +6,11 @@ Running the `kimodo-godot-server` MMCP server after [installation](INSTALL.md).
 
 ## Start the server
 
+For the verified Windows checkout, use root `start.bat`. It sets
+`TEXT_ENCODER_DEVICE=cpu` and local text encoding, leaving motion inference on
+the automatically selected device (CUDA on the reference machine). Wait for
+the ready message before connecting the Godot dock to `http://127.0.0.1:8000`.
+
 ```bash
 # Defaults: port 8000, default Kimodo model, cuda:0 if available else cpu.
 kimodo-godot-server
@@ -17,7 +22,8 @@ kimodo-godot-server --model soma30 --port 8000 --device cuda:0
 python -m motionmcp_kimodo --model soma30
 ```
 
-Leave the terminal open while clients (e.g. Proscenium) connect. Default URL for local Blender: `http://localhost:8000`.
+Leave the terminal open while Godot connects. Use one server process; multiple
+GPU model workers are not validated. Remote deployment is outside Stage 1 support.
 
 ## CLI flags
 
@@ -36,13 +42,14 @@ Leave the terminal open while clients (e.g. Proscenium) connect. Default URL for
 |---|---|
 | `KIMODO_MODEL` | Default model id when `--model` isn’t passed |
 | `TEXT_ENCODER_MODE` | Same as `--text-encoder-mode` when the flag is omitted |
+| `TEXT_ENCODER_DEVICE` | Kimodo text-encoder device; reference launcher sets `cpu` |
 | `KIMODO_QUANTIZE` | With local LLM encoder: `4bit` or `8bit` (BitsAndBytes). Set by `--quantize` or manually. Ignored with `dummy`. |
 
 ### Text encoder and `--quantize`
 
 The server defaults to **`local`** (loads Kimodo’s LLM2Vec text encoder). Use `--text-encoder-mode dummy` for constraint-only runs without an LLM (lower VRAM, no text semantics).
 
-4-bit quantization to save VRAM:
+Optional upstream 4-bit text-encoder mode (not the validated CPU-encoder baseline):
 
 ```bash
 kimodo-godot-server --quantize 4bit
@@ -65,4 +72,6 @@ cannot yet be targeted directly. The capability response advertises six contact
 channels in generated order: left foot/toe/toe-end, then right
 foot/toe/toe-end.
 
-The officially supported client is **[Proscenium for Blender](https://github.com/animatica-ai/proscenium-blender)** — see [Installation](INSTALL.md) for setup.
+This fork's validated client is [Kimodo Motion Studio for Godot](https://github.com/Vega-KH/godot-kimodo).
+Backend constraint support does not mean the Stage 1 dock exposes advanced pose/path
+authoring; that is Stage 2 work. Proscenium is a separate upstream Blender client.

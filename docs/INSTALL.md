@@ -1,132 +1,67 @@
-# Installation
+# Backend installation — Windows reference workflow
 
-End-to-end setup for **self-hosted Kimodo** with **[Proscenium for Blender](https://github.com/animatica-ai/proscenium-blender)**.
+[Documentation index](README.md). The primary client is
+[Kimodo Motion Studio for Godot](https://github.com/Vega-KH/godot-kimodo).
+Blender/Proscenium is a separate upstream client, not required for this fork.
 
-You need **two pieces**:
+## Prerequisites
 
-1. **This motion server** — runs in a terminal on your machine (GPU-heavy AI work).
-2. **Proscenium** — Blender addon that sends requests and bakes animation onto your rig.
+- Python 3.10+, Git, and a CUDA-capable PyTorch installation/NVIDIA GPU.
+  Verified machine: Python 3.10.16, RTX 4070 Laptop (8 GB VRAM), 32 GB RAM.
+- CMake and MSVC C++ build tools. Kimodo builds MotionCorrection locally;
+  use a Visual Studio developer shell if the compiler is not discoverable.
+  Read [MotionCorrection](MOTION_CORRECTION.md) before retrying failed builds.
+- Model access/downloads for Kimodo-SOMA-RP-v1.1 and the gated
+  Meta-Llama-3-8B-Instruct encoder base. Authenticate locally; never commit tokens.
+- Enough disk for model caches and enough RAM for CPU text encoding:
+  cold startup has used about 28.52 GiB of total system memory.
 
-[← Documentation index](README.md)
+## Development checkout
 
-## What you need first
+Use this fork, not an unpinned upstream installation:
 
-| Requirement | Notes |
-|---|---|
-| **Computer with a recent NVIDIA GPU** | Strongly recommended. Generation on CPU alone is possible but very slow. |
-| **Python 3.10 or newer** | [python.org/downloads](https://www.python.org/downloads/) — on Windows, check **“Add python.exe to PATH”** during install. |
-| **Git** | [git-scm.com/downloads](https://git-scm.com/downloads) — Kimodo is installed from GitHub, not the usual Python package index. |
-| **C++ build tools + CMake** | Kimodo compiles **MotionCorrection** on your machine during `pip install`. See **[MotionCorrection guide](MOTION_CORRECTION.md)** — install CMake and a compiler *before* step 1. |
-| **Disk space & internet** | First run downloads Kimodo model weights from Hugging Face (several GB). |
-| **Blender 4.x** | For the Proscenium addon (step 3 below). |
-
-> **Biggest install hurdle:** MotionCorrection is a C++ extension bundled with Kimodo. It is not a separate download — `pip` builds it locally and the step often takes many minutes. Platform-specific prerequisites (Linux / macOS / Windows): **[MotionCorrection](MOTION_CORRECTION.md)**.
-
-## 1. Install the motion server
-
-Open a **terminal** (macOS: Terminal.app → search “Terminal”; Windows:
-Start → “Command Prompt” or “PowerShell”).
-
-### Option A — one command (easiest)
-
-Install **CMake and a C++ toolchain first** ([MotionCorrection guide](MOTION_CORRECTION.md)), then paste this and press Enter. The first run can take **30+ minutes** while it downloads PyTorch, **compiles MotionCorrection**, and installs Kimodo:
-
-```bash
-pip install "motionmcp-kimodo @ git+https://github.com/animatica-ai/motionmcp-kimodo.git"
+```powershell
+git clone --branch codex/milestone-0-bootstrap https://github.com/Vega-KH/kimodo-godot-server.git
+cd kimodo-godot-server
+uv sync --locked --extra dev --python 3.10
 ```
 
-To watch the C++ build instead of a long silent wait, use `pip install -v ...` (same URL as above).
+The reference dependency declarations and CUDA package index are in
+`pyproject.toml` and `uv.lock`; the Kimodo fork includes Windows/low-VRAM placement repairs.
+See [uv's sync documentation](https://docs.astral.sh/uv/concepts/projects/sync/)
+for locked installation and extras. This command is for a new checkout;
+do not sync or upgrade the established environment during ordinary feature work.
+Install uv if needed and complete C++/model access prerequisites first.
+This is checkout setup guidance, **not** a new-machine provisioning guarantee:
+Stage 1's clean-project acceptance reused the established backend environment.
+Build/downloads can take many minutes. Do not recreate a working `.venv`
+merely because a restricted agent identity cannot launch it.
 
-### Option B — clone the repo
+## Launch and connect
 
-Use this if you want to edit code or retry a failed install:
-
-```bash
-git clone https://github.com/animatica-ai/motionmcp-kimodo
-cd motionmcp-kimodo
-pip install -e .
+```powershell
+.\start.bat
 ```
 
-Kimodo is pulled from the pinned
-[Vega-KH/kimodo](https://github.com/Vega-KH/kimodo) Windows/low-VRAM baseline
-(not PyPI). If install fails while **building MotionCorrection** (CMake /
-compiler errors), see **[MotionCorrection](MOTION_CORRECTION.md)** first, then
-[Troubleshooting](#troubleshooting).
-
-## 2. Start the server
-
-In the same terminal:
-
-```bash
-motionmcp-kimodo --port 8000
-```
-
-Leave this window **open** while you work in Blender. When startup finishes you should see a line like `ready` and the process listening on port **8000**. The first start also downloads model weights — wait until that completes.
-
-**You’re done with the server side** when Blender can reach `http://localhost:8000` (step 4).
-
-CLI options and environment variables: **[Usage](USAGE.md)**.
-
-## 3. Install Proscenium in Blender
-
-1. Download the latest **`proscenium-blender-*.zip`** from [Proscenium releases](https://github.com/animatica-ai/proscenium-blender/releases/latest).
-2. In Blender: **Edit → Preferences → Add-ons → Install…** → pick the zip.
-3. Enable **Proscenium — AI Motion Generation** in the addon list.
-
-[Video tutorials](https://www.youtube.com/watch?v=Wc349qOwjfM&list=PLAJ2UfUYhFQKZpFS8eh1eGUWJ0PAys1n1) · [Proscenium README](https://github.com/animatica-ai/proscenium-blender#readme)
-
-## 4. Connect Blender to your server
-
-1. In Blender: **Edit → Preferences → Add-ons → Proscenium → Preferences**
-2. Set **Server** to: `http://localhost:8000`
-3. In the 3D viewport **N** panel → **Proscenium** tab → **Connect**
-
-If Connect fails, the server is not running or something is blocking port 8000 — see [Troubleshooting](#troubleshooting).
-
-## 5. Generate motion
-
-1. **Import model skeleton** (Proscenium button — or use a matching rig; see Proscenium docs)
-2. Add prompts / constraints on the timeline
-3. Click **Generate Motion**
+The launcher resolves the checkout's `.venv`, sets local text encoding on CPU
+and uses automatic motion-device selection (CUDA on the reference machine).
+Wait for `ready`, then connect the Godot dock to `http://127.0.0.1:8000`.
+Do not run a second service on the same port. Ctrl+C stops the service.
+For add-on installation, sessions and rig setup, follow the
+[artist guide](https://github.com/Vega-KH/godot-kimodo/blob/main/addons/kimodo_motion/README.md).
 
 ## Troubleshooting
 
-### `pip` or `python` not found
+- Build failure: inspect the C++ error and follow the MotionCorrection guide;
+  do not blame Python or replace pinned dependencies without evidence.
+- Model access failure: verify local Hugging Face authorization and gated
+  approvals. Preserve tokens outside the repository and logs.
+- Out of memory: close other heavy applications, retain CPU text encoding,
+  shorten the clip and inspect the actual backend traceback.
+- Cannot connect: verify the ready message, loopback URL and port/process;
+  an encoder/model still loading is not a ready service.
+- Sandbox permission error: the working owner-created venv may require execution
+  in the owner's context; this is not evidence of dependency corruption.
 
-- Reinstall Python from [python.org](https://www.python.org/downloads/) and enable **Add to PATH** (Windows).
-- On macOS/Linux, try `python3` and `pip3` instead of `python` / `pip`.
-
-### Install fails while building MotionCorrection or Kimodo
-
-This usually means the **C++ compile step** failed, not Python itself.
-
-1. Follow **[MotionCorrection](MOTION_CORRECTION.md)** for your OS (CMake, compiler, Apple Silicon SIMDe, Windows MSVC).
-2. Verify: `python -c "import motion_correction; print('OK')"`.
-3. Make sure **Git** is on your PATH.
-4. Read the [Kimodo installation guide](https://research.nvidia.com/labs/sil/projects/kimodo/docs/getting_started/installation.html) for CUDA / PyTorch notes.
-5. Retry with verbose logs: `pip install -v -e .` from a cloned `motionmcp-kimodo` folder.
-
-### `motionmcp-kimodo` not found after install
-
-- Close and reopen the terminal, then try again.
-- Or run: `python -m motionmcp_kimodo --port 8000`
-
-### Blender “Connect” fails
-
-- Confirm the server terminal still shows the process running (no error traceback).
-- Server URL must be exactly `http://localhost:8000` (no trailing path).
-- Firewall: allow local connections on port 8000.
-
-### Out of memory (GPU)
-
-- Use a shorter clip or fewer constraints.
-- Close other GPU apps (games, other ML tools).
-- For Kimodo’s full local text encoder (not the server default), see [Usage](USAGE.md) and Kimodo’s `TEXT_ENCODER_DEVICE=cpu` notes in the [Kimodo docs](https://research.nvidia.com/labs/sil/projects/kimodo/docs/getting_started/installation.html).
-
-### Need help?
-
-Ask on the **[Animatica AI Discord](https://discord.com/invite/A8CrURBewz)** (install issues, Blender, server setup). You can also [open an issue](https://github.com/animatica-ai/motionmcp-kimodo/issues) on GitHub.
-
-### Don’t want to self-host?
-
-Use **Animatica Cloud** instead — same MMCP protocol, no local server setup. See [official implementations](https://animatica.ai/mmcp/docs/get-started/implementations).
+[Usage](USAGE.md) documents flags and the canonical skeleton/constraint limits.
+Remote/LAN deployment, other GPU vendors and automatic provisioning remain unvalidated.

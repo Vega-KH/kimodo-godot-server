@@ -1,67 +1,59 @@
 # Repository guidance
 
-This repository is the local Python backend for Kimodo Motion Studio for
-Godot. Keep it independently versioned from the Godot editor extension.
+This repository is the independently versioned Python backend for Kimodo Motion
+Studio for Godot. Inference never runs inside the editor.
 
-## Current phase
+## Start of a development session
 
-Goals 0–20 are complete, including durable SOMA-77 take history, undoable
-production-library acceptance, full-skeleton transfer, and reviewed reusable
-rig profiles tested with Jenny and Mixamo Remy. Goal 18 passed its final manual
-gate on 2026-09-30. Goal 19 passed its final manual gate on 2026-10-01 for
-generic partial anatomy and regular variant hierarchies. Goal 20's bounded
-matching and common-parent feasibility passed user acceptance on 2026-10-01.
-Goal 21 passed all final manual tests on 2026-10-01: Stage 1 is complete.
-Aim for useful assistance, not exhaustive rig coverage.
-The project is
-preparing Stage 2, beginning with poses, before advanced constraint authoring. Read the
-ledger for the current task list, prefer small changes with tests, and record
-consequential decisions in `docs/adr/`.
+Read the shared product documents in the sibling extension repository:
+`../godot-kimodo/docs/README.md`, then its product plan, DEVELOPMENT_GOALS.md
+and AGENT_HANDOFF.md. Product workflows supersede historical task lists.
+If that checkout is absent, use
+https://github.com/Vega-KH/godot-kimodo/tree/main/docs rather than recreating a
+second roadmap in this repository.
 
-## Goal-oriented sessions
+Goals 0–21 and Stage 1 are complete and user-accepted (2026-10-01).
+Stage 2 starts with poses; propose the next detailed goal for review before
+implementation. Aim for useful, generic assistance, not exhaustive rig coverage.
 
-Read `docs/DEVELOPMENT_GOALS.md` before choosing work. It is the authoritative
-current-goal and progress ledger; the product workflows in the root development
-plan take precedence if a historical note conflicts with them.
+## Goal-oriented work
 
-- Work on only the active goal unless the user explicitly changes the goal.
-- Keep goals small enough for a focused session of roughly 20–60 minutes.
-- Update task checkboxes, evidence, blockers, and the session log as work lands.
-- Preserve the outcome, consequential corrections, acceptance evidence, and
-  checkpoint commit for every completed goal. Older task lists and session notes
-  may be summarized once they are more than three goals behind the current goal;
-  Git remains the detailed historical record.
-- Remove obsolete notes only when their useful decision/evidence has been
-  retained elsewhere in the ledger, an ADR, or version history.
-- Run the goal's completion test before marking it complete.
-- When a goal passes, mark it complete, commit the record, report the result,
-  and, unless a major blocker makes planning premature, lay out the next goal
-  for user review. Commit the checkpoint and end the turn.
-  Do not begin the proposed goal until the user explicitly approves it.
-- If work exposes a blocker, record it and stop at a useful checkpoint rather
-  than silently switching to another planned goal.
+- Work on one explicitly approved goal; stop for discussion on major blockers
+  or architectural changes instead of applying a suboptimal workaround.
+- Record concrete defects and repair nearby ones with regressions when in scope.
+- Keep the current goal/proposal concise in the shared DEVELOPMENT_GOALS.md.
+  Preserve completed outcomes, important corrections, evidence and commits in
+  compact history; Git retains detailed obsolete lists.
+- Complete automated, relevant rendered/live and user manual gates before marking
+  a goal complete. User has authorized commit/push after completed, tested goals.
+- Record completion, commit/push affected repositories, then propose the next
+  goal for approval. Do not implement that proposal without approval.
+- Permanent compatibility/security decisions belong in `docs/adr/`; supersede
+  accepted ADRs rather than rewriting their historical decisions.
 
-## Compatibility boundaries
+## Compatibility and preservation boundaries
 
-- Preserve the standard MMCP capability and generation surface.
-- Keep the `motionmcp_kimodo` namespace until an explicit migration decision.
-- Return SOMA-77 at the service boundary; SOMA-30 is an internal model and
-  constraint representation. Goal 3 established this invariant and its golden
-  fixtures; do not restore the inherited 77-to-30 response slice.
-- Bind only to `127.0.0.1` by default. Remote access must be opt-in and must not
-  weaken path, command, or token boundaries.
-- Never run model loading or inference in the Godot editor process.
-- Preserve upstream copyright, history, notices, and Apache-2.0 licensing.
+- Preserve MMCP capability/generation endpoints and `motionmcp_kimodo` namespace.
+- SOMA-77 is the canonical/output rig; SOMA-30 is internal model/constraint data.
+  Never restore the inherited 77→30 output slice. Preserve six contact channels.
+- Bind only to `127.0.0.1` by default. Remote deployment needs explicit
+  authentication, error/path hardening and approval.
+- Keep Python/CUDA/model weights outside the editor and add-on distribution.
+- Preserve upstream history, copyright, notices and Apache-2.0 licensing.
+- Never clean, stage or modify user animation archives, independent exports,
+  private model originals or shared artist profiles as incidental test work.
 
 ## Verification
 
-Run lightweight checks before GPU tests:
+Use the existing checkout environment, lightweight checks before GPU work:
 
 ```powershell
-python -m pytest
-python -m ruff check .
+.\.venv\Scripts\python.exe -m pytest
+.\.venv\Scripts\python.exe -m ruff check .
 ```
 
-Tests requiring weights, CUDA, or network access belong in explicitly marked
-integration suites. Record GPU, driver, dependency commits, model hash, and
-resolved settings for every benchmark.
+Hardware/network tests are explicit integration checks. Record actual GPU,
+dependency/model identity and resolved settings for benchmarks. The project-owned
+venv can require owner-context execution under the agent sandbox; this is not
+proof of a broken Python installation. See the shared handoff and
+`docs/SERVER_ARCHITECTURE.md` for current code/test notes.

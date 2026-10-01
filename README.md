@@ -14,8 +14,9 @@ It intentionally retains the
 the reusable MMCP adapter is separated from Godot Studio services. The new
 preferred command is `kimodo-godot-server`.
 
-See [the development baseline](docs/DEVELOPMENT_BASELINE.md) and
-[architecture decisions](docs/adr/README.md) for current status.
+Shared planning and the fresh-session handoff live in the
+[extension development docs](https://github.com/Vega-KH/godot-kimodo/tree/main/docs).
+Server-specific decisions remain in [architecture decisions](docs/adr/README.md).
 
 The primary client is [Kimodo Motion Studio for Godot](https://github.com/Vega-KH/godot-kimodo).
 Its session-first workflow generates one or two SOMA-77 takes, retargets them
@@ -42,7 +43,7 @@ generation and a local CPU text encoder. This is not a universal installer.
 - **Kimodo SOMA models** — loads Kimodo checkpoints; maps MMCP requests to Kimodo inference
 - **Constraint-aware** — root paths, effector targets, pose keyframes (see [MMCP concepts](https://animatica.ai/mmcp/docs/concepts/skeleton))
 - **Local CLI** — `kimodo-godot-server --port 8000`; root `start.bat` launches the verified Windows environment
-- **Embeddable** — mount `KimodoBackbone` in your own FastAPI / ASGI app ([Development](docs/DEVELOPMENT.md))
+- **Embeddable** — use the existing `KimodoBackbone` SDK surface ([Server architecture](docs/SERVER_ARCHITECTURE.md))
 
 ## Requirements
 
@@ -54,9 +55,8 @@ generation and a local CPU text encoder. This is not a universal installer.
 | **Git** | Required for `pip` install (Kimodo is not on PyPI) |
 
 Dependency/build troubleshooting: **[Installation](docs/INSTALL.md)**.
-That inherited guide also discusses Blender; use the Godot workflow linked above
-for this fork's client setup. The [development baseline](docs/DEVELOPMENT_BASELINE.md)
-records the original installation and machine, not current workflow acceptance.
+Use the Godot workflow linked above for client setup. Fork/environment history
+and final acceptance are preserved in the shared development handoff/completion record.
 
 ## Quick start (self-hosted)
 
@@ -87,10 +87,10 @@ itself, so neither Python nor `kimodo-godot-server` needs to be on `PATH`.
 
 | Guide | Description |
 |---|---|
-| [Installation](docs/INSTALL.md) | Inherited dependency/build setup and troubleshooting |
+| [Installation](docs/INSTALL.md) | Windows reference setup and dependency/build troubleshooting |
 | [MotionCorrection](docs/MOTION_CORRECTION.md) | C++ build step (common install blocker) |
 | [Usage](docs/USAGE.md) | CLI, ports, models, environment variables |
-| [Development](docs/DEVELOPMENT.md) | Architecture and programmatic use |
+| [Server architecture](docs/SERVER_ARCHITECTURE.md) | Adapter code map, programmatic use and tests |
 | [Docs index](docs/README.md) | All guides and external links |
 
 ## Related projects
@@ -107,8 +107,8 @@ itself, so neither Python nor `kimodo-godot-server` needs to be on `PATH`.
 
 Contributions are welcome.
 
-1. Check [open issues](https://github.com/animatica-ai/motionmcp-kimodo/issues) or open one to discuss larger changes.
-2. Clone, install dev deps, and run tests — see [Development](docs/DEVELOPMENT.md).
+1. Check [open issues](https://github.com/Vega-KH/kimodo-godot-server/issues) or open one to discuss larger changes.
+2. Clone, install dev deps, and run tests — see [Server architecture](docs/SERVER_ARCHITECTURE.md).
 3. Open a pull request with a clear description and test plan.
 
 Bug reports for install failures: include OS, Python version, and the full `pip install -v` log (especially the MotionCorrection build).
