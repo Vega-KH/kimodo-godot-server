@@ -61,7 +61,7 @@ Animation Library or complete Preview Scene).
 
 | Repository | Current reviewed checkpoint | Notes |
 | --- | --- | --- |
-| `kimodo-godot-server` | This completion record | Goal 20 acceptance and verification on `codex/milestone-0-bootstrap`; server code unchanged |
+| `kimodo-godot-server` | `d69ca22` | Goal 20 acceptance and verification on `codex/milestone-0-bootstrap`; server code unchanged |
 | `godot-kimodo` | `f4d667e` | Goal 20 bounded rig matching, review preservation and common-parent feasibility on `main` |
 
 The user authorized pushes after each completed and tested goal. Goal 20 passed
@@ -1669,13 +1669,158 @@ Manual acceptance:
 The user accepted the current retargeting state on 2026-10-01, closing the manual
 gate and authorizing the Goal 20 push. No Goal 21 implementation before approval.
 
-### Goal 21 — Basic-workflow hardening and release gate
+### Goal 21 — Final Stage 1 workflow polish and acceptance (proposed)
 
-Complete the deferred UI overhaul, installation/setup and recovery diagnostics,
-server cancellation decision, performance/quality defaults, packaging,
-documentation, and remaining repair-ledger items. Run the full workflow and
-clean-project install matrix before declaring Stage 1 complete and beginning
-advanced pose, effector, waypoint, path, and timeline authoring.
+**Outcome:** close the basic-workflow stage with a manageable, safe session
+lifecycle, a useful preview, truthful diagnostics and an owner-validated
+clean-project installation. This is the final Stage 1 goal, not an opportunity
+to expand retargeting or build Stage 2 infrastructure. Implementation requires
+user approval. Work through the following ordered checkpoints within this goal;
+stop for discussion if a checkpoint needs a substantially different architecture.
+
+#### Requested changes and ownership contract
+
+- Add session deletion from the session chooser, including old entries beyond
+  the current eight-session recent limit. Allow deletion of the active session
+  through the same explicit, confirmed path; return safely to the chooser.
+- The warning names the session and gives the number of remaining archived
+  animation drafts to be deleted, with Cancel as the safe default. Count source
+  takes, not generations, rig snapshots, exported files or already deleted
+  tombstones. Account for recoverable generation manifests and explain missing
+  archive files rather than silently inventing a zero count.
+- Delete only the selected session resource and its verified managed
+  session_data/<session UUID> tree: retained SOMA-77 takes, rig snapshots,
+  manifests, owned staging/recovery debris and any derived disposable cache.
+  Never sweep the animations directory or follow arbitrary artifact paths.
+  Explicitly saved/accepted libraries, explicitly saved Character Previews,
+  imported models and shared certified rig profiles remain independent and
+  must survive. The confirmation says so.
+- Make Preview & Save's viewport approximately square, following available
+  width instead of imposing a huge fixed size. The existing preview component
+  has a 320×250 minimum; the new layout must also consider how its parent
+  container stretches it. Preserve camera synchronization, take switching and
+  access to playback/save controls at narrow and wider dock sizes.
+
+Suggested warning: “Delete ‘Walking studies’ and its 12 archived animation
+drafts? This removes this session and its managed source data. Saved/accepted
+animation libraries, saved previews, character models and shared rig profiles
+will be kept. This deletion cannot be undone.” Final wording must match the
+actual recovery/undo behavior; do not claim operating-system Trash support.
+
+#### Ordered task list
+
+- [ ] **21.1 — Safe session deletion service.** Introduce a focused domain
+  service with read-only deletion preflight/count and explicit execution, not
+  filesystem logic inside the UI. Verify the exact session file, UUID and owned
+  directory, reject traversal and linked/junction targets, and block duplicate
+  IDs/shared ownership or unprovable archive ownership. Revalidate a stale
+  confirmation before deleting. If explicit saved output was placed inside the
+  managed tree, stop with an actionable conflict rather than deleting it under
+  a misleading preservation promise; prevent new exports/Accept destinations
+  from using reserved managed storage.
+  Handle missing data and file locks honestly. Use bounded staging/rollback or
+  a recoverable deletion marker so interrupted/partially failed cleanup can be
+  retried without pretending cross-file atomicity. Never delete another session.
+  Corrupt/unsupported resources receive an explanatory limitation; do not infer
+  their ownership from a filename or migrate legacy sessions.
+- [ ] **21.2 — Session chooser and lifecycle integration.** Show a browsable
+  session list (not only eight recent entries) with clear titles, update times
+  and selection-specific Delete. Add confirmation/cancel/result states and
+  refresh the list after successful deletion. Disable destructive actions
+  during generation or a Save/Accept transaction. Stop/detach active autosave,
+  clear owned preview state, and return to the chooser only after a safe result.
+  Old timers, deferred callbacks and acceptance Undo/Redo must not recreate a
+  deleted session. Preserve ordinary production-library Undo/Redo and unrelated
+  editor undo history; do not clear the editor's global stack as a shortcut.
+- [ ] **21.3 — Responsive square preview and targeted UI polish.** Give the
+  preview enough vertical room at approximately 1:1 aspect ratio, including
+  resized/split docks. Render/check narrow and wider layouts. Keep take
+  selection, transport, Save and Accept compact and accessible; reduce redundant
+  status text and ensure disabled controls explain what is missing. Preserve
+  existing tabs and Rig Setup rather than redesigning the entire dock.
+- [ ] **21.4 — Close nearby correctness issues.** Make backend origin
+  normalization operate on a copy so the validated request, retry inputs and
+  retained provenance are unchanged. Separate advanced-constraint support flags
+  from basic-generation eligibility while retaining strict actual SOMA-77 rig,
+  response and required generation-option validation. Add focused regression
+  fixtures before touching either boundary. Audit save-state errors, missing or
+  changed character/profile references, corrupt/missing archives, disconnects,
+  late responses and session-switch recovery; repair only concrete failures.
+  Large baker consolidation and matcher/control-rig expansion are deferred.
+- [ ] **21.5 — Honest operation and setup guidance.** Retain client-side
+  cancellation for Stage 1; make the action/message clearly “stop waiting,”
+  not a promise to stop CUDA inference. Do not add a server job queue/cancel
+  protocol here. Verify one/two-take and diffusion-step bounds; retain the
+  current conservative defaults unless a small reproducible live check justifies
+  a change, rather than launching a broad quality/performance benchmark.
+  Give actionable backend-unreachable, loading, GPU-memory, archive/disk and
+  stale-rig messages where the current interface can distinguish them.
+- [ ] **21.6 — Documentation and clean-project handoff.** Refresh stale
+  “Milestone 0,” exact-name-only, obsolete map/count and unfinished-rig-setup
+  claims. Provide one concise Windows/Godot 4.7.2 quick start covering backend
+  prerequisites/start.bat, enable add-on, session → character/profile → generate
+  → compare/history → Save/Accept → reopen/delete. Document matching bind/rest
+  requirements, common uniform bind-space scale, optional anatomy, manual
+  mapping, limited generated finger articulation and unsupported control rigs.
+  Separate session-owned data from independent exports and explain backup/
+  version-control responsibilities. Specify an add-on-only distribution/copy
+  manifest with license notices, excluding private fixtures, user animations,
+  credentials, model weights, .venv and development artifacts. Validate a clean
+  Godot project against the existing verified backend; a new cross-platform
+  installer or full machine re-provision is not part of this goal.
+- [ ] **21.7 — Final Stage 1 acceptance.** Run the full Godot suite, backend
+  pytest and Ruff (new backend tests must actually execute, not be skipped),
+  rendered narrow/wide UI checks, and the clean-project/basic-workflow matrix.
+  Include a live one/two-take smoke check when the user starts the backend.
+  Obtain the manual gate below. Resolve remaining Stage 1 defects or explicitly
+  discuss any new blocker; do not silently defer data-loss or broken workflow
+  issues. Then mark Stage 1 complete, commit/push both affected repositories,
+  propose the first small Stage 2 goal for approval, and stop.
+
+#### Mandatory regression cases
+
+- Empty, single- and multi-generation sessions; multi-take count accuracy;
+  some already-deleted/missing drafts; recovered manifests; unrelated sessions.
+- Cancel confirmation leaves session/data/output hashes unchanged. Deleting an
+  active session does not trigger resurrection through autosave, a late response
+  or an old Accept undo action. Deleting an inactive one preserves the active
+  session. Save/Accept output and shared rig/profile hashes survive deletion.
+- Traversal, project/root paths, links/junctions, duplicate session IDs,
+  conflicting output placement, stale confirmation, locked files and injected
+  failures/interruption. Partial cleanup is reported and recoverable, not hidden.
+- Square preview across narrow/wide dock sizes without clipping controls,
+  camera regressions or take-selection/save mismatch.
+- Origin normalization leaves the input request deeply unchanged; basic
+  capability fixtures do not require unused advanced constraints, while
+  malformed required rig/response data still rejects.
+- Full offline History/reopen, new/existing library Add/Replace/Undo/Redo,
+  disconnect/error recovery, imported character and profile preservation, and
+  a clean-project install with no private fixtures.
+
+#### Manual final-stage gate
+
+1. In a clean Godot project, install/enable only the add-on, connect to the
+   supported local backend, create a session, import/map a character and generate
+   one or two takes. Confirm the larger preview and direct take switching.
+2. Save a character animation and optionally a preview, Accept into an existing
+   library, exercise Undo/Redo, and verify exported animation on a fresh target.
+3. Restart with the backend stopped; reopen the session and its History offline.
+   Check one helpful missing/changed-reference case and recover without losing
+   the archived sources.
+4. Create more than eight disposable sessions. Select one with several drafts;
+   verify the warning count and preservation text. Cancel once (nothing changes),
+   then confirm deletion. Its owned data is gone, other sessions/exports/shared
+   profiles still work, and it stays deleted after editor restart/Undo.
+5. Delete an empty and the active disposable session. Confirm safe return to
+   the chooser and disabled authoring controls until another session is opened.
+
+The Stage 1 completion claim is the owner-validated Windows/Godot 4.7.2 basic
+workflow, not universal rigs, marketplace readiness or every operating system.
+Deferred: full CUDA cancellation/retained server jobs, remote/LAN deployment,
+automated Python provisioning, broad inference-quality tuning, comprehensive
+UI redesign, large refactors, alternate reference poses and control-rig solvers.
+These exclusions must be visible in the completion record, not advertised as
+implemented. No Stage 2 pose/path/constraint/timeline UI begins before approval.
 
 ## Code-review repair ledger
 
@@ -1683,6 +1828,15 @@ These are implementation findings and their current disposition.
 
 ### Priority 1 — before the affected workflow is claimed complete
 
+0. **Goal 21 session-deletion integration hazards — not yet repaired.**
+   ProjectPaths currently checks lexical containment, not linked/junction
+   traversal. Session save_as can retain an existing session UUID, so shared
+   ownership must not be assumed away. Export/Accept destinations currently
+   allow project paths inside managed archive storage. Acceptance Undo/Redo
+   unconditionally saves its retained session resource, which could recreate
+   a session after the new deletion feature. Address these narrowly with
+   ownership/link checks, reserved-output containment and lifecycle guards
+   before claiming safe session deletion; preserve normal library undo behavior.
 1. **Resolved in Goal 13 — save-path containment and partial saves.** Draft and
    all three existing output flows now canonicalize `res://` paths, compare
    their absolute result with the project root, reject traversal and `user://`,
@@ -1710,7 +1864,7 @@ These are implementation findings and their current disposition.
    Goal 18 adds reviewed exact/normalized/alias matching, hierarchy/rest
    certification, signature invalidation, scale/root policy, and persistent
    Rig Setup for Jenny and Mixamo. Goal 19 adds generic partial anatomy and
-   compatible rest/skin validation. Proposed Goal 20 improves evidence-based
+   compatible rest/skin validation. Completed Goal 20 improves evidence-based
    matching and bounds common-parent feasibility; general control-rig solvers
    are deferred rather than implied by the Stage 1 compatibility claim.
 6. **Resolved in Goal 15 — character saves duplicated the target scene.** The
@@ -1723,7 +1877,7 @@ These are implementation findings and their current disposition.
    exact before/after library bytes plus session provenance in one Godot editor
    action. Controlled persistence, Undo, and Redo failures compensate back to
    the prior state without transaction debris. Cross-file filesystem atomicity
-   is not claimed; see ADR 0005.
+   is not claimed; see Goal 17's recorded compensation/rollback evidence.
 
 ### Priority 2 — structural risks to address while nearby code changes
 
@@ -1740,8 +1894,8 @@ These are implementation findings and their current disposition.
    assumptions already differ. Consolidate only with regression fixtures in
    place and where the full-skeleton audit makes the shared behavior explicit.
    Profile-driven semantics now remove character-name assumptions, but shared
-   sampling/save helpers are still a safe future cleanup. **Owner: Goal 18 or
-   Goal 19 when nearby regression fixtures make consolidation safe.**
+   sampling/save helpers are still a safe future cleanup. **Owner: deferred
+   post-Stage-1 maintenance; do not force a broad refactor into final hardening.**
 3. **Backend origin normalization mutates the validated request.** That is
    currently hidden from the client, but it complicates retries, hashes, and
    server-side provenance. Preserve the original request and normalize a copy
@@ -1765,8 +1919,8 @@ These are implementation findings and their current disposition.
 ## Current blockers and operational risks
 
 Goal 19's local Remy rig-profile preservation issue is resolved with user
-confirmation and verified recovery. Implementation and automated checks are
-ready for manual acceptance.
+confirmation and verified recovery. Goal 20 passed manual acceptance; Goal 21
+is proposed and has not started.
 No external service blocker is active. Gated access to
 `meta-llama/Meta-Llama-3-8B-Instruct` was granted and verified on 2026-09-05.
 
@@ -2088,3 +2242,11 @@ No external service blocker is active. Gated access to
   extension checkpoint `f4d667e`. Goal 21 will be the final Stage 1 goal,
   explicitly including confirmed session-owned-data deletion and a taller
   square preview. Preparation is documentation-only until approval.
+- **2026-10-01:** Prepared the detailed final Stage 1 Goal 21 proposal after
+  pushing Goal 20 (extension `f4d667e`, documentation `d69ca22`). Added the
+  requested counted/confirmed session deletion and responsive square preview,
+  bounded correctness repairs, truthful cancellation/setup guidance and a
+  clean-project/manual release gate. Read-only audit identified deletion
+  hazards in linked paths, shared IDs, outputs inside managed storage and old
+  acceptance callbacks re-saving session resources; tests for these are explicit
+  tasks, not implemented fixes. No Goal 21 product code has changed.
