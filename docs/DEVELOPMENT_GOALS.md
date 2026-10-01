@@ -40,7 +40,8 @@ session/take/save/accept spine of the basic workflow:
 6. explicitly accept one take into native animation data.
 
 Before Stage 2, Goals 18–20 generalize target setup from Jenny to reviewable,
-saved rig profiles across mainstream, incomplete, and complex humanoid rigs;
+saved rig profiles across mainstream and incomplete humanoid rigs, improve
+matching on diverse exports, and define explicit unsupported-topology limits;
 Goal 21 then performs final basic-workflow hardening and release validation.
 
 `MotionDraft` was the Goal 13 implementation name. The product concept is now
@@ -60,7 +61,7 @@ Animation Library or complete Preview Scene).
 
 | Repository | Current reviewed checkpoint | Notes |
 | --- | --- | --- |
-| `kimodo-godot-server` | This completion record | Goal 19 completion and accepted compatibility ADRs on `codex/milestone-0-bootstrap`; server code unchanged |
+| `kimodo-godot-server` | `886201e` | Goal 19 completion and accepted compatibility ADRs on `codex/milestone-0-bootstrap`; server code unchanged |
 | `godot-kimodo` | `4719722` | Goal 19 generic partial profiles, hierarchy-independent transfer, compatibility checks and preservation repairs on `main` |
 
 The user authorized pushes after each completed and tested goal. Goal 19 passed
@@ -1438,7 +1439,8 @@ directory during this goal; their source files remain unchanged.
   the suggested schema-2 profile at the original path (54 roles, Hips-is-root,
   leg-height scaling, recorded palm pairs). All three affected sessions reopen
   with that mapping and remain byte-identical. No session or animation was
-  deleted. The recovery blocker is resolved; the final manual gate remains.
+  deleted. The recovery blocker is resolved; the final manual gate subsequently
+  passed on 2026-10-01.
 - **2026-10-01 manual feedback:** the user passed Jenny04 plus additional
   Auto Rig Pro spine/neck variants, Godot universal and Unity-exported rigs;
   manual mapping and actionable validation messages worked. Their corrected
@@ -1490,8 +1492,9 @@ torso/hand frame requires invented anatomy, or the rest/root convention needs a
 per-model offset or substantially different solver. Fix nearby code concerns
 only when necessary for these tasks and record them in the repair ledger.
 
-Goal 20 retains face/control/IK interpretation, active twist distribution,
-multiple-skeleton selection, and Godette's complex rig. Goal 21 retains broad
+Goal 20's revised proposal below focuses on reviewable matching and a bounded
+complex-hierarchy feasibility check, not general face/control/IK interpretation,
+active twist distribution or multiple-skeleton selection. Goal 21 retains broad
 UI overhaul, performance/release work, and server cancellation. Goal 19 changes
 neither generation nor the authoritative SOMA-77 archive format; no private
 fixture is committed or packaged.
@@ -1499,16 +1502,103 @@ fixture is committed or packaged.
 Stop condition: obtain user approval before implementation. After all automated
 and manual gates pass, mark complete, commit/push, propose Goal 20, and stop.
 
-### Goal 20 — Complex deform/control rigs
+### Goal 20 — Faster, evidence-based rig setup (proposed; not approved)
 
-Use local-only `godette_rigged.glb` as the advanced validation target. Its glTF
-declares 227 skin joints, with name-based audit candidates including roughly
-121 face-related and 36 IK/control/handle bones. Add explicit deform/control
-classification, ambiguity resolution, ignored-role presentation, and robust
-preservation of face, IK, backpack, twist, and other non-humanoid branches.
-The 100-name Character Creator-style Skeleton FBX is an exploratory stress case,
-not a completion gate unless its import and rotation conventions fit the same
-architecture without asset-specific hacks.
+**Outcome:** make common exported naming variations substantially faster to map
+without sacrificing manual review, hierarchy validation or certified-profile
+stability. Replace the earlier broad complex-control-rig milestone with a
+bounded matching improvement and one explicit structural feasibility gate.
+General constraint reconstruction is not a prerequisite for Stage 1.
+
+#### Evidence and scope
+
+The corrected private Godette now passes bind/rest validation. Its actual chain
+is Root_225 → Body_220, branching to Hip_218 and Spine_1_199; the spine continues
+through Spine_2_198 → Ribcage_197. Spine_Control_219 is another Body child.
+Hip and Body are effectively colocated. Hip and spine bones carry mesh weights;
+Body, Spine_Control, Root and the GLTF-created wrapper have no direct weights.
+This is not evidence of a universal Character Creator convention or a corrupt
+rig. Mapping semantic Hips to Hip_218 violates the current torso ancestor
+contract; mapping Hips to Body_220 is a plausible existing-profile alternative,
+not yet a verified solution. No filename-specific transfer branch is justified.
+
+Private universal Remy has root.x → spine_01.x and both thigh branches, with
+c_traj above root.x. Thus root.x is a pelvis candidate, not automatically the
+root-motion bone. Numeric suffixes also have different meanings: Hip_218 may
+carry an exporter ID, whereas spine_01 and index2 encode anatomical sequence.
+GLTF_created_0_rootJoint is a wrapper candidate, not necessarily the artist's
+intended root. These cases motivate semantic evidence, not substring guessing.
+
+#### Ordered tasks
+
+- [ ] **20.1 — Establish matching baselines.** Capture current correct,
+  unmatched, ambiguous and wrong suggestions on generic synthetic conventions
+  and staged Remy/Jenny variants. Create held-out suffix/prefix/chain/control
+  combinations. Imported models remain optional private examples; no fixture
+  filename, bone count or model-specific offset enters production matching.
+- [ ] **20.2 — Token-aware normalization and aliases.** Preserve exact-name
+  precedence. Recognize neutral `.x` markers, namespaces, exporter wrappers,
+  singular Hip/pelvis synonyms and common stretch/deform naming conventions.
+  Separate exporter numeric IDs from anatomical chain/digit numbers using
+  patterns and whole-rig evidence. Retain original names and normalization
+  evidence; do not globally strip all digits or blindly truncate prefixes.
+- [ ] **20.3 — Rank candidates using structure.** Combine semantic tokens,
+  side, ancestry, descendant limb/torso branches and rest geometry. Treat skin
+  weighting and control/IK/pole/twist/end markers as supporting evidence, not
+  definitive deform/control labels: valid root/helper bones may be unweighted.
+  Specifically distinguish pelvis-like root.x from trajectory/root wrappers.
+  Deterministic ties remain unresolved; prevent duplicate-role and wrong-side
+  suggestions. Do not relax certification to make a guessed map pass.
+- [ ] **20.4 — Explain and preserve review.** Show ranked alternatives and
+  concise confidence/evidence for ambiguous or weak rows in the existing Rig
+  Setup surface. Keep manual choices and certified maps authoritative; rerun
+  suggestions only through an explicit action, without overwriting reviewed
+  rows. Preserve the profile schema unless concrete evidence requires a change.
+  Explain structural failures with actual bone names/parent relationships and
+  an honest remedy when remapping cannot solve them. Avoid a broad UI overhaul.
+- [ ] **20.5 — Bounded Godette/common-parent feasibility gate.** Use a generic
+  synthetic colocated pelvis-helper/weighted-hip topology and corrected private
+  Godette to evaluate mapping Hips to the common parent while leaving the hip
+  helper unmapped. Check pelvis translation/rotation, leg and torso response,
+  root ownership, skin deformation and saved playback against independent
+  expectations. This is a read-only asset experiment using existing transfer,
+  not automatic reparenting. If independent hip articulation, missing exported
+  constraints or per-branch translation requires a different solver, stop and
+  discuss; document the unsupported topology instead of weakening validation.
+  Full Godette support is conditional, not the goal's completion requirement.
+- [ ] **20.6 — Regress and accept.** Prove greater correct automatic coverage
+  on the declared naming suite than the recorded baseline, with zero newly
+  incorrect high-confidence mappings. Test misleading names, numeric collisions,
+  duplicate aliases, multiple root wrappers, twist/control decoys, wrong sides,
+  renaming/reindexing invariance and a held-out combination. Demonstrate manual
+  correction, profile save/reopen and unchanged archived take playback. Run all
+  Godot checks, render the affected setup UI, and obtain the manual gate below.
+
+#### Acceptance and stop conditions
+
+1. On private universal Remy, suggestions identify the pelvis structurally,
+   handle `.x` names, and reduce manual setup compared with the baseline. Root
+   selection remains reviewable. Certify, preview, save a character library,
+   reopen the session and play the library on a fresh target.
+2. On a synthetic exporter-ID/control-decoy rig, see useful candidates and
+   reasons without silently selecting a conflicting control or opposite side.
+   Manually resolve a deliberate ambiguity and verify saved choices persist.
+3. On Godette, either validate the common-parent mapping through preview/save
+   or receive a precise topology limitation explaining why full transfer is
+   deferred. Report the experimental result, not just successful certification.
+4. Existing Jenny, Mixamo and Goal 19 partial-profile workflows and their
+   preservation gates remain green. No user profiles, sessions, models or
+   animation libraries are overwritten by diagnostics.
+
+Explicit exclusions: rebuilding Blender constraints/IK, automatic reparenting,
+new multi-branch translation solvers, facial animation synthesis, active twist
+distribution, multiple-skeleton selection, and model-specific remapping hacks.
+Unsupported control-driven rigs may need an exported game/deform skeleton or a
+future solver; these capabilities are not required to close Stage 1. Goal 21
+will document the support contract and harden the basic workflow.
+
+Stop for discussion before expanding beyond this scope. After approval and
+successful automated/manual gates, commit/push, propose Goal 21, and stop.
 
 ### Goal 21 — Basic-workflow hardening and release gate
 
@@ -1550,8 +1640,10 @@ These are implementation findings and their current disposition.
    and a renamed-bone regression proves the mathematics is not Jenny-specific.
    Goal 18 adds reviewed exact/normalized/alias matching, hierarchy/rest
    certification, signature invalidation, scale/root policy, and persistent
-   Rig Setup for Jenny and Mixamo. Partial anatomy remains Goal 19; complex
-   deform/control rigs remain Goal 20.
+   Rig Setup for Jenny and Mixamo. Goal 19 adds generic partial anatomy and
+   compatible rest/skin validation. Proposed Goal 20 improves evidence-based
+   matching and bounds common-parent feasibility; general control-rig solvers
+   are deferred rather than implied by the Stage 1 compatibility claim.
 6. **Resolved in Goal 15 — character saves duplicated the target scene.** The
    default Character animation output is now a dependency-free target-specific
    `AnimationLibrary`; the large self-contained character scene remains only
@@ -1908,3 +2000,10 @@ No external service blocker is active. Gated access to
   No sessions or animations needed removal. The preservation discussion is
   resolved; Goal 19 awaits its real-editor manual acceptance before completion
   and push.
+- **2026-10-01:** The user accepted Goal 19 and confirmed corrected Godette
+  loads without compatibility errors. Pushed extension `4719722` and completion
+  documentation `886201e`. Audited Godette's sibling pelvis/torso branches and
+  universal Remy's misleading pelvis name `root.x`. Proposed a narrower Goal
+  20 for evidence-based matching, explicit ambiguity review and a bounded
+  common-parent feasibility check, leaving new control-rig solvers deferred.
+  No Goal 20 implementation has begun.
