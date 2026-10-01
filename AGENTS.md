@@ -5,12 +5,15 @@ Godot. Keep it independently versioned from the Godot editor extension.
 
 ## Current phase
 
-Goals 0–19 are complete, including durable SOMA-77 take history, undoable
+Goals 0–20 are complete, including durable SOMA-77 take history, undoable
 production-library acceptance, full-skeleton transfer, and reviewed reusable
 rig profiles tested with Jenny and Mixamo Remy. Goal 18 passed its final manual
 gate on 2026-09-30. Goal 19 passed its final manual gate on 2026-10-01 for
-generic partial anatomy and regular variant hierarchies. Goal 20 is being
-revised for discussion and is not approved for implementation. The project is
+generic partial anatomy and regular variant hierarchies. Goal 20's bounded
+matching and common-parent feasibility passed user acceptance on 2026-10-01.
+Goal 21 is the proposed final Stage 1 hardening goal, not yet approved.
+Aim for useful assistance, not exhaustive rig coverage.
+The project is
 finishing the basic workflow before advanced constraint authoring. Read the
 ledger for the current task list, prefer small changes with tests, and record
 consequential decisions in `docs/adr/`.
