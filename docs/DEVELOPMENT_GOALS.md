@@ -1,10 +1,10 @@
 # Development goals and project ledger
 
-Last reviewed: **2026-09-30**
+Last reviewed: **2026-10-01**
 
 Current product stage: **basic workflow**
 
-Current goal: **Goal 19 — Proposed; awaiting approval**
+Current goal: **Goal 19 complete — Goal 20 planning, approval pending**
 
 ## How to use this document
 
@@ -60,12 +60,12 @@ Animation Library or complete Preview Scene).
 
 | Repository | Current reviewed checkpoint | Notes |
 | --- | --- | --- |
-| `kimodo-godot-server` | This documentation checkpoint (parent `35d1bba`) | Goal 18 completion and detailed Goal 19 proposal on `codex/milestone-0-bootstrap` |
-| `godot-kimodo` | `ded4aef` | Goal 18 reviewed rig profiles, Mixamo onboarding, and final integration repairs on `main` |
+| `kimodo-godot-server` | This completion record | Goal 19 completion and accepted compatibility ADRs on `codex/milestone-0-bootstrap`; server code unchanged |
+| `godot-kimodo` | `4719722` | Goal 19 generic partial profiles, hierarchy-independent transfer, compatibility checks and preservation repairs on `main` |
 
-The user authorized pushes after each completed and tested goal. Goal 18 passed
-its final manual gate on 2026-09-30; this completion record and the proposed next
-goal accompany the verified extension checkpoint.
+The user authorized pushes after each completed and tested goal. Goal 19 passed
+its final manual gate on 2026-10-01; this completion record accompanies the
+verified extension checkpoint. Goal 20 remains approval-gated.
 
 The repositories remain independently versioned. The server keeps the
 `motionmcp_kimodo` namespace and MMCP surface until a deliberate migration.
@@ -1179,11 +1179,41 @@ detail, and stop.
   saved-preview animation cleanup. Goal 18 is complete at extension checkpoint
   `ded4aef`.
 
-### Goal 19 — Variant anatomy and hierarchy (proposed)
+### Goal 19 — Variant anatomy and hierarchy (complete)
 
 Make reviewed profiles support regular humanoids with fewer torso segments or
-digits while preserving the fidelity and workflow established for Jenny and
-Remy. Primary acceptance target: the local-only `mannequiny-0.3.0.glb`.
+digits, different naming/rest conventions, and extra branches through a generic
+semantic transfer contract. Synthetic skeleton families define acceptance;
+Jenny04 and Remy are independent imported compatibility examples,
+not rigs whose quirks define the algorithm or characters the product targets.
+Mannequiny is an explicit bind/rest incompatibility example. The user approved
+requiring matching skin bind and skeleton rest poses rather than spending this
+goal on alternate saved reference poses. [ADR 0004](adr/0004-matching-bind-rest-partial-profiles.md)
+records the contract.
+
+#### Generality contract and synthetic coverage
+
+- Transfer and certification consume reviewed semantic mappings, hierarchy,
+  rest geometry, and explicit policies. No character filename, identity, or
+  fixture-specific offset may select transfer mathematics.
+- Separate name suggestions from transfer. Curated convention aliases may
+  improve onboarding, but an equivalent manually mapped rig with arbitrary
+  names must produce the same motion. Ambiguous suggestions remain reviewable.
+- Build deterministic synthetic families using canonical Godot names, Mixamo
+  names/prefixes, common sided `.L`/`.R` and numbered-chain conventions, plus
+  opaque names requiring manual mapping. These are convention examples, not a
+  claim to support every rig produced by a particular DCC or auto-rigger.
+- Vary naming independently from anatomy: one/two/three torso segments,
+  separate Root versus Hips-as-root, five/four/no digit chains, shortened digit
+  chains, optional eyes/jaw, and extra hair/accessory/twist branches. Cover
+  different rest bases, proportions, scale, and valid non-parent-first bone
+  indexing. Use a focused pairwise matrix plus targeted edge cases rather than
+  a costly Cartesian product.
+- Prove invariance under renaming and valid reindexing, and test an unseen
+  combination of conventions after the transfer rules are established. Use an
+  independent expected-pose oracle rather than reproducing the transfer code.
+  Anatomies with insufficient frame evidence must fail with an actionable
+  diagnostic unless an explicitly reviewed frame policy has been validated.
 
 #### Fixture evidence and boundaries
 
@@ -1194,12 +1224,21 @@ middle, and ring. It has no little-finger, eye, jaw, or third spine skin joint.
 Godot's imported hierarchy and rest transforms must still be audited before
 choosing the final profile; glTF skin membership alone is not that proof.
 
-Jenny's planned hair update is not yet available. Local Jenny03 variants have
-61/60 skin joints, including limb twist branches and respectively with/without
-Root, but no hair joints. Use a repository-owned synthetic hair branch as the
-mandatory extra-branch regression. Test an updated Jenny additionally if the
-user supplies it; its availability must not block completion. Stage private
-models only in the existing ignored project-local directory.
+Jenny04 is now available. A read-only export audit finds one skin, 64 uniquely
+named skin joints, 64 inverse-bind matrices, and no animations. `Hair`, `Eye_L`,
+and `Eye_R` are weighted skin joints parented to `Head`; left/right eye weights
+affect separate vertex sets. All inspected JOINTS_0/WEIGHTS_0 data has valid
+joint indices, finite nonnegative weights, and no zero-total-weight vertices.
+The GLB is self-contained. Small near-unit scale deviations exist in the export;
+import/rest consistency and visible deformation still require Godot checks.
+The user's Blender round trip must be audited, not assumed lossless.
+
+Use Jenny04 as the real hair/eye compatibility example alongside mandatory
+synthetic branches. Do not replace the existing repository Jenny fixture until
+the new import, skin/rest behavior, and regressions pass and its intended
+repository inclusion is confirmed. Local Jenny03 variants remain useful root
+and twist examples. Stage all new models only in the ignored project-local
+directory during this goal; their source files remain unchanged.
 
 #### Intended mapping policy
 
@@ -1214,66 +1253,120 @@ models only in the existing ignored project-local directory.
 - Do not assign several canonical roles to one target bone. For an omitted
   intermediate source role, transfer the mapped descendant's complete motion
   relative to its actual target parent so torso motion is not silently lost.
-- Four-finger hands must use one shared anatomical palm frame for wrist and
-  all digits. Choose explicit, recorded frame landmarks from available digits
-  (for Mannequiny, middle-forward and index-to-ring lateral); never invent a
+- Hands must use one shared anatomical palm frame for wrist and all mapped
+  digits. Choose explicit, recorded frame landmarks from available geometry;
+  middle-forward and index-to-ring lateral is one four-finger example to test,
+  not a model-specific rule. Also validate missing/shortened digit subsets and
+  the diagnostic for insufficient landmarks. Never invent a
   little-finger bone or independently align thumb phalanges. If no trustworthy
   non-degenerate hand frame exists, stop and discuss the supported fallback.
 - Extra target branches receive no Kimodo tracks and retain their local rest
   transforms while inheriting the mapped parent's animation. This preserves
   hierarchy; it does not add hair physics or active twist distribution.
 
+#### Import audit and approved decision — 2026-09-30
+
+- Staged Jenny04 and Mannequiny only in the ignored project-local area. No
+  source model, existing session or animation was modified. The reproducible
+  private import check is now in the passing suite, accepting Jenny04 and
+  asserting Mannequiny's detailed rejection.
+- Jenny04 imports as one 64-bone skeleton at `jennyrig/Skeleton3D`; Hair and
+  Eye_L/Eye_R remain Head children. Across nine skinned mesh nodes / 576 bind
+  entries, the maximum discrepancy between rest × skin bind and mesh-relative
+  transform is 0.00001248. No material bind/rest mismatch was detected. Direct
+  inspection confirms that the GLB has no animations property; the preliminary
+  PowerShell audit mistakenly counted an absent property as one entry. Godot's
+  lack of an AnimationPlayer therefore represents no lost source animation.
+  Weighted-vertex stress checks and a GPU-rendered walking preview pass;
+  multi-angle real-editor acceptance remains pending. No bind/rest export
+  problem was found in Jenny04. This does not certify every artistic skin weight.
+- Mannequiny imports as one 45-bone skeleton at `root/Skeleton3D` with all ten
+  animations. Its skin matrices describe a different reference pose from the
+  imported bone defaults: maximum rest × bind discrepancy is 3.33283734 across
+  position and basis-vector distances. The raw GLB already stores the posed
+  pelvis default (translation approximately -0.00276, 0.96641, 0.21429 and
+  quaternion -0.25439, 0.11986, -0.06610, 0.95737); Godot preserves that default.
+  This is not established to be invalid glTF or an importer failure.
+- The existing transfer uses imported bone rests as its sole reference. A
+  posed default with a different skin bind reference requires a deliberate
+  generic policy, not a per-Mannequiny offset or silently rewritten asset.
+  Implementation stopped for discussion; the user chose matching bind/rest
+  poses as an asset requirement. No alternate-reference selector, per-model
+  offset, or source modification was implemented. The rejection names mesh
+  `body_001` and bone `pelvis`, reports position/axis differences, explains the
+  requirement, and recommends a modeling-tool repair and re-export. Selection,
+  baking and Accept preflight share validation; editing the map is explicitly
+  not presented as a repair for this incompatibility.
+- Godette's control/IK/face interpretation and the Skeleton model remain
+  optional Goal 20 checks. Goal 19's synthetic matrix provides sufficient
+  independent anatomy, naming, rest-axis, proportion and indexing coverage;
+  no additional download or character-specific exception was necessary.
+
 #### Ordered task list
 
-- [ ] **19.1 — Audit the imported fixture.** Stage Mannequiny, record imported
-  skeleton path, full hierarchy, rest bases, units, root convention, skin
-  bindings, and bundled clips. Create an explicit reviewed semantic mapping;
-  record missing roles and likely hand landmarks before changing transfer.
-- [ ] **19.2 — Define partial-profile certification.** Separate required body
+- [x] **19.1 — Define the generic test matrix and audit imports.** Build the
+  synthetic convention/anatomy matrix and independent expected-pose cases
+  first. Stage Mannequiny and Jenny04; record imported skeleton paths,
+  hierarchy, rest bases, units, root convention, skins, and bundled clips.
+  Audit Jenny04's round-trip bind/rest consistency and hair/eye deformation.
+  Notify the user of asset issues before changing or replacing any fixture.
+- [x] **19.2 — Define partial-profile certification.** Separate required body
   roles, required chain structure, optional anatomy, and intentional omissions.
   Record effective torso/hand landmarks and unsupported cases in profile data.
   Version the schema if the persisted contract changes; preserve or explicitly
   recertify Goal 18 profiles without losing sessions or archived takes.
-- [ ] **19.3 — Extend transparent suggestions and Rig Setup.** Recognize sided
-  `.l`/`.r` names and curated regular chain aliases with visible evidence.
+- [x] **19.3 — Extend transparent suggestions and Rig Setup.** Recognize sided
+  prefix/suffix and numbered-chain conventions with visible evidence; use the
+  synthetic naming families rather than an alias list designed for one model.
   Keep manual overrides authoritative. Show missing optional chains, required
   unresolved roles, and the recorded hand-frame choice clearly. Reopen/reset
   behavior must preserve the reviewed profile and remain usable in a narrow
   dock; do not infer control/deform classification here.
-- [ ] **19.4 — Transfer supported partial anatomy.** Handle omitted torso roles
+- [x] **19.4 — Transfer supported partial anatomy.** Handle omitted torso roles
   and mapped descendants through the existing rest-aware transfer path. Build
   a shared frame from recorded available hand landmarks and apply it through
   each mapped digit. Emit tracks only for mapped bones, preserving root travel,
   scale, thumb roll, and unmapped branches without fixture-specific math.
-- [ ] **19.5 — Verify root, scale, and branches.** Test Mannequiny's imported
-  root convention and effective camera-follow bone. Exercise changed scale,
-  rest orientation, omitted intermediate roles, four-finger hands, and hair
-  branches with deterministic synthetic rigs. Verify parent inheritance and
-  unchanged local transforms for extras; test local Jenny03 variants if useful.
-- [ ] **19.6 — Exercise the complete session workflow.** Certify/save/reopen a
-  Mannequiny profile, reload History offline, preview/switch takes, Save a
+- [x] **19.5 — Verify root, scale, and branches.** Test synthetic partial rigs,
+  Remy and Jenny04's root conventions and effective camera-follow bones. Run the
+  synthetic matrix, renaming/reindexing invariance, and held-out combination.
+  Verify parent inheritance and unchanged local transforms for hair/accessory
+  branches, and map optional eyes through the same semantic contract. Preserve
+  unmapped twist branches without claiming active twist distribution.
+- [x] **19.6 — Exercise the complete session workflow.** Certify/save/reopen a
+  profile for Jenny04 and retain Remy's complete regression, reload History
+  offline, preview/switch takes, Save a
   lightweight character library and clean Character Preview, and Accept into
   a production library with exact Undo/Redo and restart. Preserve all ten
-  bundled clips and the original model bytes.
-- [ ] **19.7 — Document and accept.** Record supported anatomy limits, profile
+  Mannequiny bundled clips and all original model files. Mannequiny only enters
+  the rejection path, not the supported workflow. Jenny04 has no source
+  animations; add a synthetic authored clip to test preservation on that path.
+- [x] **19.7 — Document and accept.** Record supported anatomy limits, profile
   compatibility rules, chosen hand landmarks, and numeric evidence. Run the
   complete extension suite, inspect the narrow UI, and perform the manual
-  multi-angle Mannequiny gate before marking complete or pushing.
+  multi-angle imported-model gate before marking complete or pushing.
 
 #### Numeric and workflow acceptance
 
 1. Deterministic profile fixtures prove missing optional roles certify while
    missing required body roles, duplicates, reversed sides, invalid mapped
    chain order, degenerate frames, and stale signatures fail clearly.
+   Equivalent mappings across naming families and valid reindexings produce
+   identical results within numerical tolerance. An unseen naming/anatomy/rest
+   combination passes without adding a fixture-specific alias or correction.
 2. Synthetic motion exercises all mapped body and digit rotations, including
    non-rest omitted torso segments. Compared with an independent expected pose,
    corresponding anatomical directions/frame axes agree within 0.1 degrees,
    and scaled root/pelvis positions agree within 0.0001 target units. Unmapped
    branches retain their local rest transforms and receive zero tracks.
 3. Jenny and Remy's existing numerical gates continue to pass. For imported
-   Mannequiny, record measured frame/chain/root errors and ground contact across
-   sampled poses; anatomical/proportion differences must not be hidden by
+   Jenny04, record frame/chain/root errors across sampled poses, and inspect
+   ground contact manually; anatomical/proportion differences must not be hidden by
    relaxing the synthetic transfer tests. Discuss material discrepancies.
+   On Jenny04, verify bind/rest consistency, head-following hair, and separately
+   mapped eyes with synthetic motion; generated Kimodo eye movement is not
+   assumed. Distinguish bad skin weights from transfer errors using bone poses
+   and deformed-mesh checks.
 4. Profile save/reopen reproduces omissions, landmark choices, and mapping.
    Preview and saved-library reload contain no unresolved tracks or invalid
    transforms; lightweight libraries carry no character meshes/textures.
@@ -1287,6 +1380,108 @@ models only in the existing ignored project-local directory.
    angles, confirm root-follow and optional-role UI, Save/load on a fresh
    character instance, and Accept/Undo/Redo. Kimodo's subtle generated finger
    motion is not the sole test of digit fidelity.
+
+#### Implementation and verification evidence — 2026-09-30
+
+- Profile schema 2 separates required body anatomy from optional roles, requires
+  at least one torso segment, validates every mapped chain subset, and stores
+  explicit source/target palm-landmark pairs. Four-finger and shortened chains
+  certify; insufficient/fingerless palm geometry produces a clear diagnostic.
+  Existing certified schema-1 profiles upgrade in memory only for an exact
+  signature and are rewritten only when Save Profile is clicked.
+- Six synthetic families cover canonical, Mixamo, sided/numbered, prefixed and
+  opaque names; 1/2/3 torso segments; 4/5 digits and missing-digit rejection;
+  short chains; optional neck/shoulders/toes/eyes/jaw; separate Root/Hips-as-root;
+  different rest axes, independently changed limb/torso proportions and scale;
+  reverse bone numbering; head accessories and limb twist branches. A held-out
+  combined recipe passes without production fixture-specific branches.
+- Independent body/palm axis oracles pass the 0.1° bound; scaled pelvis/root
+  position checks pass the 0.0001-unit bound. Renaming/reindexing invariance and
+  actual baked-library playback on newly built rigs pass. Unmapped branches
+  preserve local rests, inherit parent poses and receive no tracks.
+- Shared compatibility validation accounts for scene transforms and every
+  mesh skin binding. Detailed checks cover missing skins/bones, invalid rests,
+  mismatched bind/rest matrices and unsafe reflected/sheared/non-uniform bone
+  bases. Accept repeats skin checks even when the skeleton signature is unchanged.
+- Jenny04's private full workflow passes reviewed sided-eye mapping,
+  profile/session reopen, offline History, lightweight library playback on a
+  fresh target, clean Character Preview, Accept and exact Undo/Redo. A synthetic
+  authored target clip remains untouched in live/source data and is stripped
+  only from the detached saved preview. Original hashes remain unchanged.
+- Synthetic head/eye/wrist/all-digit motion tests imported Jenny04 without
+  relying on Kimodo's weak finger generation. Optional-eye maximum angular error
+  is 0.055953° (within 0.1°); hair local rest and inherited Head pose match;
+  CPU weighted skin samples for Hair/Eye_L/Eye_R move and remain finite.
+- All **31 Godot checks** pass with staged private fixtures. The same complete
+  suite passes in a fresh temporary project without private models: only the
+  explicitly model-dependent sections skip. No unexpected engine/script errors
+  or orphan warnings. A GPU-rendered 480-pixel dock inspection passes optional
+  roles, palm controls, full incompatibility text and Jenny04 preview. Backend
+  code is unchanged; prior backend evidence remains applicable.
+- Repairs addressed: stale Rig Setup rows are cleared before rejected selection;
+  generation availability is recomputed on target errors; duplicate structural
+  validators were consolidated behind the shared compatibility check; bone
+  traversal no longer assumes parent-first indexing. The renamed-skeleton test
+  now also renames its Skin bindings, rather than relying on an invalid asset.
+- **Preservation incident — resolved with user confirmation:** the inherited
+  `test_private_remy_workflow.gd` saved a profile at the real staged-Remy target's
+  shared path and deleted it during cleanup. It was run before this defect was
+  identified. `remy_2.tres`, `remy_3.tres` and `kyle's_test_session.tres` still
+  referenced `remy_with_taunt_animation_867509c6_rig.tres`, which was absent.
+  The session files, takes, saved animations and source models remain intact;
+  original custom mapping choices were not assumed to match suggestions.
+  Both the Remy workflow test and existing capture helper now save per-process
+  isolated target scenes/profiles; the isolated Remy workflow passes. Work
+  stopped for discussion before writing a guessed replacement. The user then
+  confirmed that every Remy profile used unchanged suggestions, and permitted
+  removal of unrecoverable test sessions if necessary. Recreated and certified
+  the suggested schema-2 profile at the original path (54 roles, Hips-is-root,
+  leg-height scaling, recorded palm pairs). All three affected sessions reopen
+  with that mapping and remain byte-identical. No session or animation was
+  deleted. The recovery blocker is resolved; the final manual gate remains.
+- **2026-10-01 manual feedback:** the user passed Jenny04 plus additional
+  Auto Rig Pro spine/neck variants, Godot universal and Unity-exported rigs;
+  manual mapping and actionable validation messages worked. Their corrected
+  Godette export exposed a harmless common bind-space scale from a parent
+  empty. Added the approved shared positive-uniform-scale exception, without
+  changing skins, rests or transfer math; inconsistent scales and genuine
+  pose mismatches remain rejected. See [ADR 0005](adr/0005-common-uniform-bind-space-scale.md).
+  The full 31-check Godot suite passes; Godette's corrected export reports
+  scale 1.07826213 and normalized axis error 0.00000074. Original Godette and
+  Mannequiny still reject. Source models remain byte-identical.
+- **Final acceptance, 2026-10-01:** the user confirmed corrected Godette loads
+  without compatibility errors and explicitly marked Goal 19 complete. Its
+  flattened torso hierarchy is a separate Goal 20 scope discussion, not a
+  failed bind/rest correction. All 31 automated checks passed. Existing sessions/animations and source models
+  were not cleaned, migrated or replaced. Jenny04 remains private, not substituted
+  for the repository's licensed Jenny03 fixture.
+
+#### Final manual checklist
+
+The Remy preservation checkpoint above is resolved. The editor can be restarted;
+the affected existing sessions now have their original suggested mapping available.
+
+1. Restart Godot. Open/create a Jenny04 session using
+   `res://tests/private_models/Jenny04.glb`. In Rig Setup, Reset Suggestions to
+   include `LeftEye → Eye_L` and `RightEye → Eye_R`, review the map and Save Profile.
+   Generate/reopen a body take; inspect hair/head motion, wrists and ground
+   contact from several angles. No new hair physics or foot-contact solver is
+   claimed here.
+2. Close/reopen the session offline. Confirm Rig Setup retains optional eye
+   mappings and both palm frames; select the archived take from History. Save
+   a character library, play it on a fresh Jenny04 instance, and test
+   Accept/Undo/Redo in a production library.
+3. Select staged Mannequiny after a valid target. Confirm the bind/rest message
+   explains the affected mesh/bone and remedy, generation is disabled, and stale
+   map rows are cleared. Select Jenny04 again and confirm recovery.
+4. For the strong finger/eye test, open
+   `res://tests/private_models/goal19_manual/jenny04_stress_2.tscn` and inspect
+   `KimodoAnimationPlayer/motion` at 0.0, 0.25 and 0.5 seconds. Compare with the
+   humanoid source in `goal19_manual/humanoid_stress.tscn`. All finger joints,
+   wrists, eyes and head deliberately move. The matching `_2.res` library can
+   also be loaded on a fresh Jenny04 instance. These local-only manual fixtures
+   were generated with `test_private_jenny04_workflow.gd -- --keep-stress`;
+   rerunning prints collision-safe new output paths.
 
 #### Decision gates and exclusions
 
@@ -1408,7 +1603,10 @@ These are implementation findings and their current disposition.
 
 ## Current blockers and operational risks
 
-No external blocker is active. Gated access to
+Goal 19's local Remy rig-profile preservation issue is resolved with user
+confirmation and verified recovery. Implementation and automated checks are
+ready for manual acceptance.
+No external service blocker is active. Gated access to
 `meta-llama/Meta-Llama-3-8B-Instruct` was granted and verified on 2026-09-05.
 
 - The full text encoder peaked near 28.52 GiB of system memory on the 31.52 GiB
@@ -1688,3 +1886,25 @@ No external blocker is active. Gated access to
   preservation, and full offline Save/Accept acceptance. Confirmed Jenny03 has
   twist branches but no hair joints, so synthetic hair coverage is mandatory
   and an updated private Jenny is optional. Goal 19 awaits approval.
+- **2026-09-30:** Revised the Goal 19 proposal at the user's direction to make
+  generic synthetic convention/anatomy families the acceptance contract and
+  imported models compatibility examples. Added naming/reindexing invariance,
+  a held-out combination, and the newly supplied Jenny04 hair/eye audit.
+  Preliminary GLB structure/weight checks pass; imported bind/rest and visual
+  deformation remain implementation-time checks. No Goal 19 code work begun.
+- **2026-09-30:** Implemented approved Goal 19 using generic partial schema-2
+  profiles, paired hand landmarks, hierarchy-order-independent transfer and
+  shared actionable asset compatibility checks. The user chose matching
+  bind/rest poses instead of alternate references; Mannequiny is a rejection
+  fixture. All 31 Godot checks pass with private fixtures and in a temporary
+  project without them; numerical and rendered Jenny04 checks pass. Found and
+  repaired an inherited test/capture cleanup defect that targeted the shared
+  Remy profile. The profile is absent after earlier test runs, while sessions,
+  archives, saved animations and models remain intact. Stopped for user review
+  of mapping recovery/recertification; no guessed replacement, completion or push.
+- **2026-09-30:** The user confirmed unchanged suggested Remy mappings. Recreated
+  the certified profile at its original shared path and verified all three
+  affected sessions reopen with that map without changing their file bytes.
+  No sessions or animations needed removal. The preservation discussion is
+  resolved; Goal 19 awaits its real-editor manual acceptance before completion
+  and push.
