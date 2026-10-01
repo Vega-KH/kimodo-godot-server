@@ -115,12 +115,17 @@ def test_soma77_request_generates_soma77_using_soma30_constraints(monkeypatch):
         "constraints": [{
             "type": "root_path",
             "frames": [0, 4],
-            "positions_xz": [[0.0, 0.0], [1.0, 0.0]],
+            "positions_xz": [[3.0, 5.0], [4.0, 5.0]],
         }],
         "timing": {"fps": 30.0},
         "options": {"diffusion_steps": 1, "num_samples": 1, "seed": 7},
     })
+    original = request.model_dump(mode="json")
     result = asyncio.run(backend.generate(request))
+    assert request.model_dump(mode="json") == original
+    retry = asyncio.run(backend.generate(request))
+    assert request.model_dump(mode="json") == original
+    np.testing.assert_array_equal(retry.root_translations, result.root_translations)
 
     assert model.received_constraints[0].skeleton is model.skeleton
     assert result.rotations.shape == (1, 5, 77, 4)

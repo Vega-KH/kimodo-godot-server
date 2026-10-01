@@ -2,9 +2,9 @@
 
 Last reviewed: **2026-10-01**
 
-Current product stage: **basic workflow**
+Current product stage: **Stage 1 complete; Stage 2 preparation**
 
-Current goal: **Goal 20 complete — Goal 21 planning, approval pending**
+Current goal: **Goal 21 complete — all final manual tests passed 2026-10-01**
 
 ## How to use this document
 
@@ -62,11 +62,12 @@ Animation Library or complete Preview Scene).
 | Repository | Current reviewed checkpoint | Notes |
 | --- | --- | --- |
 | `kimodo-godot-server` | `d69ca22` | Goal 20 acceptance and verification on `codex/milestone-0-bootstrap`; server code unchanged |
-| `godot-kimodo` | `f4d667e` | Goal 20 bounded rig matching, review preservation and common-parent feasibility on `main` |
+| `godot-kimodo` | `7e9d1a8` | Completed Stage 1 basic workflow, Goal 21 and all manual acceptance on `main` |
 
 The user authorized pushes after each completed and tested goal. Goal 20 passed
 its final manual gate on 2026-10-01; this completion record accompanies the
-verified extension checkpoint. Goal 21 is proposed for approval.
+verified extension checkpoint. Goal 21 passed every final manual test on
+2026-10-01. Stage 1 is complete; Stage 2 begins with poses after planning approval.
 
 The repositories remain independently versioned. The server keeps the
 `motionmcp_kimodo` namespace and MMCP surface until a deliberate migration.
@@ -1669,13 +1670,13 @@ Manual acceptance:
 The user accepted the current retargeting state on 2026-10-01, closing the manual
 gate and authorizing the Goal 20 push. No Goal 21 implementation before approval.
 
-### Goal 21 — Final Stage 1 workflow polish and acceptance (proposed)
+### Goal 21 — Final Stage 1 workflow polish and acceptance (complete)
 
 **Outcome:** close the basic-workflow stage with a manageable, safe session
 lifecycle, a useful preview, truthful diagnostics and an owner-validated
 clean-project installation. This is the final Stage 1 goal, not an opportunity
 to expand retargeting or build Stage 2 infrastructure. Implementation requires
-user approval. Work through the following ordered checkpoints within this goal;
+user approval, granted on 2026-10-01. Work through the following ordered checkpoints within this goal;
 stop for discussion if a checkpoint needs a substantially different architecture.
 
 #### Requested changes and ownership contract
@@ -1709,7 +1710,7 @@ actual recovery/undo behavior; do not claim operating-system Trash support.
 
 #### Ordered task list
 
-- [ ] **21.1 — Safe session deletion service.** Introduce a focused domain
+- [x] **21.1 — Safe session deletion service.** Introduce a focused domain
   service with read-only deletion preflight/count and explicit execution, not
   filesystem logic inside the UI. Verify the exact session file, UUID and owned
   directory, reject traversal and linked/junction targets, and block duplicate
@@ -1723,7 +1724,7 @@ actual recovery/undo behavior; do not claim operating-system Trash support.
   retried without pretending cross-file atomicity. Never delete another session.
   Corrupt/unsupported resources receive an explanatory limitation; do not infer
   their ownership from a filename or migrate legacy sessions.
-- [ ] **21.2 — Session chooser and lifecycle integration.** Show a browsable
+- [x] **21.2 — Session chooser and lifecycle integration.** Show a browsable
   session list (not only eight recent entries) with clear titles, update times
   and selection-specific Delete. Add confirmation/cancel/result states and
   refresh the list after successful deletion. Disable destructive actions
@@ -1732,13 +1733,13 @@ actual recovery/undo behavior; do not claim operating-system Trash support.
   Old timers, deferred callbacks and acceptance Undo/Redo must not recreate a
   deleted session. Preserve ordinary production-library Undo/Redo and unrelated
   editor undo history; do not clear the editor's global stack as a shortcut.
-- [ ] **21.3 — Responsive square preview and targeted UI polish.** Give the
+- [x] **21.3 — Responsive square preview and targeted UI polish.** Give the
   preview enough vertical room at approximately 1:1 aspect ratio, including
   resized/split docks. Render/check narrow and wider layouts. Keep take
   selection, transport, Save and Accept compact and accessible; reduce redundant
   status text and ensure disabled controls explain what is missing. Preserve
   existing tabs and Rig Setup rather than redesigning the entire dock.
-- [ ] **21.4 — Close nearby correctness issues.** Make backend origin
+- [x] **21.4 — Close nearby correctness issues.** Make backend origin
   normalization operate on a copy so the validated request, retry inputs and
   retained provenance are unchanged. Separate advanced-constraint support flags
   from basic-generation eligibility while retaining strict actual SOMA-77 rig,
@@ -1747,7 +1748,7 @@ actual recovery/undo behavior; do not claim operating-system Trash support.
   changed character/profile references, corrupt/missing archives, disconnects,
   late responses and session-switch recovery; repair only concrete failures.
   Large baker consolidation and matcher/control-rig expansion are deferred.
-- [ ] **21.5 — Honest operation and setup guidance.** Retain client-side
+- [x] **21.5 — Honest operation and setup guidance.** Retain client-side
   cancellation for Stage 1; make the action/message clearly “stop waiting,”
   not a promise to stop CUDA inference. Do not add a server job queue/cancel
   protocol here. Verify one/two-take and diffusion-step bounds; retain the
@@ -1755,7 +1756,7 @@ actual recovery/undo behavior; do not claim operating-system Trash support.
   a change, rather than launching a broad quality/performance benchmark.
   Give actionable backend-unreachable, loading, GPU-memory, archive/disk and
   stale-rig messages where the current interface can distinguish them.
-- [ ] **21.6 — Documentation and clean-project handoff.** Refresh stale
+- [x] **21.6 — Documentation and clean-project handoff.** Refresh stale
   “Milestone 0,” exact-name-only, obsolete map/count and unfinished-rig-setup
   claims. Provide one concise Windows/Godot 4.7.2 quick start covering backend
   prerequisites/start.bat, enable add-on, session → character/profile → generate
@@ -1768,7 +1769,7 @@ actual recovery/undo behavior; do not claim operating-system Trash support.
   credentials, model weights, .venv and development artifacts. Validate a clean
   Godot project against the existing verified backend; a new cross-platform
   installer or full machine re-provision is not part of this goal.
-- [ ] **21.7 — Final Stage 1 acceptance.** Run the full Godot suite, backend
+- [x] **21.7 — Final Stage 1 acceptance.** Run the full Godot suite, backend
   pytest and Ruff (new backend tests must actually execute, not be skipped),
   rendered narrow/wide UI checks, and the clean-project/basic-workflow matrix.
   Include a live one/two-take smoke check when the user starts the backend.
@@ -1776,6 +1777,67 @@ actual recovery/undo behavior; do not claim operating-system Trash support.
   discuss any new blocker; do not silently defer data-loss or broken workflow
   issues. Then mark Stage 1 complete, commit/push both affected repositories,
   propose the first small Stage 2 goal for approval, and stop.
+
+#### Implementation and automated evidence — 2026-10-01
+
+- Implemented a focused deletion service and small persistent lifecycle receipt.
+  Read-only preflight verifies the exact resource/UUID, project session ownership,
+  managed inventory, remaining source-take count and missing files. Immutable
+  manifests include recoverable generations but do not override later take
+  deletion tombstones. Duplicate IDs, shared archive paths, linked/junction
+  targets, unknown data and protected outputs inside the managed tree block
+  deletion. Confirmation fingerprints are rechecked before staging.
+- Same-project rename staging restores originals on precommit failure/restart;
+  committed cleanup retries locked files and checks the remaining staged inventory.
+  A tiny identity receipt remains after payload removal, not an animation cache.
+  Existing unrecognized incomplete archive work must recover normally before it
+  can be deleted; no filename-based ownership or general garbage sweep is used.
+  See [ADR 0006](adr/0006-session-deletion-ownership-and-recovery.md).
+- Chooser includes every default-folder session, titles/dates/path tooltips and
+  Delete selection; active deletion shares the same counted warning with Cancel
+  focused. Generation blocks delete/session switching; synchronous Save/Accept
+  transactions cannot interleave a delete callback. Committed active deletion
+  detaches autosave, closes stale dialogs, clears previews and returns to chooser.
+  No global editor undo stack is cleared. Tests exercise active/inactive delete,
+  ten entries, cancel, late callbacks and actual retained Accept Undo/Redo.
+- Preview uses a square aspect container plus width-derived reserved height.
+  Rendered 360/680-pixel checks exposed and corrected long-title/camera-hint
+  horizontal clipping; playback, Save and Accept remain accessible via scrolling
+  at larger sizes. Take selection/camera behavior remains unchanged.
+- Repaired origin normalization by deep-copying GenerateRequest. The actual CPU
+  backbone test uses nonzero root constraints, verifies the complete input stays
+  unchanged and repeats generation with identical results. Basic capability
+  parsing now permits absent/partial advanced constraint lists but still rejects
+  malformed types and the wrong SOMA-77 rig/response. UI action says Stop waiting;
+  one/two-take and 100-default/200-maximum-step limits remain unchanged.
+- Final transaction review found another persistence defect: old Accept Undo
+  could overwrite a reopened session's newer fields/history, while the dock
+  cleared dirty intent. Transactions now merge acceptance fields into the latest
+  saved session; the active dock refreshes only those fields and preserves pending
+  intent autosave. Added reopened-session/new-generation and unsaved-intent
+  regression cases, keeping existing Add/Replace/compensation tests.
+- Add-on-only packaging allowlists scripts/UIDs/config/guide plus the unchanged
+  MIT LICENSE. Backend remains Apache-2.0. No models/tests/user outputs/weights/
+  environments/credentials enter the package. The clean-project builder adds
+  one explicitly supplied private character and a smoke driver separately.
+- Created `C:/code/godot-kimodo/stage1-clean-project`, copied the packaged add-on,
+  imported a private Jenny04 GLB with no development fixtures/generated scenes or
+  pre-existing profiles, and connected to the backend started by the user using
+  start.bat. Live 30-frame/100-step batches passed: one take 7.94s, two distinct
+  takes 10.76s. All four Save outputs, Accept/Undo/Redo and fresh preview loading
+  passed. A separate process with no backend connection reopens History and
+  compares saved character-library poses on a freshly imported character.
+- Rendered captures: `.research/goal21-ui/clean_preview_360.png` and
+  `clean_preview_680.png` in the combined workspace (not distributed).
+  Backend pytest: **24 passed, 7 hardware-specific skips**; the new copy test
+  executes. Ruff and whitespace checks pass. Full Godot suite now contains
+  **35 checks**, including real Windows junction/exclusive-file-lock and
+  injected interruption/rollback tests. All final manual tests passed 2026-10-01.
+- User-created `animations/`, models and shared certified profiles have not been
+  swept or repackaged. Test-created disposable sessions/data are cleaned up by
+  their harnesses. The clean project and its useful live session/exports remain
+  available as internal acceptance evidence. The user accepted Goal 21 and
+  authorized the Stage 1 completion push on 2026-10-01.
 
 #### Mandatory regression cases
 
@@ -1798,6 +1860,9 @@ actual recovery/undo behavior; do not claim operating-system Trash support.
   a clean-project install with no private fixtures.
 
 #### Manual final-stage gate
+
+Use [the focused Goal 21 walkthrough](GOAL21_MANUAL_TESTS.md); the clean project
+and its live session/exports are ready at the path recorded above.
 
 1. In a clean Godot project, install/enable only the add-on, connect to the
    supported local backend, create a session, import/map a character and generate
@@ -1828,15 +1893,13 @@ These are implementation findings and their current disposition.
 
 ### Priority 1 — before the affected workflow is claimed complete
 
-0. **Goal 21 session-deletion integration hazards — not yet repaired.**
-   ProjectPaths currently checks lexical containment, not linked/junction
-   traversal. Session save_as can retain an existing session UUID, so shared
-   ownership must not be assumed away. Export/Accept destinations currently
-   allow project paths inside managed archive storage. Acceptance Undo/Redo
-   unconditionally saves its retained session resource, which could recreate
-   a session after the new deletion feature. Address these narrowly with
-   ownership/link checks, reserved-output containment and lifecycle guards
-   before claiming safe session deletion; preserve normal library undo behavior.
+0. **Repaired in Goal 21 — session-deletion integration hazards.**
+   Preflight checks linked/junction traversal, duplicate IDs/shared archives,
+   protected outputs and stale confirmation. Export/Accept/profile destinations
+   reject managed source/deletion storage. Persistent lifecycle receipts prevent
+   old autosave/archive/Undo resources from recreating deleted sessions; library
+   Undo/Redo still works. Real Windows lock/junction and interruption tests pass.
+   Final owner/manual workflow acceptance passed on 2026-10-01.
 1. **Resolved in Goal 13 — save-path containment and partial saves.** Draft and
    all three existing output flows now canonicalize `res://` paths, compare
    their absolute result with the project root, reject traversal and `user://`,
@@ -1896,15 +1959,16 @@ These are implementation findings and their current disposition.
    Profile-driven semantics now remove character-name assumptions, but shared
    sampling/save helpers are still a safe future cleanup. **Owner: deferred
    post-Stage-1 maintenance; do not force a broad refactor into final hardening.**
-3. **Backend origin normalization mutates the validated request.** That is
-   currently hidden from the client, but it complicates retries, hashes, and
-   server-side provenance. Preserve the original request and normalize a copy
-   before introducing retained jobs or server audit records.
-4. **Capability parsing is stricter than the basic workflow needs.** The Godot
-   client rejects a model unless all three advanced constraint types and the
-   exact contact layout are present, even though basic text generation does
-   not use them. Keep strict SOMA-77 validation, but capability-gate optional
-   advanced UI instead of rejecting an otherwise usable basic model.
+3. **Repaired in Goal 21 — origin normalization mutated the request.** Normalize
+   a deep copy; nonzero-origin/retry CPU tests verify unchanged caller input.
+4. **Repaired in Goal 21 — advanced capability flags blocked basic generation.**
+   Missing/partial unused constraint lists now permit basic generation. Their
+   types, actual SOMA-77 rig/contact/response and required options remain strict.
+5. **Repaired in Goal 21 — retained Accept Undo could overwrite newer session
+   fields/history or clear pending intent.** Merge acceptance fields into the
+   latest saved session, refresh those fields in the active dock, preserve dirty
+   intent and reject missing/changed ownership. Reopen/history/intent regressions
+   and existing Add/Replace/compensation tests pass.
 
 ### Priority 3 — before remote access or broader distribution
 
@@ -1920,7 +1984,7 @@ These are implementation findings and their current disposition.
 
 Goal 19's local Remy rig-profile preservation issue is resolved with user
 confirmation and verified recovery. Goal 20 passed manual acceptance; Goal 21
-is proposed and has not started.
+is implemented locally and awaiting its final manual acceptance gate.
 No external service blocker is active. Gated access to
 `meta-llama/Meta-Llama-3-8B-Instruct` was granted and verified on 2026-09-05.
 
@@ -2249,4 +2313,15 @@ No external service blocker is active. Gated access to
   clean-project/manual release gate. Read-only audit identified deletion
   hazards in linked paths, shared IDs, outputs inside managed storage and old
   acceptance callbacks re-saving session resources; tests for these are explicit
-  tasks, not implemented fixes. No Goal 21 product code has changed.
+  tasks, not implemented fixes. No Goal 21 product code had changed at that point.
+- **2026-10-01:** User approved Goal 21 and clean-project validation. Implemented
+  counted/confirmed session deletion, ownership/link/stale guards and recoverable
+  staging; lifecycle-safe Undo/autosave; a responsive square preview; request-copy
+  and optional-capability repairs; and narrow/wide clipping fixes. Final Undo
+  review additionally repaired stale session rewrites and dropped dirty intent.
+  Add-on-only packaging and concise setup/storage/support guides are included.
+  Clean imported Jenny04 project passed live one/two-take generation at 100 steps,
+  four exports, Accept/Undo/Redo, fresh playback and disconnected offline restart.
+  Backend tests/Ruff pass, including executed deep-copy regression. Automated
+  Godot checks pass. The user subsequently passed every final manual test,
+  completing Goal 21 and Stage 1 on 2026-10-01; completion push is authorized.

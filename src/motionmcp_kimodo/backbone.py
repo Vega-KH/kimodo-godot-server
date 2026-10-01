@@ -126,6 +126,9 @@ class KimodoBackbone(Backbone):
         return self._spec
 
     async def generate(self, req: GenerateRequest) -> MotionResult:
+        # Canonicalization edits nested constraint values. Preserve the validated
+        # caller-owned request for retries, logging, and provenance.
+        req = req.model_copy(deep=True)
         if req.options is not None and req.options.seed is not None:
             seed_everything(req.options.seed)
 

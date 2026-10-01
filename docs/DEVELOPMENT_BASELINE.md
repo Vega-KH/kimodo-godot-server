@@ -1,6 +1,8 @@
 # Development baseline
 
-Status: Milestone 0 bootstrap
+Historical record: Milestone 0 bootstrap. For current status and acceptance,
+read [DEVELOPMENT_GOALS.md](DEVELOPMENT_GOALS.md); the old gates below are not
+current blockers.
 
 ## Fork point
 

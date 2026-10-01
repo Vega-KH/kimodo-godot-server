@@ -9,3 +9,4 @@ with a new ADR instead of rewriting history.
 - [0003: Keep SOMA-30 constraints behind a SOMA-77 MMCP boundary](0003-soma30-constraints-soma77-output.md)
 - [0004: Require matching bind/rest poses for generic partial profiles](0004-matching-bind-rest-partial-profiles.md)
 - [0005: Accept a common positive uniform bind-space scale](0005-common-uniform-bind-space-scale.md)
+- [0006: Session deletion ownership and recoverable staging](0006-session-deletion-ownership-and-recovery.md)

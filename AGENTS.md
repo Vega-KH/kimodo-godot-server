@@ -11,10 +11,10 @@ rig profiles tested with Jenny and Mixamo Remy. Goal 18 passed its final manual
 gate on 2026-09-30. Goal 19 passed its final manual gate on 2026-10-01 for
 generic partial anatomy and regular variant hierarchies. Goal 20's bounded
 matching and common-parent feasibility passed user acceptance on 2026-10-01.
-Goal 21 is the proposed final Stage 1 hardening goal, not yet approved.
+Goal 21 passed all final manual tests on 2026-10-01: Stage 1 is complete.
 Aim for useful assistance, not exhaustive rig coverage.
 The project is
-finishing the basic workflow before advanced constraint authoring. Read the
+preparing Stage 2, beginning with poses, before advanced constraint authoring. Read the
 ledger for the current task list, prefer small changes with tests, and record
 consequential decisions in `docs/adr/`.
 
