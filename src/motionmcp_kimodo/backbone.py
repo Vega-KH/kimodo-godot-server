@@ -316,12 +316,11 @@ def _normalize_origin(
             ox = c.root_position[0]
             oz = c.root_position[2]
 
-    if anchor_frame is None:
-        for c in body.constraints:
-            if isinstance(c, RootPathConstraint):
-                for f, (x, z) in zip(c.frames, c.positions_xz):
-                    if anchor_frame is None or f < anchor_frame:
-                        anchor_frame, ox, oz = f, x, z
+    for c in body.constraints:
+        if isinstance(c, RootPathConstraint):
+            for f, (x, z) in zip(c.frames, c.positions_xz):
+                if anchor_frame is None or f < anchor_frame:
+                    anchor_frame, ox, oz = f, x, z
 
     if anchor_frame is None:
         return None
@@ -331,6 +330,7 @@ def _normalize_origin(
         if (
             isinstance(c, PoseKeyframeConstraint)
             and root_joint_name in c.joint_rotations
+            and c.frame == anchor_frame
             and (earliest_pk is None or c.frame < earliest_pk.frame)
         ):
             earliest_pk = c
@@ -349,6 +349,13 @@ def _normalize_origin(
             fx = 2.0 * (x * z + w * y)
             fz = 1.0 - 2.0 * (x * x + y * y)
             heading = float(np.arctan2(fx, fz))
+    else:
+        # A later pose's facing must not become the initial frame's heading.
+        for c in body.constraints:
+            if isinstance(c, RootPathConstraint) and c.heading_radians is not None:
+                for frame, value in zip(c.frames, c.heading_radians):
+                    if frame == anchor_frame:
+                        heading = float(value)
 
     cos_t = float(np.cos(-heading))
     sin_t = float(np.sin(-heading))
@@ -378,6 +385,8 @@ def _normalize_origin(
                 rx, rz = rot_xz(p[0] - ox, p[1] - oz)
                 new_xz.append([rx, rz])
             c.positions_xz = new_xz
+            if c.heading_radians is not None:
+                c.heading_radians = [float(h - heading) for h in c.heading_radians]
         elif isinstance(c, EffectorTargetConstraint):
             new_pos: list[list[float]] = []
             for p in c.positions:
